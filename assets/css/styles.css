@@ -15,6 +15,10 @@
   --color-border-strong: #d4a83f44;
   --color-danger: #d85d5d;
   --color-danger-strong: #ff5a5a;
+  --scrollbar-track: #131820;
+  --scrollbar-thumb: #4b5562;
+  --scrollbar-thumb-hover: #d4a83f;
+  --scrollbar-thumb-active: #f1c35a;
   --font-display: "Teko", sans-serif;
   --font-ui: "Rajdhani", sans-serif;
   --card-height: 64px;
@@ -32,6 +36,9 @@ body {
   min-height: 100vh;
   padding: 28px 18px;
   overflow-x: hidden;
+  scrollbar-gutter: stable;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
   color: var(--color-text);
   font-family: var(--font-ui);
   line-height: 1.45;
@@ -39,6 +46,42 @@ body {
     radial-gradient(circle at 50% -10%, #d4a83f1c 0%, transparent 34%),
     radial-gradient(circle at 100% 0%, #ffffff08 0%, transparent 20%),
     linear-gradient(180deg, #0b0d10 0%, #111419 45%, #0f1114 100%);
+}
+
+body::-webkit-scrollbar,
+.weapon-filter-groups::-webkit-scrollbar {
+  width: 11px;
+  height: 11px;
+}
+
+body::-webkit-scrollbar-track,
+.weapon-filter-groups::-webkit-scrollbar-track {
+  border-radius: 999px;
+  background: linear-gradient(180deg, #1a1f27 0%, #10151c 100%);
+}
+
+body::-webkit-scrollbar-thumb,
+.weapon-filter-groups::-webkit-scrollbar-thumb {
+  border: 2px solid var(--scrollbar-track);
+  border-radius: 999px;
+  background: linear-gradient(180deg, #616d7d 0%, #3f4956 100%);
+  box-shadow: inset 0 0 0 1px #ffffff14;
+}
+
+body::-webkit-scrollbar-thumb:hover,
+.weapon-filter-groups::-webkit-scrollbar-thumb:hover {
+  border-color: #2b313a;
+  background: linear-gradient(180deg, #e5c578 0%, #c79b37 100%);
+}
+
+body::-webkit-scrollbar-thumb:active,
+.weapon-filter-groups::-webkit-scrollbar-thumb:active {
+  background: linear-gradient(180deg, var(--scrollbar-thumb-active) 0%, #bc9136 100%);
+}
+
+body::-webkit-scrollbar-corner,
+.weapon-filter-groups::-webkit-scrollbar-corner {
+  background: var(--scrollbar-track);
 }
 
 body::before,
@@ -312,6 +355,8 @@ h1 {
   max-height: 470px;
   padding-right: 4px;
   overflow: auto;
+  scrollbar-width: thin;
+  scrollbar-color: var(--scrollbar-thumb) var(--scrollbar-track);
 }
 
 .weapon-filter-group {
