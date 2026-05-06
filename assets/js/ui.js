@@ -187,26 +187,36 @@ export function syncPaylinePosition(elements) {
   }
 
   const slotMachineRect = elements.slotMachine.getBoundingClientRect();
-  const winningCardCenterOffset = VISUAL_OFFSET + CARD_HEIGHT * 1.5;
-  const rowTops = [];
+  const rows = [];
 
   visibleWindows.forEach((windowElement) => {
     const windowTop = windowElement.getBoundingClientRect().top;
-    const existingRowTop = rowTops.find((top) => Math.abs(top - windowTop) < 2);
+    const existingRow = rows.find((row) => Math.abs(row.windowTop - windowTop) < 2);
 
-    if (existingRowTop === undefined) {
-      rowTops.push(windowTop);
+    if (existingRow === undefined) {
+      rows.push({ windowTop, windowElement });
     }
   });
 
-  rowTops.sort((a, b) => a - b);
+  rows.sort((a, b) => a.windowTop - b.windowTop);
 
-  const firstPaylineTop =
-    rowTops[0] - slotMachineRect.top + winningCardCenterOffset;
+  if (rows.length === 0) {
+    return;
+  }
+
+  const getTextCenter = (windowElement) => {
+    const cardText = windowElement.querySelector(".card-text");
+    if (cardText) {
+      const rect = cardText.getBoundingClientRect();
+      return rect.top + rect.height / 2 - slotMachineRect.top;
+    }
+    const windowTop = windowElement.getBoundingClientRect().top;
+    return windowTop - slotMachineRect.top + VISUAL_OFFSET + CARD_HEIGHT * 1.5;
+  };
+
+  const firstPaylineTop = getTextCenter(rows[0].windowElement);
   const secondPaylineTop =
-    rowTops.length > 1
-      ? rowTops[1] - slotMachineRect.top + winningCardCenterOffset
-      : null;
+    rows.length > 1 ? getTextCenter(rows[1].windowElement) : null;
 
   elements.slotMachine.style.setProperty(
     "--payline-top",
