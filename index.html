@@ -36,8 +36,18 @@
 
         <div class="filter-content" id="filterContent">
           <div class="filter-section">
-            <h2>Categories</h2>
-            <div class="filter-grid" id="categoryContainer"></div>
+            <h2>Equipment Row 1</h2>
+            <div class="filter-grid" id="categoryContainer1"></div>
+          </div>
+
+          <div class="filter-section">
+            <h2>Equipment Row 2</h2>
+            <div class="filter-grid" id="categoryContainer2"></div>
+          </div>
+
+          <div class="filter-section">
+            <h2>Weapons</h2>
+            <div class="filter-grid" id="categoryContainer3"></div>
           </div>
 
           <div class="filter-section">
@@ -58,69 +68,75 @@
       </section>
 
       <section class="slot-machine" aria-label="Randomizer slots">
-        <div class="payline"></div>
-        <div class="payline payline-secondary" hidden></div>
-
-        <div class="col-container" data-category="map">
-          <span class="label">Map</span>
-          <div class="window">
-            <div class="strip" id="strip-map"></div>
+        <div class="slot-row">
+          <div class="payline"></div>
+          <div class="col-container" data-category="map">
+            <span class="label">Map</span>
+            <div class="window">
+              <div class="strip" id="strip-map"></div>
+            </div>
           </div>
         </div>
 
-        <div class="col-container" data-category="helmet">
-          <span class="label">Helmet</span>
-          <div class="window">
-            <div class="strip" id="strip-helmet"></div>
+        <div class="slot-row">
+          <div class="payline"></div>
+          <div class="col-container" data-category="helmet">
+            <span class="label">Helmet</span>
+            <div class="window">
+              <div class="strip" id="strip-helmet"></div>
+            </div>
+          </div>
+
+          <div class="col-container" data-category="headset">
+            <span class="label">Headset</span>
+            <div class="window">
+              <div class="strip" id="strip-headset"></div>
+            </div>
+          </div>
+
+          <div class="col-container" data-category="chestRig">
+            <span class="label">Chest Rig</span>
+            <div class="window">
+              <div class="strip" id="strip-chest-rig"></div>
+            </div>
+          </div>
+
+          <div class="col-container" data-category="armoredChestRig">
+            <span class="label">Armored Chest Rig</span>
+            <div class="window">
+              <div class="strip" id="strip-armored-chest-rig"></div>
+            </div>
+          </div>
+
+          <div class="col-container" data-category="armor">
+            <span class="label">Armor</span>
+            <div class="window">
+              <div class="strip" id="strip-armor"></div>
+            </div>
+          </div>
+
+          <div class="col-container" data-category="backpack">
+            <span class="label">Backpack</span>
+            <div class="window">
+              <div class="strip" id="strip-backpack"></div>
+            </div>
           </div>
         </div>
 
-        <div class="col-container" data-category="armor">
-          <span class="label">Armor</span>
-          <div class="window">
-            <div class="strip" id="strip-armor"></div>
+        <div class="slot-row">
+          <div class="payline"></div>
+          <div class="col-container" data-category="weapon">
+            <span class="label">Weapon</span>
+            <div class="window">
+              <div class="strip" id="strip-weapon"></div>
+            </div>
           </div>
-        </div>
 
-        <div class="col-container" data-category="weapon">
-          <span class="label">Weapon</span>
-          <div class="window">
-            <div class="strip" id="strip-weapon"></div>
-          </div>
-        </div>
-
-        <div class="col-container" data-category="chestRig">
-          <span class="label">Chest Rig</span>
-          <div class="window">
-            <div class="strip" id="strip-chest-rig"></div>
-          </div>
-        </div>
-
-        <div class="col-container" data-category="armoredChestRig">
-          <span class="label">Armored Chest Rig</span>
-          <div class="window">
-            <div class="strip" id="strip-armored-chest-rig"></div>
-          </div>
-        </div>
-
-        <div class="col-container" data-category="headset">
-          <span class="label">Headset</span>
-          <div class="window">
-            <div class="strip" id="strip-headset"></div>
-          </div>
-        </div>
-
-        <div class="col-container" data-category="secondary">
-          <span class="label">Secondary</span>
-          <div class="window">
-            <div class="strip" id="strip-secondary"></div>
-          </div>
-        </div>
-
-        <div class="col-container" data-category="backpack">
-          <span class="label">Backpack</span>
-          <div class="window">
-            <div class="strip" id="strip-backpack"></div>
+          <div class="col-container" data-category="secondary">
+            <span class="label">Secondary</span>
+            <div class="window">
+              <div class="strip" id="strip-secondary"></div>
+            </div>
           </div>
         </div>
       </section>
@@ -132,6 +148,90 @@
           <span class="setting-label">ZTH Chance %</span>
           <input type="number" id="chanceInput" value="5" min="0" max="100" />
         </label>
+      </section>
+
+      <section class="squad-panel" aria-label="Squad Modus" id="squadPanel">
+        <div class="squad-header">
+          <h2 class="squad-title">👥 Squad Modus</h2>
+          <button
+            class="squad-toggle-btn"
+            id="squadToggle"
+            type="button"
+            aria-expanded="false"
+          >
+            <span>Beitreten / Erstellen</span>
+            <span id="squadChevron" aria-hidden="true">▼</span>
+          </button>
+        </div>
+
+        <div class="squad-content" id="squadContent">
+          <!-- Setup (vor Session) -->
+          <div class="squad-setup" id="squadSetup">
+            <div class="squad-name-row">
+              <label class="squad-field-label" for="squadName">Dein Name</label>
+              <input
+                class="squad-input"
+                type="text"
+                id="squadName"
+                maxlength="20"
+                placeholder="z.B. Denni"
+              />
+            </div>
+            <div class="squad-actions">
+              <button
+                class="squad-btn squad-btn--create"
+                id="squadCreateBtn"
+                type="button"
+              >
+                Neue Session
+              </button>
+              <div class="squad-join-row">
+                <input
+                  class="squad-input squad-code-input"
+                  type="text"
+                  id="squadJoinCode"
+                  maxlength="6"
+                  placeholder="Code eingeben"
+                />
+                <button
+                  class="squad-btn squad-btn--join"
+                  id="squadJoinBtn"
+                  type="button"
+                >
+                  Beitreten
+                </button>
+              </div>
+            </div>
+            <p class="squad-error" id="squadError" hidden></p>
+          </div>
+
+          <!-- Aktive Session -->
+          <div class="squad-session" id="squadSession" hidden>
+            <div class="squad-session-header">
+              <div class="squad-code-display">
+                <span class="squad-code-label">Session Code:</span>
+                <strong class="squad-code-value" id="squadCodeDisplay"></strong>
+                <button
+                  class="squad-copy-btn"
+                  id="squadCopyBtn"
+                  type="button"
+                  title="Code kopieren"
+                >
+                  📋
+                </button>
+              </div>
+              <button
+                class="squad-btn squad-btn--leave"
+                id="squadLeaveBtn"
+                type="button"
+              >
+                Verlassen
+              </button>
+            </div>
+
+            <div class="squad-members" id="squadMembers"></div>
+          </div>
+        </div>
       </section>
     </main>
 

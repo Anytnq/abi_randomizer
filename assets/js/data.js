@@ -20,16 +20,26 @@ export const tierNumberByType = {
   t5: 6,
 };
 
-export const categoryOptions = [
-  { key: "map", label: "Map" },
+export const categoryOptionsRow1 = [{ key: "map", label: "Map" }];
+
+export const categoryOptionsRow2 = [
   { key: "helmet", label: "Helmet" },
-  { key: "armor", label: "Armor" },
-  { key: "weapon", label: "Weapon" },
+  { key: "headset", label: "Headset" },
   { key: "chestRig", label: "Chest Rig" },
   { key: "armoredChestRig", label: "Armored Chest Rig" },
-  { key: "headset", label: "Headset" },
-  { key: "secondary", label: "Secondary" },
+  { key: "armor", label: "Armor" },
   { key: "backpack", label: "Backpack" },
+];
+
+export const categoryOptionsRow3 = [
+  { key: "weapon", label: "Weapon" },
+  { key: "secondary", label: "Secondary" },
+];
+
+export const categoryOptions = [
+  ...categoryOptionsRow1,
+  ...categoryOptionsRow2,
+  ...categoryOptionsRow3,
 ];
 
 export const maps = [

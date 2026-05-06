@@ -3,6 +3,9 @@ import {
   TOTAL_CARDS,
   VISUAL_OFFSET,
   categoryOptions,
+  categoryOptionsRow1,
+  categoryOptionsRow2,
+  categoryOptionsRow3,
 } from "./data.js";
 
 export function getElements() {
@@ -10,7 +13,6 @@ export function getElements() {
     body: document.body,
     slotMachine: document.querySelector(".slot-machine"),
     payline: document.querySelector(".payline"),
-    paylineSecondary: document.querySelector(".payline-secondary"),
     mainTitle: document.getElementById("mainTitle"),
     subTitle: document.getElementById("subTitle"),
     spinButton: document.getElementById("spinBtn"),
@@ -18,7 +20,9 @@ export function getElements() {
     filterToggle: document.getElementById("filterToggle"),
     filterChevron: document.getElementById("filterChevron"),
     filterContent: document.getElementById("filterContent"),
-    categoryContainer: document.getElementById("categoryContainer"),
+    categoryContainer1: document.getElementById("categoryContainer1"),
+    categoryContainer2: document.getElementById("categoryContainer2"),
+    categoryContainer3: document.getElementById("categoryContainer3"),
     armorTierContainer: document.getElementById("armorTierContainer"),
     helmetTierContainer: document.getElementById("helmetTierContainer"),
     mapContainer: document.getElementById("mapContainer"),
@@ -29,8 +33,21 @@ export function getElements() {
 }
 
 export function renderFilterButtons(elements, filters, handlers) {
-  renderCategoryButtons(
-    elements.categoryContainer,
+  renderCategoryButtonsRow(
+    elements.categoryContainer1,
+    categoryOptionsRow1,
+    filters.selectedCategories,
+    handlers.onCategoryToggle,
+  );
+  renderCategoryButtonsRow(
+    elements.categoryContainer2,
+    categoryOptionsRow2,
+    filters.selectedCategories,
+    handlers.onCategoryToggle,
+  );
+  renderCategoryButtonsRow(
+    elements.categoryContainer3,
+    categoryOptionsRow3,
     filters.selectedCategories,
     handlers.onCategoryToggle,
   );
@@ -51,7 +68,12 @@ export function renderFilterButtons(elements, filters, handlers) {
   );
 }
 
-function renderCategoryButtons(container, selectedCategories, onToggle) {
+function renderCategoryButtonsRow(
+  container,
+  categoryOptions,
+  selectedCategories,
+  onToggle,
+) {
   container.replaceChildren();
 
   categoryOptions.forEach((category) => {
@@ -164,63 +186,28 @@ export function syncVisibleCategories(elements, selectedCategories) {
   });
 
   elements.slotMachine.dataset.visibleCount = String(selectedCategories.length);
-  syncPaylinePosition(elements);
+  syncPaylinePosition();
 }
 
-export function syncPaylinePosition(elements) {
-  if (!elements.slotMachine || !elements.payline) {
-    return;
-  }
-
-  const visibleWindows = elements.columns
-    .filter((column) => !column.hidden)
-    .map((column) => column.querySelector(".window"))
-    .filter(Boolean);
-
-  if (visibleWindows.length === 0) {
-    elements.slotMachine.style.removeProperty("--payline-top");
-    elements.slotMachine.style.removeProperty("--payline-top-2");
-    if (elements.paylineSecondary) {
-      elements.paylineSecondary.hidden = true;
-    }
-    return;
-  }
-
-  const slotMachineRect = elements.slotMachine.getBoundingClientRect();
+export function syncPaylinePosition() {
   const winningCardCenterOffset = VISUAL_OFFSET + CARD_HEIGHT * 1.5;
-  const rowTops = [];
 
-  visibleWindows.forEach((windowElement) => {
-    const windowTop = windowElement.getBoundingClientRect().top;
-    const existingRowTop = rowTops.find((top) => Math.abs(top - windowTop) < 2);
+  document.querySelectorAll(".slot-row").forEach((row) => {
+    const payline = row.querySelector(".payline");
+    if (!payline) return;
 
-    if (existingRowTop === undefined) {
-      rowTops.push(windowTop);
-    }
-  });
-
-  rowTops.sort((a, b) => a - b);
-
-  const firstPaylineTop =
-    rowTops[0] - slotMachineRect.top + winningCardCenterOffset;
-  const secondPaylineTop =
-    rowTops.length > 1
-      ? rowTops[1] - slotMachineRect.top + winningCardCenterOffset
-      : null;
-
-  elements.slotMachine.style.setProperty(
-    "--payline-top",
-    `${firstPaylineTop}px`,
-  );
-
-  if (secondPaylineTop !== null && elements.paylineSecondary) {
-    elements.slotMachine.style.setProperty(
-      "--payline-top-2",
-      `${secondPaylineTop}px`,
+    const firstWindow = row.querySelector(
+      ".col-container:not([hidden]) .window",
     );
-    elements.paylineSecondary.hidden = false;
-  } else if (elements.paylineSecondary) {
-    elements.slotMachine.style.removeProperty("--payline-top-2");
-    elements.paylineSecondary.hidden = true;
-  }
+    if (!firstWindow) {
+      payline.hidden = true;
+      return;
+    }
+
+    payline.hidden = false;
+    const rowRect = row.getBoundingClientRect();
+    const windowRect = firstWindow.getBoundingClientRect();
+    const top = windowRect.top - rowRect.top + winningCardCenterOffset;
+    payline.style.top = `${top}px`;
+  });
 }
