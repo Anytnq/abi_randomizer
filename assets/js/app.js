@@ -25,11 +25,14 @@ import {
   loadExcludedArmorTiers,
   loadExcludedHelmetTiers,
   loadExcludedMaps,
+  loadExcludedWeaponCategories,
+  loadExcludedWeapons,
   loadSelectedCategories,
   loadWeaponHistory,
   saveExcludedArmorTiers,
   saveExcludedHelmetTiers,
   saveExcludedMaps,
+  saveExcludedWeapons,
   saveSelectedCategories,
   saveWeaponHistory,
 } from "./storage.js";
@@ -49,6 +52,7 @@ import {
   createSession,
   joinSession,
   leaveSession,
+  publishSelectedCategories,
   publishResult,
   publishSpinning,
 } from "./squad.js";
@@ -62,6 +66,7 @@ const state = {
   excludedArmorTiers: [],
   excludedHelmetTiers: [],
   excludedMaps: [],
+  excludedWeapons: [],
   activeMaps: [...maps],
   activeHelmets: [...helmets],
   activeArmors: [...armors],
@@ -77,11 +82,40 @@ const state = {
 
 const elements = getElements();
 
+function canEditCategoryFilters() {
+  return !squadState.active || squadState.isLeader;
+}
+
+function renderFilters() {
+  renderFilterButtons(
+    elements,
+    state,
+    {
+      onCategoryToggle: toggleCategory,
+      onArmorTierToggle: toggleArmorTier,
+      onHelmetTierToggle: toggleHelmetTier,
+      onMapToggle: toggleMap,
+      onWeaponToggle: toggleWeapon,
+      onWeaponGroupToggle: toggleWeaponGroup,
+    },
+    {
+      canEditCategories: canEditCategoryFilters(),
+    },
+  );
+}
+
 function initialize() {
   state.weaponHistory = loadWeaponHistory();
   state.excludedArmorTiers = loadExcludedArmorTiers();
   state.excludedHelmetTiers = loadExcludedHelmetTiers();
   state.excludedMaps = loadExcludedMaps();
+  state.excludedWeapons = loadExcludedWeapons();
+  if (state.excludedWeapons.length === 0) {
+    const excludedWeaponCategories = loadExcludedWeaponCategories();
+    state.excludedWeapons = weapons
+      .filter((weapon) => excludedWeaponCategories.includes(weapon.category))
+      .map((weapon) => weapon.name);
+  }
   state.selectedCategories = loadSelectedCategories(
     defaultSelectedCategories,
   ).filter((category) => defaultSelectedCategories.includes(category));
@@ -91,13 +125,7 @@ function initialize() {
   }
 
   updateActiveFilters();
-
-  renderFilterButtons(elements, state, {
-    onCategoryToggle: toggleCategory,
-    onArmorTierToggle: toggleArmorTier,
-    onHelmetTierToggle: toggleHelmetTier,
-    onMapToggle: toggleMap,
-  });
+  renderFilters();
 
   setupFilterToggle(elements);
   syncVisibleCategories(elements, state.selectedCategories);
@@ -109,6 +137,11 @@ function initialize() {
 }
 
 function toggleCategory(category) {
+  if (!canEditCategoryFilters()) {
+    showSquadError("Nur der Squad Leader kann Kategorien ändern.");
+    return;
+  }
+
   const isSelected = state.selectedCategories.includes(category);
 
   if (isSelected && state.selectedCategories.length === 1) {
@@ -118,12 +151,20 @@ function toggleCategory(category) {
   state.selectedCategories = toggleValue(state.selectedCategories, category);
   saveSelectedCategories(state.selectedCategories);
   syncVisibleCategories(elements, state.selectedCategories);
-  renderFilterButtons(elements, state, {
-    onCategoryToggle: toggleCategory,
-    onArmorTierToggle: toggleArmorTier,
-    onHelmetTierToggle: toggleHelmetTier,
-    onMapToggle: toggleMap,
-  });
+  renderFilters();
+
+  if (
+    squadState.active &&
+    squadState.code &&
+    squadState.playerId &&
+    squadState.isLeader
+  ) {
+    publishSelectedCategories(
+      squadState.code,
+      squadState.playerId,
+      state.selectedCategories,
+    );
+  }
 }
 
 function toggleArmorTier(tier) {
@@ -144,6 +185,34 @@ function toggleMap(mapName) {
   updateFilters();
 }
 
+function toggleWeapon(weaponName) {
+  state.excludedWeapons = toggleValue(state.excludedWeapons, weaponName);
+  saveExcludedWeapons(state.excludedWeapons);
+  updateFilters();
+}
+
+function toggleWeaponGroup(weaponCategory) {
+  const groupWeapons = weapons
+    .filter((weapon) => weapon.category === weaponCategory)
+    .map((weapon) => weapon.name);
+  const allIncluded = groupWeapons.every(
+    (weaponName) => !state.excludedWeapons.includes(weaponName),
+  );
+
+  if (allIncluded) {
+    state.excludedWeapons = Array.from(
+      new Set([...state.excludedWeapons, ...groupWeapons]),
+    );
+  } else {
+    state.excludedWeapons = state.excludedWeapons.filter(
+      (weaponName) => !groupWeapons.includes(weaponName),
+    );
+  }
+
+  saveExcludedWeapons(state.excludedWeapons);
+  updateFilters();
+}
+
 function toggleValue(list, value) {
   return list.includes(value)
     ? list.filter((entry) => entry !== value)
@@ -152,18 +221,15 @@ function toggleValue(list, value) {
 
 function updateFilters() {
   updateActiveFilters();
-
-  renderFilterButtons(elements, state, {
-    onCategoryToggle: toggleCategory,
-    onArmorTierToggle: toggleArmorTier,
-    onHelmetTierToggle: toggleHelmetTier,
-    onMapToggle: toggleMap,
-  });
+  renderFilters();
 }
 
 function updateActiveFilters() {
   state.activeMaps = maps.filter(
     (map) => !state.excludedMaps.includes(map.name),
+  );
+  state.activeWeapons = weapons.filter(
+    (weapon) => !state.excludedWeapons.includes(weapon.name),
   );
   state.activeHelmets = helmets.filter(
     (helmet) =>
@@ -235,6 +301,10 @@ function spinAll() {
   }
 
   if (isCategorySelected("armor") && state.activeArmors.length === 0) {
+    return;
+  }
+
+  if (isCategorySelected("weapon") && state.activeWeapons.length === 0) {
     return;
   }
 
@@ -456,6 +526,7 @@ const squadState = {
   code: null,
   playerId: null,
   active: false,
+  isLeader: false,
 };
 
 function initSquad() {
@@ -477,11 +548,17 @@ function initSquad() {
     const name = getSquadName();
     if (!name) return;
 
-    const { code, playerId } = createSession(name, onSquadUpdate);
+    const { code, playerId } = createSession(
+      name,
+      state.selectedCategories,
+      onSquadUpdate,
+    );
     squadState.code = code;
     squadState.playerId = playerId;
     squadState.active = true;
+    squadState.isLeader = true;
     showSquadSession(code);
+    renderFilters();
   });
 
   joinBtn.addEventListener("click", () => {
@@ -503,7 +580,9 @@ function initSquad() {
     squadState.code = code;
     squadState.playerId = playerId;
     squadState.active = true;
+    squadState.isLeader = false;
     showSquadSession(code);
+    renderFilters();
   });
 
   leaveBtn.addEventListener("click", () => {
@@ -513,9 +592,13 @@ function initSquad() {
     squadState.code = null;
     squadState.playerId = null;
     squadState.active = false;
+    squadState.isLeader = false;
     document.getElementById("squadSession").hidden = true;
     document.getElementById("squadSetup").hidden = false;
     document.getElementById("squadMembers").innerHTML = "";
+    updateSquadRoleHint();
+    hideSquadError();
+    renderFilters();
   });
 
   copyBtn.addEventListener("click", () => {
@@ -548,6 +631,32 @@ function showSquadSession(code) {
   document.getElementById("squadSetup").hidden = true;
   document.getElementById("squadSession").hidden = false;
   document.getElementById("squadCodeDisplay").textContent = code;
+  updateSquadRoleHint();
+}
+
+function updateSquadRoleHint() {
+  const hintEl = document.getElementById("squadRoleHint");
+  if (!hintEl) {
+    return;
+  }
+
+  hintEl.classList.remove("leader", "member");
+
+  if (!squadState.active) {
+    hintEl.textContent = "";
+    return;
+  }
+
+  if (squadState.isLeader) {
+    hintEl.classList.add("leader");
+    hintEl.textContent =
+      "Du bist Squad Leader. Du entscheidest die Kategorien fur alle.";
+    return;
+  }
+
+  hintEl.classList.add("member");
+  hintEl.textContent =
+    "Du bist Squad Member. Kategorien werden vom Squad Leader gesteuert.";
 }
 
 function showSquadError(msg) {
@@ -562,6 +671,29 @@ function hideSquadError() {
 
 function onSquadUpdate(data) {
   if (!data) return;
+  squadState.isLeader = data.leaderId === squadState.playerId;
+  updateSquadRoleHint();
+
+  const remoteCategories = data.filters?.selectedCategories;
+  if (Array.isArray(remoteCategories) && remoteCategories.length > 0) {
+    const sanitizedCategories = remoteCategories.filter((category) =>
+      defaultSelectedCategories.includes(category),
+    );
+
+    if (
+      sanitizedCategories.length > 0 &&
+      JSON.stringify(sanitizedCategories) !==
+        JSON.stringify(state.selectedCategories)
+    ) {
+      state.selectedCategories = sanitizedCategories;
+      saveSelectedCategories(state.selectedCategories);
+      syncVisibleCategories(elements, state.selectedCategories);
+      createInitialStrips();
+    }
+  }
+
+  renderFilters();
+
   const membersEl = document.getElementById("squadMembers");
   const players = data.players ?? {};
   membersEl.innerHTML = "";
@@ -573,7 +705,9 @@ function onSquadUpdate(data) {
 
     const nameEl = document.createElement("div");
     nameEl.className = "squad-member-name";
-    nameEl.textContent = player.name + (isMe ? " (Du)" : "");
+    const isLeader = id === data.leaderId;
+    nameEl.textContent =
+      player.name + (isLeader ? " 👑" : "") + (isMe ? " (Du)" : "");
 
     const resultEl = document.createElement("div");
     resultEl.className = "squad-member-result";

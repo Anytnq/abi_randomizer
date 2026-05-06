@@ -10,7 +10,7 @@
     <meta name="theme-color" content="#0d0d0d" />
     <title>ABI Randomizer - Arena Breakout Infinite Generator</title>
     <link
-      href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Fredoka:wght@400;600;700&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Teko:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./assets/css/styles.css" />
@@ -35,34 +35,50 @@
         </button>
 
         <div class="filter-content" id="filterContent">
-          <div class="filter-section">
-            <h2>Equipment Row 1</h2>
-            <div class="filter-grid" id="categoryContainer1"></div>
+          <div class="filter-toolbar">
+            <div class="filter-section filter-section--compact">
+              <h2>Equipment Row 1</h2>
+              <div class="filter-grid" id="categoryContainer1"></div>
+            </div>
+
+            <div class="filter-section filter-section--compact">
+              <h2>Equipment Row 2</h2>
+              <div class="filter-grid" id="categoryContainer2"></div>
+            </div>
+
+            <div class="filter-section filter-section--compact">
+              <h2>Weapons</h2>
+              <div class="filter-grid" id="categoryContainer3"></div>
+            </div>
           </div>
 
-          <div class="filter-section">
-            <h2>Equipment Row 2</h2>
-            <div class="filter-grid" id="categoryContainer2"></div>
-          </div>
+          <div class="filter-dashboard">
+            <div class="filter-column filter-column--wide">
+              <div class="filter-section filter-section--panel">
+                <h2>Weapons</h2>
+                <div
+                  class="weapon-filter-groups"
+                  id="weaponCategoryContainer"
+                ></div>
+              </div>
+            </div>
 
-          <div class="filter-section">
-            <h2>Weapons</h2>
-            <div class="filter-grid" id="categoryContainer3"></div>
-          </div>
+            <div class="filter-column">
+              <div class="filter-section filter-section--panel">
+                <h2>Armor Tier</h2>
+                <div class="filter-tier-grid" id="armorTierContainer"></div>
+              </div>
 
-          <div class="filter-section">
-            <h2>Exclude Armor Tiers</h2>
-            <div class="filter-tier-grid" id="armorTierContainer"></div>
-          </div>
+              <div class="filter-section filter-section--panel">
+                <h2>Helmet Tier</h2>
+                <div class="filter-tier-grid" id="helmetTierContainer"></div>
+              </div>
 
-          <div class="filter-section">
-            <h2>Exclude Helmet Tiers</h2>
-            <div class="filter-tier-grid" id="helmetTierContainer"></div>
-          </div>
-
-          <div class="filter-section">
-            <h2>Exclude Maps</h2>
-            <div class="filter-grid" id="mapContainer"></div>
+              <div class="filter-section filter-section--panel">
+                <h2>Maps</h2>
+                <div class="filter-grid" id="mapContainer"></div>
+              </div>
+            </div>
           </div>
         </div>
       </section>
@@ -228,6 +244,8 @@
                 Verlassen
               </button>
             </div>
+
+            <p class="squad-role-hint" id="squadRoleHint"></p>
 
             <div class="squad-members" id="squadMembers"></div>
           </div>

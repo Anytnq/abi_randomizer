@@ -3,6 +3,8 @@ const SELECTED_CATEGORIES_KEY = "selectedCategories";
 const EXCLUDED_ARMOR_TIERS_KEY = "excludedArmorTiers";
 const EXCLUDED_HELMET_TIERS_KEY = "excludedHelmetTiers";
 const EXCLUDED_MAPS_KEY = "excludedMaps";
+const EXCLUDED_WEAPON_CATEGORIES_KEY = "excludedWeaponCategories";
+const EXCLUDED_WEAPONS_KEY = "excludedWeapons";
 
 export function loadWeaponHistory() {
   try {
@@ -74,6 +76,22 @@ export function loadExcludedMaps() {
 
 export function saveExcludedMaps(maps) {
   saveArray(EXCLUDED_MAPS_KEY, maps);
+}
+
+export function loadExcludedWeaponCategories() {
+  return loadArray(EXCLUDED_WEAPON_CATEGORIES_KEY);
+}
+
+export function saveExcludedWeaponCategories(categories) {
+  saveArray(EXCLUDED_WEAPON_CATEGORIES_KEY, categories);
+}
+
+export function loadExcludedWeapons() {
+  return loadArray(EXCLUDED_WEAPONS_KEY);
+}
+
+export function saveExcludedWeapons(weapons) {
+  saveArray(EXCLUDED_WEAPONS_KEY, weapons);
 }
 
 function loadArray(key) {

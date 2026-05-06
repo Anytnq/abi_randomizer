@@ -2,8 +2,8 @@ import {
   ref,
   set,
   onValue,
+  get,
   remove,
-  serverTimestamp,
 } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
 import { db } from "./firebase.js";
 
@@ -16,13 +16,17 @@ function generateCode() {
   ).join("");
 }
 
-export function createSession(playerName, onUpdate) {
+export function createSession(playerName, selectedCategories, onUpdate) {
   const code = generateCode();
   const sessionRef = ref(db, `sessions/${code}`);
   const playerId = crypto.randomUUID();
 
   set(sessionRef, {
     createdAt: Date.now(),
+    leaderId: playerId,
+    filters: {
+      selectedCategories,
+    },
     players: {
       [playerId]: {
         name: playerName,
@@ -80,8 +84,40 @@ export function publishSpinning(code, playerId, isSpinning) {
   set(ref(db, `sessions/${code}/players/${playerId}/spinning`), isSpinning);
 }
 
+export function publishSelectedCategories(code, playerId, selectedCategories) {
+  set(
+    ref(db, `sessions/${code}/filters/selectedCategories`),
+    selectedCategories,
+  );
+  set(ref(db, `sessions/${code}/leaderId`), playerId);
+}
+
 export function leaveSession(code, playerId) {
-  remove(ref(db, `sessions/${code}/players/${playerId}`));
+  const sessionRef = ref(db, `sessions/${code}`);
+
+  get(sessionRef).then((snapshot) => {
+    if (!snapshot.exists()) {
+      return;
+    }
+
+    const data = snapshot.val();
+    const players = data.players ?? {};
+    const isLeader = data.leaderId === playerId;
+
+    remove(ref(db, `sessions/${code}/players/${playerId}`));
+
+    if (!isLeader) {
+      return;
+    }
+
+    const remainingIds = Object.keys(players).filter((id) => id !== playerId);
+    if (remainingIds.length === 0) {
+      remove(sessionRef);
+      return;
+    }
+
+    set(ref(db, `sessions/${code}/leaderId`), remainingIds[0]);
+  });
 }
 
 function listenToSession(code, onUpdate) {

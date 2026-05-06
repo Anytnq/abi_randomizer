@@ -2,10 +2,11 @@ import {
   CARD_HEIGHT,
   TOTAL_CARDS,
   VISUAL_OFFSET,
-  categoryOptions,
   categoryOptionsRow1,
   categoryOptionsRow2,
   categoryOptionsRow3,
+  weapons,
+  weaponCategoryOptions,
 } from "./data.js";
 
 export function getElements() {
@@ -26,30 +27,36 @@ export function getElements() {
     armorTierContainer: document.getElementById("armorTierContainer"),
     helmetTierContainer: document.getElementById("helmetTierContainer"),
     mapContainer: document.getElementById("mapContainer"),
+    weaponCategoryContainer: document.getElementById("weaponCategoryContainer"),
     columns: Array.from(
       document.querySelectorAll(".col-container[data-category]"),
     ),
   };
 }
 
-export function renderFilterButtons(elements, filters, handlers) {
+export function renderFilterButtons(elements, filters, handlers, options = {}) {
+  const canEditCategories = options.canEditCategories ?? true;
+
   renderCategoryButtonsRow(
     elements.categoryContainer1,
     categoryOptionsRow1,
     filters.selectedCategories,
     handlers.onCategoryToggle,
+    canEditCategories,
   );
   renderCategoryButtonsRow(
     elements.categoryContainer2,
     categoryOptionsRow2,
     filters.selectedCategories,
     handlers.onCategoryToggle,
+    canEditCategories,
   );
   renderCategoryButtonsRow(
     elements.categoryContainer3,
     categoryOptionsRow3,
     filters.selectedCategories,
     handlers.onCategoryToggle,
+    canEditCategories,
   );
   renderTierButtons(
     elements.armorTierContainer,
@@ -66,6 +73,12 @@ export function renderFilterButtons(elements, filters, handlers) {
     filters.excludedMaps,
     handlers.onMapToggle,
   );
+  renderWeaponCategoryButtons(
+    elements.weaponCategoryContainer,
+    filters.excludedWeapons,
+    handlers.onWeaponToggle,
+    handlers.onWeaponGroupToggle,
+  );
 }
 
 function renderCategoryButtonsRow(
@@ -73,6 +86,7 @@ function renderCategoryButtonsRow(
   categoryOptions,
   selectedCategories,
   onToggle,
+  canEditCategories,
 ) {
   container.replaceChildren();
 
@@ -90,6 +104,9 @@ function renderCategoryButtonsRow(
       "aria-pressed",
       String(selectedCategories.includes(category.key)),
     );
+    button.disabled = !canEditCategories;
+    button.classList.toggle("locked", !canEditCategories);
+    button.setAttribute("aria-disabled", String(!canEditCategories));
     button.addEventListener("click", () => onToggle(category.key));
     container.appendChild(button);
   });
@@ -125,6 +142,68 @@ function renderMapButtons(container, excludedMaps, onToggle) {
       container.appendChild(button);
     },
   );
+}
+
+function renderWeaponCategoryButtons(
+  container,
+  excludedWeapons,
+  onToggle,
+  onGroupToggle,
+) {
+  container.replaceChildren();
+
+  weaponCategoryOptions.forEach((weaponCategory) => {
+    const groupElement = document.createElement("section");
+    groupElement.className = "weapon-filter-group";
+
+    const groupHeader = document.createElement("div");
+    groupHeader.className = "weapon-filter-header";
+
+    const title = document.createElement("h3");
+    title.className = "weapon-filter-title";
+    title.textContent = weaponCategory.label;
+
+    const groupWeapons = weapons
+      .filter((weapon) => weapon.category === weaponCategory.key)
+      .sort((left, right) => left.name.localeCompare(right.name));
+    const includedWeapons = groupWeapons.filter(
+      (weapon) => !excludedWeapons.includes(weapon.name),
+    );
+
+    const groupToggleButton = document.createElement("button");
+    groupToggleButton.type = "button";
+    groupToggleButton.className = "weapon-filter-all";
+    groupToggleButton.textContent = "ALL";
+    groupToggleButton.classList.toggle(
+      "active",
+      includedWeapons.length === groupWeapons.length,
+    );
+    groupToggleButton.addEventListener("click", () =>
+      onGroupToggle(weaponCategory.key),
+    );
+
+    groupHeader.append(title, groupToggleButton);
+
+    const groupGrid = document.createElement("div");
+    groupGrid.className = "weapon-filter-grid";
+
+    groupWeapons.forEach((weapon) => {
+      const button = document.createElement("button");
+      button.type = "button";
+      button.className = "weapon-filter-item";
+      button.dataset.weapon = weapon.name;
+      button.classList.toggle(
+        "excluded",
+        excludedWeapons.includes(weapon.name),
+      );
+      button.innerHTML = `<span class="weapon-filter-dot" aria-hidden="true"></span><span>${weapon.name}</span>`;
+      button.addEventListener("click", () => onToggle(weapon.name));
+      groupGrid.appendChild(button);
+    });
+
+    groupElement.append(groupHeader, groupGrid);
+    container.appendChild(groupElement);
+  });
 }
 
 export function setupFilterToggle(elements) {
