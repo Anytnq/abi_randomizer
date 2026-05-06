@@ -610,31 +610,31 @@ h1 {
   font-size: 11px;
 }
 
-.card.t0 {
+.card.t1 {
   color: #f3f3f3;
 }
 
-.card.t1 {
+.card.t2 {
   color: #8ff5b2;
   text-shadow: 0 0 8px #8ff5b24d;
 }
 
-.card.t2 {
+.card.t3 {
   color: #8ddfff;
   text-shadow: 0 0 8px #8ddfff52;
 }
 
-.card.t3 {
+.card.t4 {
   color: #f0abff;
   text-shadow: 0 0 8px #f0abff59;
 }
 
-.card.t4 {
+.card.t5 {
   color: #ffe38c;
   text-shadow: 0 0 10px #ffe38c66;
 }
 
-.card.t5 {
+.card.t6 {
   color: #ff9393;
   text-shadow: 0 0 12px #ff939370;
 }
