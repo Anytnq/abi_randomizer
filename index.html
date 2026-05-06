@@ -8,7 +8,7 @@
       content="Static ABI Randomizer ready for GitHub Pages deployment."
     />
     <meta name="theme-color" content="#0d0d0d" />
-    <title>ABI Randomizer - Arena Breakout Infinite Generator</title>
+    <title>HL Idioten - OPERATION: RNG</title>
     <link
       href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Teko:wght@500;600;700&display=swap"
       rel="stylesheet"
@@ -21,37 +21,38 @@
         <h1 id="mainTitle">HL Idioten</h1>
         <p class="subtitle" id="subTitle">OPERATION: RNG</p>
       </header>
-
       <section class="filters-container" aria-label="Advanced filters">
-        <button
-          class="filter-toggle-btn"
-          id="filterToggle"
-          type="button"
-          aria-expanded="false"
-          aria-controls="filterContent"
-        >
-          <span>Advanced Filters</span>
-          <span id="filterChevron" aria-hidden="true">▼</span>
-        </button>
-
+        <div class="filters-header">
+          <button
+            class="filter-toggle-btn"
+            id="filterToggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="filterContent"
+          >
+            <span>Advanced Filters</span>
+            <span id="filterChevron" aria-hidden="true">▼</span>
+          </button>
+          <label class="setting-box" for="chanceInput">
+            <span class="setting-label">ZTH Chance %</span>
+            <input type="number" id="chanceInput" value="5" min="0" max="100" />
+          </label>
+        </div>
         <div class="filter-content" id="filterContent">
           <div class="filter-toolbar">
             <div class="filter-section filter-section--compact">
               <h2>Equipment Row 1</h2>
               <div class="filter-grid" id="categoryContainer1"></div>
             </div>
-
             <div class="filter-section filter-section--compact">
               <h2>Equipment Row 2</h2>
               <div class="filter-grid" id="categoryContainer2"></div>
             </div>
-
             <div class="filter-section filter-section--compact">
               <h2>Weapons</h2>
               <div class="filter-grid" id="categoryContainer3"></div>
             </div>
           </div>
-
           <div class="filter-dashboard">
             <div class="filter-column filter-column--wide">
               <div class="filter-section filter-section--panel">
@@ -62,18 +63,15 @@
                 ></div>
               </div>
             </div>
-
             <div class="filter-column">
               <div class="filter-section filter-section--panel">
                 <h2>Armor Tier</h2>
                 <div class="filter-tier-grid" id="armorTierContainer"></div>
               </div>
-
               <div class="filter-section filter-section--panel">
                 <h2>Helmet Tier</h2>
                 <div class="filter-tier-grid" id="helmetTierContainer"></div>
               </div>
-
               <div class="filter-section filter-section--panel">
                 <h2>Maps</h2>
                 <div class="filter-grid" id="mapContainer"></div>
@@ -82,7 +80,6 @@
           </div>
         </div>
       </section>
-
       <section class="slot-machine" aria-label="Randomizer slots">
         <div class="slot-row">
           <div class="payline"></div>
@@ -93,7 +90,6 @@
             </div>
           </div>
         </div>
-
         <div class="slot-row">
           <div class="payline"></div>
           <div class="col-container" data-category="helmet">
@@ -102,35 +98,30 @@
               <div class="strip" id="strip-helmet"></div>
             </div>
           </div>
-
           <div class="col-container" data-category="headset">
             <span class="label">Headset</span>
             <div class="window">
               <div class="strip" id="strip-headset"></div>
             </div>
           </div>
-
           <div class="col-container" data-category="chestRig">
             <span class="label">Chest Rig</span>
             <div class="window">
               <div class="strip" id="strip-chest-rig"></div>
             </div>
           </div>
-
           <div class="col-container" data-category="armoredChestRig">
             <span class="label">Armored Chest Rig</span>
             <div class="window">
               <div class="strip" id="strip-armored-chest-rig"></div>
             </div>
           </div>
-
           <div class="col-container" data-category="armor">
             <span class="label">Armor</span>
             <div class="window">
               <div class="strip" id="strip-armor"></div>
             </div>
           </div>
-
           <div class="col-container" data-category="backpack">
             <span class="label">Backpack</span>
             <div class="window">
@@ -138,7 +129,6 @@
             </div>
           </div>
         </div>
-
         <div class="slot-row">
           <div class="payline"></div>
           <div class="col-container" data-category="weapon">
@@ -147,7 +137,6 @@
               <div class="strip" id="strip-weapon"></div>
             </div>
           </div>
-
           <div class="col-container" data-category="secondary">
             <span class="label">Secondary</span>
             <div class="window">
@@ -156,16 +145,9 @@
           </div>
         </div>
       </section>
-
       <section class="controls" aria-label="Randomizer controls">
         <button class="spin-btn" id="spinBtn" type="button">Start</button>
-
-        <label class="setting-box" for="chanceInput">
-          <span class="setting-label">ZTH Chance %</span>
-          <input type="number" id="chanceInput" value="5" min="0" max="100" />
-        </label>
       </section>
-
       <section class="squad-panel" aria-label="Squad Modus" id="squadPanel">
         <div class="squad-header">
           <h2 class="squad-title">👥 Squad Modus</h2>
@@ -179,7 +161,6 @@
             <span id="squadChevron" aria-hidden="true">▼</span>
           </button>
         </div>
-
         <div class="squad-content" id="squadContent">
           <!-- Setup (vor Session) -->
           <div class="squad-setup" id="squadSetup">
@@ -220,7 +201,6 @@
             </div>
             <p class="squad-error" id="squadError" hidden></p>
           </div>
-
           <!-- Aktive Session -->
           <div class="squad-session" id="squadSession" hidden>
             <div class="squad-session-header">
@@ -244,19 +224,12 @@
                 Verlassen
               </button>
             </div>
-
             <p class="squad-role-hint" id="squadRoleHint"></p>
-
             <div class="squad-members" id="squadMembers"></div>
           </div>
         </div>
       </section>
     </main>
-
-    <footer class="page-footer">
-      <p>Static build for GitHub Pages.</p>
-    </footer>
-
     <script type="module" src="./assets/js/app.js"></script>
   </body>
 </html>
