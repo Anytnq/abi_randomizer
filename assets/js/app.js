@@ -619,23 +619,39 @@ function initServiceWorkerUpdateFlow() {
     return;
   }
 
-  navigator.serviceWorker.register("./sw.js").then((registration) => {
-    registration.addEventListener("updatefound", () => {
-      const worker = registration.installing;
-      if (!worker) {
-        return;
-      }
+  const isSupportedContext =
+    location.protocol === "https:" ||
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1";
 
-      worker.addEventListener("statechange", () => {
-        if (
-          worker.state === "installed" &&
-          navigator.serviceWorker.controller
-        ) {
-          worker.postMessage({ type: "SKIP_WAITING" });
+  if (!isSupportedContext) {
+    navigator.serviceWorker
+      .getRegistrations()
+      .then((regs) => Promise.all(regs.map((reg) => reg.unregister())))
+      .catch(() => {});
+    return;
+  }
+
+  navigator.serviceWorker
+    .register("./sw.js", { updateViaCache: "none" })
+    .then((registration) => {
+      registration.addEventListener("updatefound", () => {
+        const worker = registration.installing;
+        if (!worker) {
+          return;
         }
+
+        worker.addEventListener("statechange", () => {
+          if (
+            worker.state === "installed" &&
+            navigator.serviceWorker.controller
+          ) {
+            worker.postMessage({ type: "SKIP_WAITING" });
+          }
+        });
       });
-    });
-  });
+    })
+    .catch(() => {});
 
   navigator.serviceWorker.addEventListener("controllerchange", () => {
     if (sessionStorage.getItem("sw-reloaded") === "1") {

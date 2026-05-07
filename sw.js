@@ -1,4 +1,4 @@
-const BUILD_VERSION = "2026-05-07-01";
+const BUILD_VERSION = "2026-05-07-02";
 const CACHE_NAME = `op-rng-${BUILD_VERSION}`;
 const OFFLINE_URL = "./offline.html";
 
