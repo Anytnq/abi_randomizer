@@ -1,4 +1,4 @@
-const BUILD_VERSION = "2026-05-07-02";
+const BUILD_VERSION = "2026-05-07-04";
 const CACHE_NAME = `op-rng-${BUILD_VERSION}`;
 const OFFLINE_URL = "./offline.html";
 
@@ -7,13 +7,13 @@ const STATIC_ASSETS = [
   "./index.html",
   "./offline.html",
   "./assets/css/styles.css",
-  "./assets/js/app.js",
+  "./assets/js/app.js?v=20260507-4",
   "./assets/js/data.js",
   "./assets/js/firebase.js",
   "./assets/js/game.js",
   "./assets/js/sound.js",
-  "./assets/js/squad.js",
-  "./assets/js/squad-utils.js",
+  "./assets/js/squad.js?v=20260507-4",
+  "./assets/js/squad-utils.js?v=20260507-4",
   "./assets/js/storage.js",
   "./assets/js/ui.js",
   "./assets/js/wheel.js",

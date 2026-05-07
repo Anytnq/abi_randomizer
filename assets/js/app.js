@@ -66,12 +66,15 @@ import {
   rejoinSession,
   setPlayerRole,
   transferLeader,
-} from "./squad.js?v=20260507-3";
+} from "./squad.js?v=20260507-4";
 import {
   buildSquadStoragePayload,
   getRecentEvents,
   isSquadStoragePayloadValid,
-} from "./squad-utils.js?v=20260507-3";
+} from "./squad-utils.js?v=20260507-4";
+
+const CACHE_HOTFIX_VERSION = "20260507-4";
+const SW_SCRIPT_URL = "./sw.js?v=20260507-4";
 
 const defaultSelectedCategories = categoryOptions.map(
   (category) => category.key,
@@ -121,7 +124,36 @@ function renderFilters() {
   );
 }
 
-function initialize() {
+async function applyCacheHotfixOnce() {
+  if (!("serviceWorker" in navigator) || !("caches" in window)) {
+    return false;
+  }
+
+  const markerKey = "cache-hotfix-version";
+  if (localStorage.getItem(markerKey) === CACHE_HOTFIX_VERSION) {
+    return false;
+  }
+
+  try {
+    const registrations = await navigator.serviceWorker.getRegistrations();
+    await Promise.all(
+      registrations.map((registration) => registration.unregister()),
+    );
+    const cacheKeys = await caches.keys();
+    await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+    localStorage.setItem(markerKey, CACHE_HOTFIX_VERSION);
+    location.reload();
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+async function initialize() {
+  if (await applyCacheHotfixOnce()) {
+    return;
+  }
+
   state.weaponHistory = loadWeaponHistory();
   state.excludedArmorTiers = loadExcludedArmorTiers();
   state.excludedHelmetTiers = loadExcludedHelmetTiers();
@@ -631,7 +663,7 @@ function initServiceWorkerUpdateFlow() {
   }
 
   navigator.serviceWorker
-    .register("./sw.js", { updateViaCache: "none" })
+    .register(SW_SCRIPT_URL, { updateViaCache: "none" })
     .then((registration) => {
       registration.addEventListener("updatefound", () => {
         const worker = registration.installing;
