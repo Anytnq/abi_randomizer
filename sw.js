@@ -16,7 +16,6 @@ const STATIC_ASSETS = [
   "./assets/js/squad-utils.js",
   "./assets/js/storage.js",
   "./assets/js/ui.js",
-  "./assets/js/vagari.js",
   "./assets/js/wheel.js",
 ];
 

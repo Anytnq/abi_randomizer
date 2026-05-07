@@ -37,7 +37,6 @@ import {
   saveWeaponHistory,
 } from "./storage.js";
 import { playSpinSound, stopSpinSound } from "./sound.js";
-import { initializeVagariMode } from "./vagari.js";
 import { initializeWheelSpin } from "./wheel.js";
 import {
   createStripContent,
@@ -67,12 +66,12 @@ import {
   rejoinSession,
   setPlayerRole,
   transferLeader,
-} from "./squad.js";
+} from "./squad.js?v=20260507-3";
 import {
   buildSquadStoragePayload,
   getRecentEvents,
   isSquadStoragePayloadValid,
-} from "./squad-utils.js";
+} from "./squad-utils.js?v=20260507-3";
 
 const defaultSelectedCategories = categoryOptions.map(
   (category) => category.key,
@@ -146,7 +145,6 @@ function initialize() {
   renderFilters();
 
   setupFilterToggle(elements);
-  initializeVagariMode();
   wheelController = initializeWheelSpin({
     onManualModeChange: handleWheelConfigChange,
     onManualValuesChange: handleWheelConfigChange,
