@@ -37,6 +37,7 @@ import {
   saveWeaponHistory,
 } from "./storage.js";
 import { playSpinSound, stopSpinSound } from "./sound.js";
+import { initializeWheelSpin } from "./wheel.js";
 import {
   createStripContent,
   enableAlarmMode,
@@ -128,6 +129,7 @@ function initialize() {
   renderFilters();
 
   setupFilterToggle(elements);
+  initializeWheelSpin();
   syncVisibleCategories(elements, state.selectedCategories);
   createInitialStrips();
   syncPaylinePosition();
