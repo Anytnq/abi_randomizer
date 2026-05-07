@@ -37,6 +37,7 @@ import {
   saveWeaponHistory,
 } from "./storage.js";
 import { playSpinSound, stopSpinSound } from "./sound.js";
+import { initializeVagariMode } from "./vagari.js";
 import { initializeWheelSpin } from "./wheel.js";
 import {
   createStripContent,
@@ -132,6 +133,7 @@ function initialize() {
   renderFilters();
 
   setupFilterToggle(elements);
+  initializeVagariMode();
   wheelController = initializeWheelSpin({
     onManualModeChange: handleWheelConfigChange,
     onManualValuesChange: handleWheelConfigChange,
