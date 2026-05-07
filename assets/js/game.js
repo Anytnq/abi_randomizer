@@ -9,6 +9,26 @@ export const SPIN_START_OFFSET_MS = 50;
 export const SPIN_STAGGER_MS = 400;
 export const SPIN_ANIMATION_MS = 3000;
 
+function formatWeaponCategory(category) {
+  if (!category) {
+    return "";
+  }
+
+  return category
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function buildCardContent(item) {
+  const categoryLabel = formatWeaponCategory(item.category);
+  const categoryLine = categoryLabel
+    ? `<span class="card-category">(${categoryLabel})</span>`
+    : "";
+
+  return `<span class="card-text">${item.name}${categoryLine}</span>`;
+}
+
 export function getWeightedRandom(items) {
   if (!items || items.length === 0) {
     return items?.[0];
@@ -105,7 +125,7 @@ function replaceWinningCard(strip, dataset, targetIndex, winnerItem) {
   }
 
   winningCard.className = `card ${winnerItem.type}`;
-  winningCard.innerHTML = `<span class="card-text">${winnerItem.name}</span>`;
+  winningCard.innerHTML = buildCardContent(winnerItem);
 
   const previousCard = strip.children[targetIndex - 1];
   const nextCard = strip.children[targetIndex + 1];
@@ -118,12 +138,12 @@ function replaceWinningCard(strip, dataset, targetIndex, winnerItem) {
   if (previousCard && previousCard.textContent.trim() === winnerItem.name) {
     const replacement = getDifferentItem();
     previousCard.className = `card ${replacement.type}`;
-    previousCard.innerHTML = `<span class="card-text">${replacement.name}</span>`;
+    previousCard.innerHTML = buildCardContent(replacement);
   }
 
   if (nextCard && nextCard.textContent.trim() === winnerItem.name) {
     const replacement = getDifferentItem();
     nextCard.className = `card ${replacement.type}`;
-    nextCard.innerHTML = `<span class="card-text">${replacement.name}</span>`;
+    nextCard.innerHTML = buildCardContent(replacement);
   }
 }

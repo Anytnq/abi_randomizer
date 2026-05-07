@@ -214,6 +214,26 @@ export function setupFilterToggle(elements) {
   });
 }
 
+function formatWeaponCategory(category) {
+  if (!category) {
+    return "";
+  }
+
+  return category
+    .split("-")
+    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
+    .join(" ");
+}
+
+function buildCardContent(item) {
+  const categoryLabel = formatWeaponCategory(item.category);
+  const categoryLine = categoryLabel
+    ? `<span class="card-category">(${categoryLabel})</span>`
+    : "";
+
+  return `<span class="card-text">${item.name}${categoryLine}</span>`;
+}
+
 export function createStripContent(elementId, items, addHiddenZth) {
   const strip = document.getElementById(elementId);
   let html = "";
@@ -229,7 +249,7 @@ export function createStripContent(elementId, items, addHiddenZth) {
     } while (item.name === lastItemName && attempts < 10);
 
     lastItemName = item.name;
-    html += `<div class="card ${item.type}"><span class="card-text">${item.name}</span></div>`;
+    html += `<div class="card ${item.type}">${buildCardContent(item)}</div>`;
   }
 
   if (addHiddenZth) {
