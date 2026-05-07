@@ -270,6 +270,38 @@ function reloadMapOnly() {
       Map: mapWinner.name,
     };
 
+    if (
+      squadState.active &&
+      squadState.playerId &&
+      squadState.lastPlayers?.[squadState.playerId]
+    ) {
+      const optimisticPlayers = {
+        ...squadState.lastPlayers,
+        [squadState.playerId]: {
+          ...squadState.lastPlayers[squadState.playerId],
+          spinning: false,
+          lastSeenAt: Date.now(),
+          result: state.lastResult,
+        },
+      };
+
+      squadState.lastPlayers = optimisticPlayers;
+      squadState.lastMembersSignature = buildMembersSignature(
+        optimisticPlayers,
+        squadState.lastLeaderId,
+      );
+      renderSquadMembers(optimisticPlayers, squadState.lastLeaderId);
+
+      const optimisticAutoValues = buildSquadWheelValues(optimisticPlayers);
+      const optimisticAutoValuesSignature = optimisticAutoValues.join("\u0001");
+      if (
+        optimisticAutoValuesSignature !== squadState.lastAutoValuesSignature
+      ) {
+        squadState.lastAutoValuesSignature = optimisticAutoValuesSignature;
+        wheelController.setAutoValues(optimisticAutoValues);
+      }
+    }
+
     if (squadState.active && squadState.code && squadState.playerId) {
       publishResult(squadState.code, squadState.playerId, state.lastResult);
     }
@@ -738,6 +770,8 @@ const squadState = {
   lastWheelConfigSignature: "",
   lastAutoValuesSignature: "",
   lastRemoteSpinId: null,
+  lastPlayers: {},
+  lastLeaderId: null,
   lastSeenUpdateAt: 0,
   heartbeatTimerId: null,
   cleanupTimerId: null,
@@ -1146,6 +1180,8 @@ function resetSquadUi(clearStorage = true) {
   squadState.lastWheelConfigSignature = "";
   squadState.lastAutoValuesSignature = "";
   squadState.lastRemoteSpinId = null;
+  squadState.lastPlayers = {};
+  squadState.lastLeaderId = null;
   squadState.lastSeenUpdateAt = 0;
   if (clearStorage) {
     clearSquadFromStorage();
@@ -1230,6 +1266,8 @@ function onSquadUpdate(data) {
   squadState.isLeader = data.leaderId === squadState.playerId;
 
   const players = data.players ?? {};
+  squadState.lastPlayers = players;
+  squadState.lastLeaderId = data.leaderId ?? null;
   const me = players[squadState.playerId];
   if (
     !me &&
