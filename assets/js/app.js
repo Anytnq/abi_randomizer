@@ -59,6 +59,7 @@ import {
   publishWheelSpin,
   publishResult,
   publishSpinning,
+  publishZeroToHero,
 } from "./squad.js";
 
 const defaultSelectedCategories = categoryOptions.map(
@@ -509,6 +510,13 @@ function spinAll() {
         secondary: secondaryWinner,
       };
       publishResult(squadState.code, squadState.playerId, buildResult(winners));
+      if (isZeroToHero) {
+        publishZeroToHero(
+          squadState.code,
+          squadState.playerId,
+          squadState.playerName,
+        );
+      }
     }
   }, spinDurationMs);
 }
@@ -576,6 +584,8 @@ const squadState = {
   playerId: null,
   active: false,
   isLeader: false,
+  playerName: null,
+  lastZeroToHero: null,
 };
 
 function initSquad() {
@@ -606,6 +616,7 @@ function initSquad() {
     squadState.playerId = playerId;
     squadState.active = true;
     squadState.isLeader = true;
+    squadState.playerName = name;
     wheelController.setSquadContext({ active: true, isLeader: true });
     showSquadSession(code);
     renderFilters();
@@ -619,7 +630,7 @@ function initSquad() {
       .getElementById("squadJoinCode")
       .value.trim()
       .toUpperCase();
-    if (code.length < 4) {
+    if (code.length < 2) {
       showSquadError("Bitte einen gültigen Code eingeben.");
       return;
     }
@@ -631,6 +642,7 @@ function initSquad() {
     squadState.playerId = playerId;
     squadState.active = true;
     squadState.isLeader = false;
+    squadState.playerName = name;
     wheelController.setSquadContext({ active: true, isLeader: false });
     showSquadSession(code);
     renderFilters();
@@ -730,6 +742,13 @@ function onSquadUpdate(data) {
   });
   updateSquadRoleHint();
 
+  // Squad-weites 0TH Event erkennen
+  const zth = data.zeroToHero;
+  if (zth?.triggeredAt && zth.triggeredAt !== squadState.lastZeroToHero) {
+    squadState.lastZeroToHero = zth.triggeredAt;
+    showSquadZeroToHeroOverlay(zth.triggeredByName ?? "Jemand");
+  }
+
   const remoteCategories = data.filters?.selectedCategories;
   if (Array.isArray(remoteCategories) && remoteCategories.length > 0) {
     const sanitizedCategories = remoteCategories.filter((category) =>
@@ -791,6 +810,29 @@ function onSquadUpdate(data) {
     card.appendChild(resultEl);
     membersEl.appendChild(card);
   });
+}
+
+function showSquadZeroToHeroOverlay(triggerName) {
+  const existingOverlay = document.getElementById("squadZthOverlay");
+  if (existingOverlay) existingOverlay.remove();
+
+  const overlay = document.createElement("div");
+  overlay.id = "squadZthOverlay";
+  overlay.className = "squad-zth-overlay";
+
+  overlay.innerHTML = `
+    <div class="squad-zth-content">
+      <div class="squad-zth-skull">💀</div>
+      <div class="squad-zth-title">SQUAD 0TH</div>
+      <div class="squad-zth-sub">${triggerName} hat 0TH bekommen!</div>
+      <div class="squad-zth-msg">Ihr wart alle mit dabei – ihr bekommt alle 0TH!</div>
+    </div>
+  `;
+
+  overlay.addEventListener("click", () => overlay.remove());
+  document.body.appendChild(overlay);
+
+  setTimeout(() => overlay?.remove(), 8000);
 }
 
 function buildResult(winners) {

@@ -11,7 +11,7 @@ const SESSION_TTL_MS = 4 * 60 * 60 * 1000; // 4 Stunden
 
 function generateCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return Array.from({ length: 6 }, () =>
+  return Array.from({ length: 2 }, () =>
     chars.charAt(Math.floor(Math.random() * chars.length)),
   ).join("");
 }
@@ -106,6 +106,14 @@ export function publishWheelSpin(code, playerId, spinPayload) {
     ...spinPayload,
     initiatedBy: playerId,
     updatedAt: Date.now(),
+  });
+}
+
+export function publishZeroToHero(code, playerId, playerName) {
+  set(ref(db, `sessions/${code}/zeroToHero`), {
+    triggeredBy: playerId,
+    triggeredByName: playerName,
+    triggeredAt: Date.now(),
   });
 }
 

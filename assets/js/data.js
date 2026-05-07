@@ -54,11 +54,12 @@ export const weaponCategoryOptions = [
 ];
 
 export const maps = [
-  { name: "Farm", type: "t2", weight: 15 },
+  { name: "Farm", type: "t2", weight: 20 },
   { name: "Northridge", type: "t3", weight: 20 },
-  { name: "Armory", type: "t5", weight: 40 },
-  { name: "TV Station", type: "t6", weight: 40 },
-  { name: "Airport", type: "t4", weight: 40 },
+  { name: "Armory", type: "t5", weight: 20 },
+  { name: "TV Station", type: "t6", weight: 20 },
+  { name: "Airport", type: "t4", weight: 20 },
+  { name: "Valley", type: "t4", weight: 20 },
 ];
 
 export const helmets = [
