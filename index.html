@@ -15,11 +15,6 @@
     />
     <link rel="stylesheet" href="./assets/css/styles.css" />
   </head>
-  <script>
-    if ("serviceWorker" in navigator) {
-      navigator.serviceWorker.register("./sw.js").catch(() => {});
-    }
-  </script>
   <body>
     <button class="vagari-mode-btn" id="vagariModeBtn" type="button">
       Vagari Mode
@@ -250,8 +245,24 @@
                 Verlassen
               </button>
             </div>
+            <p
+              class="squad-connection-banner"
+              id="squadConnectionBanner"
+              hidden
+            >
+              Verbindung wird wiederhergestellt...
+            </p>
             <p class="squad-role-hint" id="squadRoleHint"></p>
+            <p class="squad-connection-state offline" id="squadConnectionState">
+              Nicht verbunden
+            </p>
             <div class="squad-members" id="squadMembers"></div>
+            <div class="squad-feed">
+              <h3 class="squad-feed-title">Live Activity</h3>
+              <ul class="squad-feed-list" id="squadActivityFeed">
+                <li class="squad-feed-empty">Noch keine Aktivitat</li>
+              </ul>
+            </div>
           </div>
         </div>
       </section>

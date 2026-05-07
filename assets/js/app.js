@@ -51,9 +51,13 @@ import {
   syncVisibleCategories,
 } from "./ui.js";
 import {
+  cleanupInactivePlayers,
   createSession,
   joinSession,
+  kickPlayer,
   leaveSession,
+  PRESENCE_HEARTBEAT_MS,
+  publishPresence,
   publishSelectedCategories,
   publishWheelConfig,
   publishWheelSpin,
@@ -61,7 +65,14 @@ import {
   publishSpinning,
   publishZeroToHero,
   rejoinSession,
+  setPlayerRole,
+  transferLeader,
 } from "./squad.js";
+import {
+  buildSquadStoragePayload,
+  getRecentEvents,
+  isSquadStoragePayloadValid,
+} from "./squad-utils.js";
 
 const defaultSelectedCategories = categoryOptions.map(
   (category) => category.key,
@@ -146,13 +157,15 @@ function initialize() {
   syncPaylinePosition();
   elements.spinButton.addEventListener("click", spinAll);
   window.addEventListener("resize", () => syncPaylinePosition());
+  initServiceWorkerUpdateFlow();
+  initConnectionWatchers();
   initSquad();
   tryAutoRejoinSquad();
 }
 
 function toggleCategory(category) {
   if (!canEditCategoryFilters()) {
-    showSquadError("Nur der Squad Leader kann Kategorien ändern.");
+    showSquadError("Nur der Squad Leader kann Kategorien aendern.");
     return;
   }
 
@@ -303,6 +316,11 @@ function createInitialStrips() {
 
 function spinAll() {
   if (state.selectedCategories.length === 0) {
+    return;
+  }
+
+  if (squadState.active && squadState.role === "readonly") {
+    showSquadError("Du bist im Read-only Modus und kannst nicht drehen.");
     return;
   }
 
@@ -579,23 +597,60 @@ function buildSquadWheelValues(players) {
   return playerList.map((player) => player.result.Map);
 }
 
-// ── Squad Modus ────────────────────────────────────────────────────────────
+// -- Squad Modus -----------------------------------------------------------
 
 const squadState = {
   code: null,
   playerId: null,
   active: false,
   isLeader: false,
+  role: "member",
   playerName: null,
   lastZeroToHero: null,
+  lastSeenUpdateAt: 0,
+  heartbeatTimerId: null,
+  cleanupTimerId: null,
+};
 
 const SQUAD_STORAGE_KEY = "squadSession";
+
+function initServiceWorkerUpdateFlow() {
+  if (!("serviceWorker" in navigator)) {
+    return;
+  }
+
+  navigator.serviceWorker.register("./sw.js").then((registration) => {
+    registration.addEventListener("updatefound", () => {
+      const worker = registration.installing;
+      if (!worker) {
+        return;
+      }
+
+      worker.addEventListener("statechange", () => {
+        if (
+          worker.state === "installed" &&
+          navigator.serviceWorker.controller
+        ) {
+          worker.postMessage({ type: "SKIP_WAITING" });
+        }
+      });
+    });
+  });
+
+  navigator.serviceWorker.addEventListener("controllerchange", () => {
+    if (sessionStorage.getItem("sw-reloaded") === "1") {
+      return;
+    }
+    sessionStorage.setItem("sw-reloaded", "1");
+    location.reload();
+  });
+}
 
 function saveSquadToStorage(code, playerId, playerName) {
   try {
     localStorage.setItem(
       SQUAD_STORAGE_KEY,
-      JSON.stringify({ code, playerId, playerName }),
+      JSON.stringify(buildSquadStoragePayload(code, playerId, playerName)),
     );
   } catch (_) {}
 }
@@ -603,7 +658,11 @@ function saveSquadToStorage(code, playerId, playerName) {
 function loadSquadFromStorage() {
   try {
     const raw = localStorage.getItem(SQUAD_STORAGE_KEY);
-    return raw ? JSON.parse(raw) : null;
+    if (!raw) {
+      return null;
+    }
+    const payload = JSON.parse(raw);
+    return isSquadStoragePayloadValid(payload) ? payload : null;
   } catch (_) {
     return null;
   }
@@ -614,7 +673,128 @@ function clearSquadFromStorage() {
     localStorage.removeItem(SQUAD_STORAGE_KEY);
   } catch (_) {}
 }
-};
+
+function showReconnectBanner(show, text) {
+  const el = document.getElementById("squadConnectionBanner");
+  if (!el) {
+    return;
+  }
+  el.hidden = !show;
+  if (show && text) {
+    el.textContent = text;
+  }
+}
+
+function initConnectionWatchers() {
+  window.addEventListener("online", () => {
+    if (squadState.active) {
+      showReconnectBanner(false);
+      publishPresence(squadState.code, squadState.playerId);
+    }
+  });
+
+  window.addEventListener("offline", () => {
+    if (squadState.active) {
+      showReconnectBanner(true, "Offline: verbinde neu...");
+    }
+  });
+
+  document.addEventListener("visibilitychange", () => {
+    if (document.visibilityState === "visible" && squadState.active) {
+      publishPresence(squadState.code, squadState.playerId);
+    }
+  });
+}
+
+function startHeartbeat() {
+  stopHeartbeat();
+  if (!squadState.active || !squadState.code || !squadState.playerId) {
+    return;
+  }
+
+  publishPresence(squadState.code, squadState.playerId);
+  squadState.heartbeatTimerId = window.setInterval(() => {
+    publishPresence(squadState.code, squadState.playerId);
+  }, PRESENCE_HEARTBEAT_MS);
+}
+
+function stopHeartbeat() {
+  if (squadState.heartbeatTimerId) {
+    clearInterval(squadState.heartbeatTimerId);
+    squadState.heartbeatTimerId = null;
+  }
+}
+
+function startCleanupLoop() {
+  stopCleanupLoop();
+  if (!squadState.active || !squadState.isLeader) {
+    return;
+  }
+
+  squadState.cleanupTimerId = window.setInterval(() => {
+    cleanupInactivePlayers(squadState.code, squadState.playerId);
+  }, PRESENCE_HEARTBEAT_MS * 2);
+}
+
+function stopCleanupLoop() {
+  if (squadState.cleanupTimerId) {
+    clearInterval(squadState.cleanupTimerId);
+    squadState.cleanupTimerId = null;
+  }
+}
+
+function formatActivityMessage(event, players) {
+  const payload = event.payload ?? {};
+  const actorName = payload.byName || players[payload.by]?.name || "Jemand";
+  const targetName =
+    players[payload.targetId]?.name || payload.playerName || "Jemand";
+
+  switch (event.type) {
+    case "member-joined":
+      return `${actorName} ist beigetreten.`;
+    case "member-rejoined":
+      return `${actorName} ist wieder da.`;
+    case "member-left":
+      return `${actorName} hat den Squad verlassen.`;
+    case "member-timeout":
+      return `${targetName} wurde wegen Inaktivitat entfernt.`;
+    case "leader-changed":
+      return `${targetName} ist jetzt Leader.`;
+    case "member-kicked":
+      return `${targetName} wurde gekickt.`;
+    case "role-changed":
+      return `${targetName} ist jetzt ${payload.role === "readonly" ? "Read-only" : "Member"}.`;
+    case "zero-to-hero":
+      return `${actorName} hat 0TH ausgelost.`;
+    default:
+      return "Squad-Event";
+  }
+}
+
+function renderActivityFeed(eventMap, players) {
+  const list = document.getElementById("squadActivityFeed");
+  if (!list) {
+    return;
+  }
+
+  const events = getRecentEvents(eventMap, 10);
+  if (events.length === 0) {
+    list.innerHTML = '<li class="squad-feed-empty">Noch keine Aktivitat</li>';
+    return;
+  }
+
+  list.innerHTML = "";
+  events.forEach((event) => {
+    const item = document.createElement("li");
+    item.className = "squad-feed-item";
+    const time = new Date(event.createdAt).toLocaleTimeString("de-DE", {
+      hour: "2-digit",
+      minute: "2-digit",
+    });
+    item.innerHTML = `<span class="squad-feed-time">${time}</span><span class="squad-feed-text">${formatActivityMessage(event, players)}</span>`;
+    list.appendChild(item);
+  });
+}
 
 function initSquad() {
   const toggleBtn = document.getElementById("squadToggle");
@@ -640,14 +820,19 @@ function initSquad() {
       state.selectedCategories,
       onSquadUpdate,
     );
+
     squadState.code = code;
     squadState.playerId = playerId;
     squadState.active = true;
     squadState.isLeader = true;
+    squadState.role = "leader";
     squadState.playerName = name;
+
+    saveSquadToStorage(code, playerId, name);
     wheelController.setSquadContext({ active: true, isLeader: true });
     showSquadSession(code);
-      saveSquadToStorage(code, playerId, name);
+    startHeartbeat();
+    startCleanupLoop();
     renderFilters();
   });
 
@@ -660,21 +845,25 @@ function initSquad() {
       .value.trim()
       .toUpperCase();
     if (code.length < 2) {
-      showSquadError("Bitte einen gültigen Code eingeben.");
+      showSquadError("Bitte einen gueltigen Code eingeben.");
       return;
     }
 
     const { playerId } = joinSession(code, name, onSquadUpdate, () => {
       showSquadError("Session nicht gefunden oder abgelaufen.");
     });
+
     squadState.code = code;
     squadState.playerId = playerId;
     squadState.active = true;
     squadState.isLeader = false;
+    squadState.role = "member";
     squadState.playerName = name;
+
+    saveSquadToStorage(code, playerId, name);
     wheelController.setSquadContext({ active: true, isLeader: false });
-      saveSquadToStorage(code, playerId, name);
     showSquadSession(code);
+    startHeartbeat();
     renderFilters();
   });
 
@@ -682,18 +871,7 @@ function initSquad() {
     if (squadState.code && squadState.playerId) {
       leaveSession(squadState.code, squadState.playerId);
     }
-    squadState.code = null;
-    squadState.playerId = null;
-    squadState.active = false;
-      clearSquadFromStorage();
-    squadState.isLeader = false;
-    document.getElementById("squadSession").hidden = true;
-    document.getElementById("squadSetup").hidden = false;
-    document.getElementById("squadMembers").innerHTML = "";
-    wheelController.setSquadContext({ active: false, isLeader: false });
-    updateSquadRoleHint();
-    hideSquadError();
-    renderFilters();
+    resetSquadUi(true);
   });
 
   copyBtn.addEventListener("click", () => {
@@ -701,7 +879,7 @@ function initSquad() {
     navigator.clipboard
       .writeText(squadState.code)
       .then(() => {
-        copyBtn.textContent = "✅";
+        copyBtn.textContent = "OK";
         setTimeout(() => {
           copyBtn.textContent = "📋";
         }, 1500);
@@ -731,27 +909,46 @@ function showSquadSession(code) {
 
 function updateSquadRoleHint() {
   const hintEl = document.getElementById("squadRoleHint");
-  if (!hintEl) {
+  const connectionEl = document.getElementById("squadConnectionState");
+  if (!hintEl || !connectionEl) {
     return;
   }
 
-  hintEl.classList.remove("leader", "member");
+  hintEl.classList.remove("leader", "member", "readonly");
 
   if (!squadState.active) {
     hintEl.textContent = "";
+    connectionEl.textContent = "Nicht verbunden";
+    connectionEl.className = "squad-connection-state offline";
     return;
   }
+
+  const stale =
+    Date.now() - squadState.lastSeenUpdateAt > PRESENCE_HEARTBEAT_MS * 3;
+  connectionEl.textContent =
+    stale || !navigator.onLine ? "Verbindung instabil" : "Live verbunden";
+  connectionEl.className =
+    stale || !navigator.onLine
+      ? "squad-connection-state unstable"
+      : "squad-connection-state online";
 
   if (squadState.isLeader) {
     hintEl.classList.add("leader");
     hintEl.textContent =
-      "Du bist Squad Leader. Du entscheidest die Kategorien und die manuelle Wheel-Liste fur alle.";
+      "Du bist Squad Leader. Du kannst Rollen verwalten, inaktive Spieler entfernen und Filter steuern.";
+    return;
+  }
+
+  if (squadState.role === "readonly") {
+    hintEl.classList.add("readonly");
+    hintEl.textContent =
+      "Du bist Read-only Member. Du siehst alles live, kannst aber nicht drehen.";
     return;
   }
 
   hintEl.classList.add("member");
   hintEl.textContent =
-    "Du bist Squad Member. Kategorien und manuelle Wheel-Liste steuert der Leader, spinnen durfen aber alle.";
+    "Du bist Squad Member. Kategorien und manuelle Wheel-Liste steuert der Leader.";
 }
 
 function showSquadError(msg) {
@@ -764,16 +961,24 @@ function hideSquadError() {
   document.getElementById("squadError").hidden = true;
 }
 
-function resetSquadUi() {
+function resetSquadUi(clearStorage = true) {
+  stopHeartbeat();
+  stopCleanupLoop();
   squadState.code = null;
   squadState.playerId = null;
   squadState.active = false;
   squadState.isLeader = false;
+  squadState.role = "member";
   squadState.playerName = null;
-  clearSquadFromStorage();
+  squadState.lastSeenUpdateAt = 0;
+  if (clearStorage) {
+    clearSquadFromStorage();
+  }
   document.getElementById("squadSession").hidden = true;
   document.getElementById("squadSetup").hidden = false;
   document.getElementById("squadMembers").innerHTML = "";
+  renderActivityFeed({}, {});
+  showReconnectBanner(false);
   wheelController?.setSquadContext({ active: false, isLeader: false });
   updateSquadRoleHint();
   renderFilters();
@@ -781,7 +986,10 @@ function resetSquadUi() {
 
 function tryAutoRejoinSquad() {
   const saved = loadSquadFromStorage();
-  if (!saved?.code || !saved?.playerId || !saved?.playerName) return;
+  if (!saved?.code || !saved?.playerId || !saved?.playerName) {
+    clearSquadFromStorage();
+    return;
+  }
 
   rejoinSession(
     saved.code,
@@ -789,7 +997,6 @@ function tryAutoRejoinSquad() {
     saved.playerName,
     onSquadUpdate,
     () => {
-      // Session abgelaufen oder nicht mehr vorhanden
       clearSquadFromStorage();
     },
   );
@@ -798,25 +1005,79 @@ function tryAutoRejoinSquad() {
   squadState.playerId = saved.playerId;
   squadState.playerName = saved.playerName;
   squadState.active = true;
-  // isLeader wird über onSquadUpdate gesetzt sobald die Daten ankommen
   wheelController.setSquadContext({ active: true, isLeader: false });
   showSquadSession(saved.code);
+  startHeartbeat();
   renderFilters();
+}
+
+function renderAdminActions(card, playerId, player, isMe) {
+  if (!squadState.isLeader || isMe) {
+    return;
+  }
+
+  const wrap = document.createElement("div");
+  wrap.className = "squad-member-actions";
+
+  const promoteBtn = document.createElement("button");
+  promoteBtn.className = "squad-mini-btn";
+  promoteBtn.textContent = "Leader";
+  promoteBtn.addEventListener("click", () => {
+    transferLeader(squadState.code, squadState.playerId, playerId);
+  });
+
+  const roleBtn = document.createElement("button");
+  roleBtn.className = "squad-mini-btn";
+  roleBtn.textContent = player.role === "readonly" ? "RO aus" : "RO";
+  roleBtn.addEventListener("click", () => {
+    const next = player.role === "readonly" ? "member" : "readonly";
+    setPlayerRole(squadState.code, squadState.playerId, playerId, next);
+  });
+
+  const kickBtn = document.createElement("button");
+  kickBtn.className = "squad-mini-btn danger";
+  kickBtn.textContent = "Kick";
+  kickBtn.addEventListener("click", () => {
+    kickPlayer(squadState.code, squadState.playerId, playerId);
+  });
+
+  wrap.appendChild(promoteBtn);
+  wrap.appendChild(roleBtn);
+  wrap.appendChild(kickBtn);
+  card.appendChild(wrap);
 }
 
 function onSquadUpdate(data) {
   if (!data) {
-    resetSquadUi();
+    resetSquadUi(true);
     return;
   }
+
+  squadState.lastSeenUpdateAt = Date.now();
+  showReconnectBanner(false);
   squadState.isLeader = data.leaderId === squadState.playerId;
+
+  const players = data.players ?? {};
+  const me = players[squadState.playerId];
+  if (!me && squadState.active && squadState.code && squadState.playerName) {
+    rejoinSession(
+      squadState.code,
+      squadState.playerId,
+      squadState.playerName,
+      onSquadUpdate,
+      () => resetSquadUi(true),
+    );
+    return;
+  }
+
+  squadState.role = me?.role || (squadState.isLeader ? "leader" : "member");
   wheelController.setSquadContext({
     active: squadState.active,
     isLeader: squadState.isLeader,
   });
   updateSquadRoleHint();
+  startCleanupLoop();
 
-  // Squad-weites 0TH Event erkennen
   const zth = data.zeroToHero;
   if (zth?.triggeredAt && zth.triggeredAt !== squadState.lastZeroToHero) {
     squadState.lastZeroToHero = zth.triggeredAt;
@@ -844,11 +1105,10 @@ function onSquadUpdate(data) {
   renderFilters();
 
   const membersEl = document.getElementById("squadMembers");
-  const players = data.players ?? {};
+  membersEl.innerHTML = "";
   wheelController.setAutoValues(buildSquadWheelValues(players));
   wheelController.applySquadConfig(data.filters?.wheel ?? {});
   wheelController.applyRemoteSpin(data.wheelSpin);
-  membersEl.innerHTML = "";
 
   Object.entries(players).forEach(([id, player]) => {
     const isMe = id === squadState.playerId;
@@ -858,17 +1118,25 @@ function onSquadUpdate(data) {
     const nameEl = document.createElement("div");
     nameEl.className = "squad-member-name";
     const isLeader = id === data.leaderId;
+    const roleTag = player.role === "readonly" ? " [RO]" : "";
     nameEl.textContent =
-      player.name + (isLeader ? " 👑" : "") + (isMe ? " (Du)" : "");
+      player.name + roleTag + (isLeader ? " 👑" : "") + (isMe ? " (Du)" : "");
+
+    const statusEl = document.createElement("div");
+    statusEl.className = "squad-member-status";
+    const stale =
+      typeof player.lastSeenAt === "number"
+        ? Date.now() - player.lastSeenAt > PRESENCE_HEARTBEAT_MS * 3
+        : true;
+    statusEl.textContent = stale ? "inaktiv" : "aktiv";
+    statusEl.classList.toggle("offline", stale);
 
     const resultEl = document.createElement("div");
     resultEl.className = "squad-member-result";
-
     if (player.spinning) {
       resultEl.innerHTML = '<span class="squad-spinning">🎰 dreht...</span>';
     } else if (player.result) {
-      const r = player.result;
-      const entries = Object.entries(r)
+      const entries = Object.entries(player.result)
         .map(
           ([key, val]) =>
             `<span class="squad-result-item"><b>${key}:</b> ${val}</span>`,
@@ -881,9 +1149,13 @@ function onSquadUpdate(data) {
     }
 
     card.appendChild(nameEl);
+    card.appendChild(statusEl);
     card.appendChild(resultEl);
+    renderAdminActions(card, id, player, isMe);
     membersEl.appendChild(card);
   });
+
+  renderActivityFeed(data.events ?? {}, players);
 }
 
 function showSquadZeroToHeroOverlay(triggerName) {
@@ -899,7 +1171,7 @@ function showSquadZeroToHeroOverlay(triggerName) {
       <div class="squad-zth-skull">💀</div>
       <div class="squad-zth-title">SQUAD 0TH</div>
       <div class="squad-zth-sub">${triggerName} hat 0TH bekommen!</div>
-      <div class="squad-zth-msg">Ihr wart alle mit dabei – ihr bekommt alle 0TH!</div>
+      <div class="squad-zth-msg">Ihr wart alle mit dabei - ihr bekommt alle 0TH!</div>
     </div>
   `;
 
@@ -914,7 +1186,7 @@ function buildResult(winners) {
   if (winners.map) result["Map"] = winners.map.name;
   if (winners.helmet) result["Helm"] = winners.helmet.name;
   if (winners.headset) result["Headset"] = winners.headset.name;
-  if (winners.armor) result["Rüstung"] = winners.armor.name;
+  if (winners.armor) result["Ruestung"] = winners.armor.name;
   if (winners.chestRig) result["Chest Rig"] = winners.chestRig.name;
   if (winners.armoredChestRig)
     result["Armored Rig"] = winners.armoredChestRig.name;

@@ -1,13 +1,11 @@
-// Service Worker – OPERATION: RNG
-// Strategie: Network-First mit Cache-Fallback.
-// skipWaiting + clients.claim sorgen dafür, dass Updates sofort greifen
-// ohne dass alle Nutzer manuell neuladen müssen.
+const BUILD_VERSION = "2026-05-07-01";
+const CACHE_NAME = `op-rng-${BUILD_VERSION}`;
+const OFFLINE_URL = "./offline.html";
 
-const CACHE_NAME = "op-rng-v1";
-
-const PRECACHE_URLS = [
+const STATIC_ASSETS = [
   "./",
   "./index.html",
+  "./offline.html",
   "./assets/css/styles.css",
   "./assets/js/app.js",
   "./assets/js/data.js",
@@ -15,65 +13,109 @@ const PRECACHE_URLS = [
   "./assets/js/game.js",
   "./assets/js/sound.js",
   "./assets/js/squad.js",
+  "./assets/js/squad-utils.js",
   "./assets/js/storage.js",
   "./assets/js/ui.js",
-  "./assets/js/wheel.js",
   "./assets/js/vagari.js",
+  "./assets/js/wheel.js",
 ];
 
 self.addEventListener("install", (event) => {
-  // Sofort übernehmen, nicht auf andere Tabs warten
-  self.skipWaiting();
-
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(PRECACHE_URLS).catch(() => {})),
+    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)),
   );
 });
 
 self.addEventListener("activate", (event) => {
-  // Alle alten Caches löschen
   event.waitUntil(
     caches
       .keys()
       .then((keys) =>
         Promise.all(
-          keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)),
+          keys
+            .filter((key) => key !== CACHE_NAME)
+            .map((key) => caches.delete(key)),
         ),
       )
       .then(() => self.clients.claim()),
   );
 });
 
-self.addEventListener("fetch", (event) => {
-  // Nur GET-Requests cachen, keine externen Requests (Firebase, Google Fonts)
-  const url = new URL(event.request.url);
-  if (event.request.method !== "GET" || !url.origin === self.location.origin) {
-    return;
+self.addEventListener("message", (event) => {
+  if (event.data?.type === "SKIP_WAITING") {
+    self.skipWaiting();
   }
+});
 
-  // Firebase & externe URLs: immer direkt ans Netz
-  if (
+function isExternalRealtimeRequest(url) {
+  return (
     url.hostname.includes("firebase") ||
     url.hostname.includes("gstatic") ||
     url.hostname.includes("googleapis")
-  ) {
+  );
+}
+
+async function staleWhileRevalidate(request) {
+  const cache = await caches.open(CACHE_NAME);
+  const cached = await cache.match(request);
+
+  const networkPromise = fetch(request)
+    .then((response) => {
+      if (response.ok) {
+        cache.put(request, response.clone());
+      }
+      return response;
+    })
+    .catch(() => cached);
+
+  return cached || networkPromise;
+}
+
+async function networkFirst(request) {
+  const cache = await caches.open(CACHE_NAME);
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (_) {
+    const cached = await cache.match(request);
+    if (cached) {
+      return cached;
+    }
+    return cache.match(OFFLINE_URL);
+  }
+}
+
+self.addEventListener("fetch", (event) => {
+  const { request } = event;
+  if (request.method !== "GET") {
     return;
   }
 
-  // Network-First: frisch vom Netz holen, bei Fehler Cache nutzen
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        if (response.ok) {
-          const clone = response.clone();
-          caches
-            .open(CACHE_NAME)
-            .then((cache) => cache.put(event.request, clone));
-        }
-        return response;
-      })
-      .catch(() => caches.match(event.request)),
+  const url = new URL(request.url);
+  if (url.origin !== self.location.origin) {
+    return;
+  }
+
+  if (isExternalRealtimeRequest(url)) {
+    return;
+  }
+
+  if (request.mode === "navigate") {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  const isStaticFile = /\.(?:js|css|png|jpg|jpeg|webp|gif|svg|ico|json)$/i.test(
+    url.pathname,
   );
+
+  if (isStaticFile) {
+    event.respondWith(staleWhileRevalidate(request));
+    return;
+  }
+
+  event.respondWith(networkFirst(request));
 });

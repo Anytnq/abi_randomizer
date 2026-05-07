@@ -1478,6 +1478,42 @@ input[type="number"]:focus {
   color: #ffe7be;
 }
 
+.squad-role-hint.readonly {
+  border-color: #8ca2ff66;
+  background: #8ca2ff1a;
+  color: #dce4ff;
+}
+
+.squad-connection-banner {
+  margin: 0 0 10px;
+  padding: 8px 10px;
+  border: 1px solid #ffbf0066;
+  border-radius: 8px;
+  background: #ffbf0015;
+  color: #ffe7be;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.squad-connection-state {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.squad-connection-state.online {
+  color: #7df0a4;
+}
+
+.squad-connection-state.offline,
+.squad-connection-state.unstable {
+  color: #ffb0b0;
+}
+
 .squad-code-display {
   display: flex;
   align-items: center;
@@ -1550,6 +1586,97 @@ input[type="number"]:focus {
   display: flex;
   flex-direction: column;
   gap: 4px;
+}
+
+.squad-member-status {
+  margin: 0 0 8px;
+  color: #7df0a4;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.4px;
+  text-transform: uppercase;
+}
+
+.squad-member-status.offline {
+  color: #ff9f9f;
+}
+
+.squad-member-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 10px;
+}
+
+.squad-mini-btn {
+  border: 1px solid #ffffff2d;
+  border-radius: 7px;
+  padding: 4px 8px;
+  background: #ffffff14;
+  color: #f1f4ff;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.2px;
+  cursor: pointer;
+}
+
+.squad-mini-btn:hover {
+  background: #ffffff24;
+}
+
+.squad-mini-btn.danger {
+  border-color: #ff75757a;
+  color: #ffbdbd;
+  background: #ff60601f;
+}
+
+.squad-feed {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid #ffffff21;
+  border-radius: 12px;
+  background: #ffffff08;
+}
+
+.squad-feed-title {
+  margin-bottom: 8px;
+  color: #ffe7be;
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.squad-feed-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  list-style: none;
+}
+
+.squad-feed-item {
+  display: grid;
+  grid-template-columns: 58px 1fr;
+  gap: 8px;
+  padding: 5px 7px;
+  border-radius: 8px;
+  background: #ffffff10;
+}
+
+.squad-feed-time {
+  color: #9fd8ff;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.squad-feed-text {
+  color: #e6f6ff;
+  font-size: 12px;
+}
+
+.squad-feed-empty {
+  color: #ffffff80;
+  font-size: 12px;
 }
 
 .squad-result-item {
@@ -1824,6 +1951,58 @@ input[type="number"]:focus {
     left: -36px;
     right: -36px;
   }
+
+  .squad-session-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 10px;
+  }
+
+  .squad-code-display {
+    flex-wrap: wrap;
+    row-gap: 6px;
+  }
+
+  .squad-members {
+    grid-template-columns: 1fr;
+  }
+
+  .squad-member {
+    padding: 11px 12px;
+  }
+
+  .squad-member-actions {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .squad-mini-btn {
+    min-height: 36px;
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .squad-feed {
+    padding: 10px;
+  }
+
+  .squad-feed-list {
+    max-height: 210px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+
+  .squad-feed-item {
+    grid-template-columns: 52px 1fr;
+    gap: 7px;
+    padding: 7px 8px;
+  }
+
+  .squad-feed-time,
+  .squad-feed-text {
+    line-height: 1.25;
+  }
 }
 
 @media (max-width: 480px) {
@@ -2082,6 +2261,62 @@ input[type="number"]:focus {
   .page-footer {
     font-size: 11px;
     margin-top: 10px;
+  }
+
+  .squad-header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .squad-title {
+    font-size: 20px;
+  }
+
+  .squad-toggle-btn {
+    justify-content: space-between;
+  }
+
+  .squad-code-value {
+    font-size: 22px;
+    letter-spacing: 3px;
+  }
+
+  .squad-role-hint,
+  .squad-connection-banner {
+    font-size: 12px;
+    line-height: 1.35;
+  }
+
+  .squad-member-name {
+    font-size: 16px;
+  }
+
+  .squad-member-actions {
+    grid-template-columns: 1fr;
+  }
+
+  .squad-mini-btn {
+    width: 100%;
+    min-height: 38px;
+    font-size: 12px;
+  }
+
+  .squad-feed-title {
+    font-size: 18px;
+  }
+
+  .squad-feed-item {
+    grid-template-columns: 1fr;
+    gap: 4px;
+  }
+
+  .squad-feed-time {
+    font-size: 10px;
+    opacity: 0.9;
+  }
+
+  .squad-feed-text {
+    font-size: 12px;
   }
 }
 
