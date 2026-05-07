@@ -54,6 +54,8 @@ import {
   joinSession,
   leaveSession,
   publishSelectedCategories,
+  publishWheelConfig,
+  publishWheelSpin,
   publishResult,
   publishSpinning,
 } from "./squad.js";
@@ -82,6 +84,7 @@ const state = {
 };
 
 const elements = getElements();
+let wheelController;
 
 function canEditCategoryFilters() {
   return !squadState.active || squadState.isLeader;
@@ -129,7 +132,11 @@ function initialize() {
   renderFilters();
 
   setupFilterToggle(elements);
-  initializeWheelSpin();
+  wheelController = initializeWheelSpin({
+    onManualModeChange: handleWheelConfigChange,
+    onManualValuesChange: handleWheelConfigChange,
+    onSpinRequest: handleWheelSpinRequest,
+  });
   syncVisibleCategories(elements, state.selectedCategories);
   createInitialStrips();
   syncPaylinePosition();
@@ -522,6 +529,44 @@ function normalizeChanceValue(rawValue) {
   return Math.min(100, Math.max(0, parsed));
 }
 
+function handleWheelConfigChange(config) {
+  if (squadState.active && squadState.code && squadState.isLeader) {
+    publishWheelConfig(squadState.code, {
+      enabled: true,
+      manualMode: config.manualMode,
+      manualValuesText: config.manualValuesText,
+    });
+  }
+}
+
+function handleWheelSpinRequest(spinPayload) {
+  if (!squadState.active || !squadState.code || !squadState.playerId) {
+    return;
+  }
+
+  publishWheelSpin(squadState.code, squadState.playerId, spinPayload);
+}
+
+function buildSquadWheelValues(players) {
+  const playerList = Object.values(players ?? {});
+
+  if (playerList.length === 0) {
+    return [];
+  }
+
+  const allMembersRolledMap = playerList.every(
+    (player) =>
+      typeof player?.result?.Map === "string" && player.result.Map.length > 0,
+  );
+
+  if (!allMembersRolledMap) {
+    return [];
+  }
+
+  // Doppelte Maps bleiben erhalten und erhohen dadurch die Zieh-Chance im Wheel.
+  return playerList.map((player) => player.result.Map);
+}
+
 // ── Squad Modus ────────────────────────────────────────────────────────────
 
 const squadState = {
@@ -559,6 +604,7 @@ function initSquad() {
     squadState.playerId = playerId;
     squadState.active = true;
     squadState.isLeader = true;
+    wheelController.setSquadContext({ active: true, isLeader: true });
     showSquadSession(code);
     renderFilters();
   });
@@ -583,6 +629,7 @@ function initSquad() {
     squadState.playerId = playerId;
     squadState.active = true;
     squadState.isLeader = false;
+    wheelController.setSquadContext({ active: true, isLeader: false });
     showSquadSession(code);
     renderFilters();
   });
@@ -598,6 +645,7 @@ function initSquad() {
     document.getElementById("squadSession").hidden = true;
     document.getElementById("squadSetup").hidden = false;
     document.getElementById("squadMembers").innerHTML = "";
+    wheelController.setSquadContext({ active: false, isLeader: false });
     updateSquadRoleHint();
     hideSquadError();
     renderFilters();
@@ -652,13 +700,13 @@ function updateSquadRoleHint() {
   if (squadState.isLeader) {
     hintEl.classList.add("leader");
     hintEl.textContent =
-      "Du bist Squad Leader. Du entscheidest die Kategorien fur alle.";
+      "Du bist Squad Leader. Du entscheidest die Kategorien und die manuelle Wheel-Liste fur alle.";
     return;
   }
 
   hintEl.classList.add("member");
   hintEl.textContent =
-    "Du bist Squad Member. Kategorien werden vom Squad Leader gesteuert.";
+    "Du bist Squad Member. Kategorien und manuelle Wheel-Liste steuert der Leader, spinnen durfen aber alle.";
 }
 
 function showSquadError(msg) {
@@ -674,6 +722,10 @@ function hideSquadError() {
 function onSquadUpdate(data) {
   if (!data) return;
   squadState.isLeader = data.leaderId === squadState.playerId;
+  wheelController.setSquadContext({
+    active: squadState.active,
+    isLeader: squadState.isLeader,
+  });
   updateSquadRoleHint();
 
   const remoteCategories = data.filters?.selectedCategories;
@@ -698,6 +750,9 @@ function onSquadUpdate(data) {
 
   const membersEl = document.getElementById("squadMembers");
   const players = data.players ?? {};
+  wheelController.setAutoValues(buildSquadWheelValues(players));
+  wheelController.applySquadConfig(data.filters?.wheel ?? {});
+  wheelController.applyRemoteSpin(data.wheelSpin);
   membersEl.innerHTML = "";
 
   Object.entries(players).forEach(([id, player]) => {

@@ -26,6 +26,11 @@ export function createSession(playerName, selectedCategories, onUpdate) {
     leaderId: playerId,
     filters: {
       selectedCategories,
+      wheel: {
+        enabled: true,
+        manualMode: false,
+        manualValuesText: "",
+      },
     },
     players: {
       [playerId]: {
@@ -90,6 +95,18 @@ export function publishSelectedCategories(code, playerId, selectedCategories) {
     selectedCategories,
   );
   set(ref(db, `sessions/${code}/leaderId`), playerId);
+}
+
+export function publishWheelConfig(code, wheelConfig) {
+  set(ref(db, `sessions/${code}/filters/wheel`), wheelConfig);
+}
+
+export function publishWheelSpin(code, playerId, spinPayload) {
+  set(ref(db, `sessions/${code}/wheelSpin`), {
+    ...spinPayload,
+    initiatedBy: playerId,
+    updatedAt: Date.now(),
+  });
 }
 
 export function leaveSession(code, playerId) {

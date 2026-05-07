@@ -1,5 +1,3 @@
-const FALLBACK_VALUES = ["Mosin", "MP5", "AKM", "Knife", "Rat", "Rush"];
-
 const SEGMENT_COLORS = [
   "#295780",
   "#325f39",
@@ -13,7 +11,7 @@ const SEGMENT_COLORS = [
   "#2d5a4d",
 ];
 
-export function initializeWheelSpin() {
+export function initializeWheelSpin(options = {}) {
   const section = document.getElementById("wheelSection");
   const toggleButton = document.getElementById("wheelToggleBtn");
   const canvas = document.getElementById("wheelCanvas");
@@ -22,7 +20,9 @@ export function initializeWheelSpin() {
   const applyButton = document.getElementById("wheelApplyBtn");
   const countLabel = document.getElementById("wheelCount");
   const resultLabel = document.getElementById("wheelResult");
-  const toggleIcon = toggleButton.querySelector(".wheel-check-icon");
+  const toggleIcon = toggleButton?.querySelector(".wheel-check-icon");
+  const manualToggleButton = document.getElementById("wheelManualToggleBtn");
+  const sourceNote = document.getElementById("wheelSourceNote");
 
   if (
     !section ||
@@ -32,74 +32,288 @@ export function initializeWheelSpin() {
     !valuesInput ||
     !applyButton ||
     !countLabel ||
-    !resultLabel
+    !resultLabel ||
+    !manualToggleButton ||
+    !sourceNote
   ) {
-    return;
+    return createNoopController();
   }
 
   const context = canvas.getContext("2d");
 
   if (!context) {
-    return;
+    return createNoopController();
   }
 
+  const callbacks = {
+    onToggle: options.onToggle ?? (() => {}),
+    onManualModeChange: options.onManualModeChange ?? (() => {}),
+    onManualValuesChange: options.onManualValuesChange ?? (() => {}),
+    onSpinRequest: options.onSpinRequest ?? (() => {}),
+  };
+
   const state = {
-    values: [...FALLBACK_VALUES],
+    enabled: false,
+    squadActive: false,
+    isLeader: false,
+    manualMode: false,
+    manualValuesText: "",
+    autoValues: [],
+    displayValues: [],
     currentRotation: 0,
     winnerIndex: -1,
     spinning: false,
+    lastSpinId: null,
   };
 
-  valuesInput.value = state.values.join("\n");
-  updateCountLabel(countLabel, state.values.length);
-  drawWheel(context, canvas, state.values, state.winnerIndex);
-  updateSpinAvailability(centerButton, state.values.length);
+  valuesInput.value = state.manualValuesText;
   section.hidden = true;
-  updateWheelToggleState(toggleButton, toggleIcon, false);
 
   toggleButton.addEventListener("click", () => {
-    const isHidden = section.hidden;
-    section.hidden = !isHidden;
-    updateWheelToggleState(toggleButton, toggleIcon, isHidden);
+    if (state.squadActive) {
+      return;
+    }
+
+    state.enabled = !state.enabled;
+    syncUi();
+    callbacks.onToggle(state.enabled);
+  });
+
+  manualToggleButton.addEventListener("click", () => {
+    if (!canEditManualList(state)) {
+      return;
+    }
+
+    state.manualMode = !state.manualMode;
+    state.winnerIndex = -1;
+    refreshDisplayValues();
+    syncUi();
+    callbacks.onManualModeChange(getConfigSnapshot(state));
   });
 
   applyButton.addEventListener("click", () => {
-    const nextValues = parseValues(valuesInput.value);
-
-    if (nextValues.length < 2) {
-      resultLabel.textContent =
-        "Bitte mindestens 2 Werte eintragen, damit das Wheel drehen kann.";
-      updateSpinAvailability(centerButton, nextValues.length);
+    if (!canEditManualList(state) || !state.manualMode) {
+      syncUi();
       return;
     }
 
-    state.values = nextValues;
+    state.manualValuesText = valuesInput.value;
     state.winnerIndex = -1;
-    valuesInput.value = state.values.join("\n");
-    updateCountLabel(countLabel, state.values.length);
-    updateSpinAvailability(centerButton, state.values.length);
-    resultLabel.textContent =
-      "Werte aktualisiert. Klick auf die Mitte zum Drehen.";
-    drawWheel(context, canvas, state.values, state.winnerIndex);
+    refreshDisplayValues();
+    syncUi();
+    callbacks.onManualValuesChange(getConfigSnapshot(state));
   });
 
   centerButton.addEventListener("click", () => {
-    if (state.spinning || state.values.length < 2) {
+    if (state.spinning || state.displayValues.length < 2) {
       return;
     }
 
-    spinWheel(state, canvas, centerButton, resultLabel, context);
+    const spinPayload = buildSpinPayload(state.displayValues);
+    if (!spinPayload) {
+      return;
+    }
+
+    if (state.squadActive) {
+      resultLabel.textContent = "Wheel wird im Squad synchronisiert...";
+      callbacks.onSpinRequest(spinPayload);
+      return;
+    }
+
+    playSpin(spinPayload);
   });
-}
 
-function updateWheelToggleState(button, icon, isActive) {
-  button.setAttribute("aria-pressed", String(isActive));
-  if (icon) {
-    icon.textContent = isActive ? "☑" : "☐";
+  refreshDisplayValues();
+  syncUi();
+
+  function refreshDisplayValues() {
+    if (state.squadActive && !state.manualMode) {
+      state.displayValues = sanitizeSpinValues(state.autoValues);
+    } else {
+      state.displayValues = parseManualValues(state.manualValuesText);
+    }
+
+    if (state.winnerIndex >= state.displayValues.length) {
+      state.winnerIndex = -1;
+    }
+
+    drawCurrentWheel();
   }
+
+  function drawCurrentWheel() {
+    if (state.displayValues.length === 0) {
+      drawEmptyWheel(context, canvas, "Noch keine Maps verfugbar");
+      return;
+    }
+
+    drawWheel(context, canvas, state.displayValues, state.winnerIndex);
+  }
+
+  function syncUi() {
+    section.hidden = !state.enabled;
+    toggleButton.disabled = state.squadActive;
+    updateWheelToggleState(toggleButton, toggleIcon, state.enabled);
+
+    manualToggleButton.setAttribute("aria-pressed", String(state.manualMode));
+    manualToggleButton.disabled = !canEditManualList(state);
+
+    const canEditManualValues = canEditManualList(state) && state.manualMode;
+
+    valuesInput.disabled = !canEditManualValues;
+    applyButton.disabled = !canEditManualValues;
+    updateCountLabel(countLabel, state.displayValues.length);
+    centerButton.disabled = state.displayValues.length < 2 || state.spinning;
+    sourceNote.textContent = buildSourceNote(state);
+
+    if (!state.spinning) {
+      resultLabel.textContent = buildResultHint(state);
+    }
+  }
+
+  function playSpin(spinPayload) {
+    if (!spinPayload || state.spinning) {
+      return;
+    }
+
+    const values = sanitizeSpinValues(spinPayload.values);
+    if (values.length < 2) {
+      return;
+    }
+
+    state.lastSpinId = spinPayload.spinId ?? state.lastSpinId;
+    state.spinning = true;
+    state.enabled = true;
+    state.displayValues = values;
+    state.winnerIndex = -1;
+    drawWheel(context, canvas, state.displayValues, -1);
+    syncUi();
+
+    const winnerIndex = clampWinnerIndex(
+      spinPayload.winnerIndex,
+      values.length,
+    );
+    const segmentAngle = 360 / values.length;
+    const winnerCenterFromTop = winnerIndex * segmentAngle + segmentAngle / 2;
+    const desiredModulo = (360 - (winnerCenterFromTop % 360)) % 360;
+    const currentModulo = normalizeDegrees(state.currentRotation);
+    const deltaToTarget = (desiredModulo - currentModulo + 360) % 360;
+    const targetRotation = state.currentRotation + 1800 + deltaToTarget;
+
+    resultLabel.textContent = "Dreht...";
+    canvas.classList.add("spinning");
+    canvas.style.transition = "transform 4.8s cubic-bezier(0.12, 0.85, 0.2, 1)";
+    canvas.style.transform = `rotate(${targetRotation}deg)`;
+
+    const onSpinEnd = () => {
+      canvas.removeEventListener("transitionend", onSpinEnd);
+      canvas.classList.remove("spinning");
+
+      state.currentRotation = targetRotation;
+      state.winnerIndex = winnerIndex;
+      state.spinning = false;
+
+      drawWheel(context, canvas, state.displayValues, state.winnerIndex);
+      resultLabel.innerHTML = `Auswahl: <strong>${escapeHtml(
+        state.displayValues[winnerIndex],
+      )}</strong>`;
+      centerButton.disabled = state.displayValues.length < 2;
+    };
+
+    canvas.addEventListener("transitionend", onSpinEnd, { once: true });
+  }
+
+  return {
+    setSquadContext({ active, isLeader }) {
+      state.squadActive = active;
+      state.isLeader = isLeader;
+
+      if (active) {
+        state.enabled = true;
+      } else {
+        state.enabled = false;
+        state.manualMode = false;
+        state.winnerIndex = -1;
+      }
+
+      refreshDisplayValues();
+      syncUi();
+    },
+
+    applySquadConfig(config = {}) {
+      if (typeof config.manualMode === "boolean") {
+        state.manualMode = config.manualMode;
+      }
+
+      if (typeof config.manualValuesText === "string") {
+        state.manualValuesText = config.manualValuesText;
+        valuesInput.value = state.manualValuesText;
+      }
+
+      if (!state.squadActive && typeof config.enabled === "boolean") {
+        state.enabled = config.enabled;
+      }
+
+      refreshDisplayValues();
+      syncUi();
+    },
+
+    setAutoValues(values) {
+      state.autoValues = Array.isArray(values)
+        ? sanitizeSpinValues(values)
+        : [];
+      refreshDisplayValues();
+      syncUi();
+    },
+
+    applyRemoteSpin(spinPayload) {
+      if (!spinPayload?.spinId || spinPayload.spinId === state.lastSpinId) {
+        return;
+      }
+
+      state.lastSpinId = spinPayload.spinId;
+      playSpin(spinPayload);
+    },
+
+    getConfigSnapshot() {
+      return getConfigSnapshot(state);
+    },
+  };
 }
 
-function parseValues(rawInput) {
+function createNoopController() {
+  return {
+    setSquadContext() {},
+    applySquadConfig() {},
+    setAutoValues() {},
+    applyRemoteSpin() {},
+    getConfigSnapshot() {
+      return { enabled: false, manualMode: false, manualValuesText: "" };
+    },
+  };
+}
+
+function getConfigSnapshot(state) {
+  return {
+    enabled: state.squadActive ? true : state.enabled,
+    manualMode: state.manualMode,
+    manualValuesText: state.manualValuesText,
+  };
+}
+
+function buildSpinPayload(values) {
+  const sanitizedValues = sanitizeSpinValues(values);
+  if (sanitizedValues.length < 2) {
+    return null;
+  }
+
+  return {
+    spinId: `${Date.now()}-${crypto.randomUUID()}`,
+    values: sanitizedValues,
+    winnerIndex: Math.floor(Math.random() * sanitizedValues.length),
+  };
+}
+
+function parseManualValues(rawInput) {
   return rawInput
     .split(/[,;\n\r]+/)
     .map((entry) => entry.trim())
@@ -109,46 +323,91 @@ function parseValues(rawInput) {
     .slice(0, 32);
 }
 
+function sanitizeSpinValues(values) {
+  return values
+    .map((value) => String(value ?? "").trim())
+    .filter((value) => value.length > 0)
+    .slice(0, 64);
+}
+
+function buildSourceNote(state) {
+  if (state.squadActive && !state.manualMode) {
+    return state.isLeader
+      ? "Auto: Squad Maps"
+      : "Auto: Squad Maps | alle durfen spinnen";
+  }
+
+  if (state.squadActive && state.manualMode) {
+    return state.isLeader
+      ? "Manuell: Leader steuert"
+      : "Manuell: Leader Vorgabe";
+  }
+
+  return "Lokale Werte aktiv";
+}
+
+function canEditManualList(state) {
+  return !state.squadActive || state.isLeader;
+}
+
+function buildResultHint(state) {
+  if (
+    state.squadActive &&
+    !state.manualMode &&
+    state.displayValues.length === 0
+  ) {
+    return "Wheel bleibt leer, bis alle Squad-Mitglieder eine Map gedreht haben.";
+  }
+
+  if (state.displayValues.length < 2) {
+    return "Mindestens 2 Werte fur einen Spin erforderlich.";
+  }
+
+  if (state.squadActive) {
+    return "Wheel bereit fur Squad-Spin.";
+  }
+
+  return "Klicke auf die Mitte vom Wheel.";
+}
+
+function updateWheelToggleState(button, icon, isActive) {
+  button.setAttribute("aria-pressed", String(isActive));
+  if (icon) {
+    icon.textContent = isActive ? "☑" : "☐";
+  }
+}
+
 function updateCountLabel(label, count) {
   label.textContent = `${count} Werte`;
 }
 
-function updateSpinAvailability(button, valueCount) {
-  button.disabled = valueCount < 2;
+function clampWinnerIndex(winnerIndex, length) {
+  if (!Number.isInteger(winnerIndex) || length <= 0) {
+    return 0;
+  }
+
+  return Math.min(length - 1, Math.max(0, winnerIndex));
 }
 
-function spinWheel(state, canvas, centerButton, resultLabel, context) {
-  state.spinning = true;
-  centerButton.disabled = true;
+function drawEmptyWheel(context, canvas, label) {
+  const size = canvas.width;
+  const center = size / 2;
+  const radius = center - 10;
 
-  const segmentAngle = 360 / state.values.length;
-  const winnerIndex = Math.floor(Math.random() * state.values.length);
-  const winnerCenterFromTop = winnerIndex * segmentAngle + segmentAngle / 2;
-  const desiredModulo = (360 - (winnerCenterFromTop % 360)) % 360;
-  const currentModulo = normalizeDegrees(state.currentRotation);
-  const deltaToTarget = (desiredModulo - currentModulo + 360) % 360;
-  const targetRotation = state.currentRotation + 1800 + deltaToTarget;
+  context.clearRect(0, 0, size, size);
+  context.beginPath();
+  context.arc(center, center, radius, 0, Math.PI * 2);
+  context.fillStyle = "#1a212a";
+  context.fill();
+  context.lineWidth = 4;
+  context.strokeStyle = "#e1b85d";
+  context.stroke();
 
-  resultLabel.textContent = "Dreht...";
-
-  canvas.classList.add("spinning");
-  canvas.style.transition = "transform 4.8s cubic-bezier(0.12, 0.85, 0.2, 1)";
-  canvas.style.transform = `rotate(${targetRotation}deg)`;
-
-  const onSpinEnd = () => {
-    canvas.removeEventListener("transitionend", onSpinEnd);
-    canvas.classList.remove("spinning");
-
-    state.currentRotation = targetRotation;
-    state.winnerIndex = winnerIndex;
-    state.spinning = false;
-
-    drawWheel(context, canvas, state.values, state.winnerIndex);
-    resultLabel.innerHTML = `Auswahl: <strong>${escapeHtml(state.values[winnerIndex])}</strong>`;
-    centerButton.disabled = false;
-  };
-
-  canvas.addEventListener("transitionend", onSpinEnd, { once: true });
+  context.fillStyle = "#d9e5ef";
+  context.font = "700 28px Rajdhani";
+  context.textAlign = "center";
+  context.textBaseline = "middle";
+  context.fillText(label, center, center);
 }
 
 function drawWheel(context, canvas, values, winnerIndex) {
