@@ -75,6 +75,7 @@ import {
 
 const CACHE_HOTFIX_VERSION = "20260507-4";
 const SW_SCRIPT_URL = "./sw.js?v=20260507-4";
+const SQUAD_ZTH_TEAM_BANNER_CHANCE = 0.2;
 
 const defaultSelectedCategories = categoryOptions.map(
   (category) => category.key,
@@ -399,6 +400,8 @@ function spinAll() {
 
   const chancePercent = normalizeChanceValue(elements.chanceInput.value);
   const isZeroToHero = Math.random() < chancePercent / 100;
+  const isSquadWideZeroToHeroBanner =
+    isZeroToHero && Math.random() < SQUAD_ZTH_TEAM_BANNER_CHANCE;
   const mapWinner = isCategorySelected("map")
     ? pickMapWinner(state.activeMaps, state.lastMap)
     : null;
@@ -565,6 +568,9 @@ function spinAll() {
           squadState.code,
           squadState.playerId,
           squadState.playerName,
+          {
+            appliesToTeam: isSquadWideZeroToHeroBanner,
+          },
         );
       }
     }
@@ -811,7 +817,9 @@ function formatActivityMessage(event, players) {
     case "role-changed":
       return `${targetName} ist jetzt ${payload.role === "readonly" ? "Read-only" : "Member"}.`;
     case "zero-to-hero":
-      return `${actorName} hat 0TH ausgelost.`;
+      return payload.appliesToTeam
+        ? `${actorName} hat 0 to Hero fuer das ganze Team ausgelost.`
+        : `${actorName} hat 0 to Hero ausgelost.`;
     default:
       return "Squad-Event";
   }
@@ -1127,7 +1135,10 @@ function onSquadUpdate(data) {
   const zth = data.zeroToHero;
   if (zth?.triggeredAt && zth.triggeredAt !== squadState.lastZeroToHero) {
     squadState.lastZeroToHero = zth.triggeredAt;
-    showSquadZeroToHeroOverlay(zth.triggeredByName ?? "Jemand");
+    showSquadZeroToHeroOverlay(
+      zth.triggeredByName ?? "Jemand",
+      Boolean(zth.appliesToTeam),
+    );
   }
 
   const remoteCategories = data.filters?.selectedCategories;
@@ -1204,7 +1215,7 @@ function onSquadUpdate(data) {
   renderActivityFeed(data.events ?? {}, players);
 }
 
-function showSquadZeroToHeroOverlay(triggerName) {
+function showSquadZeroToHeroOverlay(triggerName, appliesToTeam) {
   const existingOverlay = document.getElementById("squadZthOverlay");
   if (existingOverlay) existingOverlay.remove();
 
@@ -1215,9 +1226,13 @@ function showSquadZeroToHeroOverlay(triggerName) {
   overlay.innerHTML = `
     <div class="squad-zth-content">
       <div class="squad-zth-skull">💀</div>
-      <div class="squad-zth-title">SQUAD 0TH</div>
-      <div class="squad-zth-sub">${triggerName} hat 0TH bekommen!</div>
-      <div class="squad-zth-msg">Ihr wart alle mit dabei - ihr bekommt alle 0TH!</div>
+      <div class="squad-zth-title">SQUAD 0 TO HERO</div>
+      <div class="squad-zth-sub">${triggerName} hat 0 to Hero bekommen!</div>
+      <div class="squad-zth-msg">${
+        appliesToTeam
+          ? "Team-Banner aktiv: Ihr bekommt alle 0 to Hero!"
+          : "Solo-Banner aktiv: Nur diese Person bekommt 0 to Hero."
+      }</div>
     </div>
   `;
 

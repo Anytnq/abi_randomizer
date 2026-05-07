@@ -233,15 +233,19 @@ export function publishWheelSpin(code, playerId, spinPayload) {
   });
 }
 
-export function publishZeroToHero(code, playerId, playerName) {
+export function publishZeroToHero(code, playerId, playerName, options = {}) {
+  const appliesToTeam = options.appliesToTeam === true;
+
   set(ref(db, `sessions/${code}/zeroToHero`), {
     triggeredBy: playerId,
     triggeredByName: playerName,
+    appliesToTeam,
     triggeredAt: Date.now(),
   }).then(() => {
     publishSquadEvent(code, "zero-to-hero", {
       by: playerId,
       byName: playerName,
+      appliesToTeam,
     });
   });
 }
