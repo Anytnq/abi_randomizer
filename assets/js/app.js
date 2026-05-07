@@ -209,10 +209,6 @@ function deselectCategoryGroup(categoryKeys) {
     (category) => !categoryKeys.includes(category),
   );
 
-  if (nextSelection.length === 0) {
-    return;
-  }
-
   state.selectedCategories = nextSelection;
   saveSelectedCategories(state.selectedCategories);
   syncVisibleCategories(elements, state.selectedCategories);

@@ -443,29 +443,42 @@ h1 {
 
 .filter-clear-btn {
   flex: 0 0 auto;
-  padding: 4px 8px;
-  border: 1px solid #ffffff2a;
-  border-radius: 8px;
-  background: #20252b;
-  color: #c9d3dc;
-  font-family: var(--font-ui);
-  font-size: 11px;
+  min-height: 40px;
+  padding: 9px 16px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #1c2026 0%, #14181d 100%);
+  color: var(--color-accent-strong);
+  font-family: var(--font-display);
+  font-size: 18px;
   font-weight: 700;
-  letter-spacing: 0.4px;
+  letter-spacing: 1px;
   text-transform: uppercase;
   cursor: pointer;
-  transition: border-color 0.16s, color 0.16s, background 0.16s;
+  box-shadow:
+    0 10px 24px #0005,
+    inset 0 1px 0 #ffffff14;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
 }
 
 .filter-clear-btn:hover {
   border-color: var(--color-accent);
-  color: #ffe7a9;
-  background: #262c34;
+  box-shadow:
+    0 12px 26px #0008,
+    inset 0 1px 0 #ffffff1f;
+  transform: translateY(-2px);
+}
+
+.filter-clear-btn:focus-visible,
+.slot-reload-btn:focus-visible {
+  outline: 2px solid #ffe7a9;
+  outline-offset: 2px;
 }
 
 .filter-clear-btn:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+  transform: none;
 }
 
 .filter-grid {
@@ -725,12 +738,13 @@ h1 {
 .slot-label-row {
   display: flex;
   width: 100%;
-  align-items: center;
-  gap: 6px;
+  align-items: stretch;
 }
 
 .label {
-  display: block;
+  display: flex;
+  align-items: center;
+  justify-content: center;
   width: 100%;
   padding: 3px 8px;
   border: 1px solid #ffffff26;
@@ -747,28 +761,42 @@ h1 {
   text-transform: uppercase;
 }
 
+.label--with-action {
+  justify-content: space-between;
+  gap: 6px;
+  padding-right: 4px;
+}
+
+.label-text {
+  flex: 1 1 auto;
+  padding-left: 6px;
+  text-align: center;
+}
+
 .slot-reload-btn {
-  flex: 0 0 auto;
-  width: 34px;
-  height: 34px;
-  border: 1px solid #ffffff2a;
-  border-radius: 8px;
-  background: #20252b;
+  flex: 0 0 28px;
+  width: 28px;
+  height: 24px;
+  border: 0;
+  border-left: 1px solid #ffffff30;
+  border-radius: 0;
+  background: transparent;
   color: var(--color-accent-strong);
-  font-size: 18px;
   line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: border-color 0.16s, color 0.16s, transform 0.16s;
+  transition: color 0.16s;
+}
+
+.slot-reload-icon {
+  width: 15px;
+  height: 15px;
 }
 
 .slot-reload-btn:hover {
-  border-color: var(--color-accent);
   color: #ffe9b1;
-  transform: translateY(-1px);
-}
-
-.slot-reload-btn:active {
-  transform: translateY(0);
 }
 
 .window {
@@ -1885,6 +1913,13 @@ input[type="number"]:focus {
     font-size: 11px;
   }
 
+  .filter-clear-btn {
+    width: 100%;
+    justify-content: center;
+    font-size: 16px;
+    letter-spacing: 0.8px;
+  }
+
   .slot-machine {
     padding: 12px;
     gap: 6px;
@@ -2140,6 +2175,14 @@ input[type="number"]:focus {
     font-size: 10px;
   }
 
+  .filter-clear-btn {
+    min-height: 36px;
+    padding: 7px 10px;
+    font-size: 13px;
+    letter-spacing: 0.6px;
+    border-radius: 10px;
+  }
+
   .slot-machine {
     padding: 10px;
     gap: 4px;
@@ -2159,6 +2202,17 @@ input[type="number"]:focus {
     padding: 2px 4px;
     font-size: 10px;
     border-radius: 6px;
+  }
+
+  .slot-reload-btn {
+    flex-basis: 22px;
+    width: 22px;
+    height: 18px;
+  }
+
+  .slot-reload-icon {
+    width: 12px;
+    height: 12px;
   }
 
   .card {
