@@ -24,10 +24,12 @@ export function getElements() {
     categoryContainer1: document.getElementById("categoryContainer1"),
     categoryContainer2: document.getElementById("categoryContainer2"),
     categoryContainer3: document.getElementById("categoryContainer3"),
+    clearAllCategoriesButton: document.getElementById("clearAllCategoriesBtn"),
     armorTierContainer: document.getElementById("armorTierContainer"),
     helmetTierContainer: document.getElementById("helmetTierContainer"),
     mapContainer: document.getElementById("mapContainer"),
     weaponCategoryContainer: document.getElementById("weaponCategoryContainer"),
+    reloadMapButton: document.getElementById("reloadMapBtn"),
     columns: Array.from(
       document.querySelectorAll(".col-container[data-category]"),
     ),
@@ -36,6 +38,8 @@ export function getElements() {
 
 export function renderFilterButtons(elements, filters, handlers, options = {}) {
   const canEditCategories = options.canEditCategories ?? true;
+
+  setClearButtonState(elements.clearAllCategoriesButton, canEditCategories);
 
   renderCategoryButtonsRow(
     elements.categoryContainer1,
@@ -79,6 +83,15 @@ export function renderFilterButtons(elements, filters, handlers, options = {}) {
     handlers.onWeaponToggle,
     handlers.onWeaponGroupToggle,
   );
+}
+
+function setClearButtonState(button, enabled) {
+  if (!button) {
+    return;
+  }
+
+  button.disabled = !enabled;
+  button.setAttribute("aria-disabled", String(!enabled));
 }
 
 function renderCategoryButtonsRow(

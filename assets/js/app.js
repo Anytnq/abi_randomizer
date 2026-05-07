@@ -102,6 +102,7 @@ const state = {
 
 const elements = getElements();
 let wheelController;
+let isMapReloading = false;
 
 function canEditCategoryFilters() {
   return !squadState.active || squadState.isLeader;
@@ -187,11 +188,76 @@ async function initialize() {
   createInitialStrips();
   syncPaylinePosition();
   elements.spinButton.addEventListener("click", spinAll);
+  elements.clearAllCategoriesButton?.addEventListener("click", () =>
+    deselectCategoryGroup(categoryOptions.map((category) => category.key)),
+  );
+  elements.reloadMapButton?.addEventListener("click", reloadMapOnly);
   window.addEventListener("resize", () => syncPaylinePosition());
   initServiceWorkerUpdateFlow();
   initConnectionWatchers();
   initSquad();
   tryAutoRejoinSquad();
+}
+
+function deselectCategoryGroup(categoryKeys) {
+  if (!canEditCategoryFilters()) {
+    showSquadError("Nur der Squad Leader kann Kategorien aendern.");
+    return;
+  }
+
+  const nextSelection = state.selectedCategories.filter(
+    (category) => !categoryKeys.includes(category),
+  );
+
+  if (nextSelection.length === 0) {
+    return;
+  }
+
+  state.selectedCategories = nextSelection;
+  saveSelectedCategories(state.selectedCategories);
+  syncVisibleCategories(elements, state.selectedCategories);
+  renderFilters();
+
+  if (
+    squadState.active &&
+    squadState.code &&
+    squadState.playerId &&
+    squadState.isLeader
+  ) {
+    publishSelectedCategories(
+      squadState.code,
+      squadState.playerId,
+      state.selectedCategories,
+    );
+  }
+}
+
+function reloadMapOnly() {
+  if (elements.spinButton.disabled || isMapReloading) {
+    return;
+  }
+
+  if (!isCategorySelected("map") || state.activeMaps.length === 0) {
+    return;
+  }
+
+  const mapWinner = pickMapWinner(state.activeMaps, state.lastMap);
+  if (!mapWinner) {
+    return;
+  }
+
+  state.lastMap = mapWinner.name;
+  createStripContent("strip-map", state.activeMaps, false);
+
+  const spinDurationMs = getSpinDuration(1);
+  isMapReloading = true;
+  playSpinSound(spinDurationMs);
+  spinColumn("strip-map", state.activeMaps, 0, mapWinner, false);
+
+  setTimeout(() => {
+    stopSpinSound();
+    isMapReloading = false;
+  }, spinDurationMs);
 }
 
 function toggleCategory(category) {

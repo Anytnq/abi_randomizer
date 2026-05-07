@@ -57,6 +57,15 @@
           </div>
         </div>
         <div class="filter-content" id="filterContent">
+          <div class="filter-toolbar-actions">
+            <button
+              class="filter-clear-btn"
+              id="clearAllCategoriesBtn"
+              type="button"
+            >
+              De-Select All (Map, Equipment, Weapons)
+            </button>
+          </div>
           <div class="filter-toolbar">
             <div class="filter-section filter-section--compact">
               <h2>Map</h2>
@@ -102,7 +111,18 @@
         <div class="slot-row">
           <div class="payline"></div>
           <div class="col-container" data-category="map">
-            <span class="label">Map</span>
+            <div class="slot-label-row">
+              <span class="label">Map</span>
+              <button
+                class="slot-reload-btn"
+                id="reloadMapBtn"
+                type="button"
+                title="Map neu rollen"
+                aria-label="Map neu rollen"
+              >
+                ↻
+              </button>
+            </div>
             <div class="window">
               <div class="strip" id="strip-map"></div>
             </div>
