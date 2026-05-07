@@ -270,6 +270,13 @@ export function initializeWheelSpin(options = {}) {
         return;
       }
 
+      if (state.squadActive && Array.isArray(spinPayload.values)) {
+        state.manualValuesText = sanitizeSpinValues(spinPayload.values).join(
+          "\n",
+        );
+        valuesInput.value = state.manualValuesText;
+      }
+
       state.lastSpinId = spinPayload.spinId;
       playSpin(spinPayload);
     },

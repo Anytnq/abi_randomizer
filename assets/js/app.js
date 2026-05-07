@@ -64,7 +64,6 @@ import {
   publishSpinning,
   publishZeroToHero,
   rejoinSession,
-  setPlayerRole,
   subscribeToSession,
   transferLeader,
 } from "./squad.js?v=20260507-4";
@@ -78,9 +77,8 @@ const CACHE_HOTFIX_VERSION = "20260507-4";
 const SW_SCRIPT_URL = "./sw.js?v=20260507-4";
 const SQUAD_ZTH_TEAM_BANNER_CHANCE = 0.2;
 
-const defaultSelectedCategories = categoryOptions.map(
-  (category) => category.key,
-);
+const allCategoryKeys = categoryOptions.map((category) => category.key);
+const defaultSelectedCategories = ["map", "weapon", "secondary"];
 
 const state = {
   selectedCategories: [...defaultSelectedCategories],
@@ -116,6 +114,7 @@ function renderFilters() {
     state,
     {
       onCategoryToggle: toggleCategory,
+      onCategoryGroupToggle: toggleCategoryGroup,
       onArmorTierToggle: toggleArmorTier,
       onHelmetTierToggle: toggleHelmetTier,
       onMapToggle: toggleMap,
@@ -171,11 +170,7 @@ async function initialize() {
   }
   state.selectedCategories = loadSelectedCategories(
     defaultSelectedCategories,
-  ).filter((category) => defaultSelectedCategories.includes(category));
-
-  if (state.selectedCategories.length === 0) {
-    state.selectedCategories = [...defaultSelectedCategories];
-  }
+  ).filter((category) => allCategoryKeys.includes(category));
 
   updateActiveFilters();
   renderFilters();
@@ -190,9 +185,9 @@ async function initialize() {
   createInitialStrips();
   syncPaylinePosition();
   elements.spinButton.addEventListener("click", spinAll);
-  elements.clearAllCategoriesButton?.addEventListener("click", () =>
-    deselectCategoryGroup(categoryOptions.map((category) => category.key)),
-  );
+  elements.clearAllCategoriesButton?.addEventListener("click", () => {
+    toggleAllCategoriesSelection();
+  });
   elements.reloadMapButton?.addEventListener("click", reloadMapOnly);
   window.addEventListener("resize", () => syncPaylinePosition());
   initServiceWorkerUpdateFlow();
@@ -201,17 +196,18 @@ async function initialize() {
   tryAutoRejoinSquad();
 }
 
-function deselectCategoryGroup(categoryKeys) {
+function setSelectedCategories(nextSelection) {
   if (!canEditCategoryFilters()) {
     showSquadError("Nur der Squad Leader kann Kategorien aendern.");
     return;
   }
 
-  const nextSelection = state.selectedCategories.filter(
-    (category) => !categoryKeys.includes(category),
+  state.selectedCategories = Array.from(
+    new Set(
+      nextSelection.filter((category) => allCategoryKeys.includes(category)),
+    ),
   );
 
-  state.selectedCategories = nextSelection;
   saveSelectedCategories(state.selectedCategories);
   syncVisibleCategories(elements, state.selectedCategories);
   renderFilters();
@@ -226,8 +222,35 @@ function deselectCategoryGroup(categoryKeys) {
       squadState.code,
       squadState.playerId,
       state.selectedCategories,
+      squadState.playerName,
     );
   }
+}
+
+function toggleAllCategoriesSelection() {
+  const areAllSelected = allCategoryKeys.every((category) =>
+    state.selectedCategories.includes(category),
+  );
+
+  setSelectedCategories(areAllSelected ? [] : allCategoryKeys);
+}
+
+function toggleCategoryGroup(categoryKeys) {
+  const uniqueKeys = Array.from(new Set(categoryKeys));
+  const areAllSelected = uniqueKeys.every((category) =>
+    state.selectedCategories.includes(category),
+  );
+
+  if (areAllSelected) {
+    setSelectedCategories(
+      state.selectedCategories.filter(
+        (category) => !uniqueKeys.includes(category),
+      ),
+    );
+    return;
+  }
+
+  setSelectedCategories([...state.selectedCategories, ...uniqueKeys]);
 }
 
 function reloadMapOnly() {
@@ -316,29 +339,7 @@ function toggleCategory(category) {
     return;
   }
 
-  const isSelected = state.selectedCategories.includes(category);
-
-  if (isSelected && state.selectedCategories.length === 1) {
-    return;
-  }
-
-  state.selectedCategories = toggleValue(state.selectedCategories, category);
-  saveSelectedCategories(state.selectedCategories);
-  syncVisibleCategories(elements, state.selectedCategories);
-  renderFilters();
-
-  if (
-    squadState.active &&
-    squadState.code &&
-    squadState.playerId &&
-    squadState.isLeader
-  ) {
-    publishSelectedCategories(
-      squadState.code,
-      squadState.playerId,
-      state.selectedCategories,
-    );
-  }
+  setSelectedCategories(toggleValue(state.selectedCategories, category));
 }
 
 function toggleArmorTier(tier) {
@@ -716,11 +717,16 @@ function normalizeChanceValue(rawValue) {
 
 function handleWheelConfigChange(config) {
   if (squadState.active && squadState.code && squadState.isLeader) {
-    publishWheelConfig(squadState.code, {
-      enabled: true,
-      manualMode: config.manualMode,
-      manualValuesText: config.manualValuesText,
-    });
+    publishWheelConfig(
+      squadState.code,
+      {
+        enabled: true,
+        manualMode: config.manualMode,
+        manualValuesText: config.manualValuesText,
+      },
+      squadState.playerId,
+      squadState.playerName,
+    );
   }
 }
 
@@ -729,7 +735,26 @@ function handleWheelSpinRequest(spinPayload) {
     return;
   }
 
-  publishWheelSpin(squadState.code, squadState.playerId, spinPayload);
+  // A new leader spin should override old manual entries across the squad.
+  if (squadState.isLeader) {
+    publishWheelConfig(
+      squadState.code,
+      {
+        enabled: true,
+        manualMode: false,
+        manualValuesText: "",
+      },
+      squadState.playerId,
+      squadState.playerName,
+    );
+  }
+
+  publishWheelSpin(
+    squadState.code,
+    squadState.playerId,
+    spinPayload,
+    squadState.playerName,
+  );
 }
 
 function buildSquadWheelValues(players) {
@@ -800,6 +825,8 @@ function initServiceWorkerUpdateFlow() {
   navigator.serviceWorker
     .register(SW_SCRIPT_URL, { updateViaCache: "none" })
     .then((registration) => {
+      registration.update().catch(() => {});
+
       registration.addEventListener("updatefound", () => {
         const worker = registration.installing;
         if (!worker) {
@@ -946,25 +973,34 @@ function stopCleanupLoop() {
 
 function formatActivityMessage(event, players) {
   const payload = event.payload ?? {};
-  const actorName = payload.byName || players[payload.by]?.name || "Jemand";
-  const targetName =
-    players[payload.targetId]?.name || payload.playerName || "Jemand";
+  const actorName = resolveActivityActorName(payload, players);
+  const targetName = resolveActivityTargetName(payload, players);
 
   switch (event.type) {
+    case "session-created":
+      return `${actorName} hat die Session erstellt.`;
     case "member-joined":
-      return `${actorName} ist beigetreten.`;
+      return `${actorName} ist dem Squad beigetreten.`;
     case "member-rejoined":
-      return `${actorName} ist wieder da.`;
+      return `${actorName} ist wieder online.`;
     case "member-left":
       return `${actorName} hat den Squad verlassen.`;
     case "member-timeout":
       return `${targetName} wurde wegen Inaktivitat entfernt.`;
     case "leader-changed":
-      return `${targetName} ist jetzt Leader.`;
+      return `${actorName} hat die Leitung an ${targetName} uebergeben.`;
     case "member-kicked":
-      return `${targetName} wurde gekickt.`;
+      return `${actorName} hat ${targetName} aus dem Squad gekickt.`;
     case "role-changed":
-      return `${targetName} ist jetzt ${payload.role === "readonly" ? "Read-only" : "Member"}.`;
+      return `${actorName} hat ${targetName} auf ${payload.role === "readonly" ? "Read-only" : "Member"} gesetzt.`;
+    case "filters-updated":
+      return `${actorName} hat die Kategorien geaendert: ${formatSelectedCategoryNames(payload.selectedCategories)}.`;
+    case "wheel-config-updated":
+      return payload.manualMode
+        ? `${actorName} hat den Wheel-Modus auf Manuell gesetzt.`
+        : `${actorName} hat den Wheel-Modus auf Auto gesetzt.`;
+    case "wheel-spun":
+      return `${actorName} hat das Wheel gedreht.`;
     case "zero-to-hero":
       return payload.appliesToTeam
         ? `${actorName} hat 0 to Hero fuer das ganze Team ausgelost.`
@@ -972,6 +1008,49 @@ function formatActivityMessage(event, players) {
     default:
       return "Squad-Event";
   }
+}
+
+function resolveActivityActorName(payload, players) {
+  if (typeof payload.byName === "string" && payload.byName.trim()) {
+    return payload.byName;
+  }
+
+  if (typeof payload.by === "string" && payload.by.trim()) {
+    return players[payload.by]?.name || payload.by;
+  }
+
+  return "Jemand";
+}
+
+function resolveActivityTargetName(payload, players) {
+  if (typeof payload.targetName === "string" && payload.targetName.trim()) {
+    return payload.targetName;
+  }
+
+  if (typeof payload.playerName === "string" && payload.playerName.trim()) {
+    return payload.playerName;
+  }
+
+  if (typeof payload.targetId === "string" && payload.targetId.trim()) {
+    return players[payload.targetId]?.name || payload.targetId;
+  }
+
+  return "Jemand";
+}
+
+function formatSelectedCategoryNames(selectedCategories) {
+  if (!Array.isArray(selectedCategories)) {
+    return "keine";
+  }
+
+  const labels = selectedCategories
+    .map(
+      (key) =>
+        categoryOptions.find((category) => category.key === key)?.label ?? key,
+    )
+    .filter((label) => typeof label === "string" && label.length > 0);
+
+  return labels.length > 0 ? labels.join(", ") : "keine";
 }
 
 function renderActivityFeed(eventMap, players) {
@@ -989,13 +1068,57 @@ function renderActivityFeed(eventMap, players) {
   list.innerHTML = "";
   events.forEach((event) => {
     const item = document.createElement("li");
-    item.className = "squad-feed-item";
+    item.className = `squad-feed-item ${getActivityItemClass(event.type)}`;
     const time = new Date(event.createdAt).toLocaleTimeString("de-DE", {
       hour: "2-digit",
       minute: "2-digit",
     });
     item.innerHTML = `<span class="squad-feed-time">${time}</span><span class="squad-feed-text">${formatActivityMessage(event, players)}</span>`;
     list.appendChild(item);
+  });
+}
+
+function getActivityItemClass(eventType) {
+  switch (eventType) {
+    case "session-created":
+    case "member-joined":
+    case "member-rejoined":
+      return "squad-feed-item--join";
+    case "member-left":
+    case "member-timeout":
+    case "member-kicked":
+      return "squad-feed-item--leave";
+    case "leader-changed":
+      return "squad-feed-item--leader";
+    case "wheel-spun":
+      return "squad-feed-item--wheel";
+    case "wheel-config-updated":
+    case "filters-updated":
+    case "role-changed":
+      return "squad-feed-item--config";
+    case "zero-to-hero":
+      return "squad-feed-item--zth";
+    default:
+      return "squad-feed-item--default";
+  }
+}
+
+function closeOpenSquadMemberMenus(exceptMenu = null) {
+  document.querySelectorAll(".squad-member-menu").forEach((menu) => {
+    if (menu === exceptMenu) {
+      return;
+    }
+
+    menu.hidden = true;
+    const triggerId = menu.getAttribute("data-trigger-id");
+    if (!triggerId) {
+      return;
+    }
+
+    const trigger = document.getElementById(triggerId);
+    if (trigger) {
+      trigger.setAttribute("aria-expanded", "false");
+    }
   });
 }
 
@@ -1086,6 +1209,10 @@ function initSquad() {
         }, 1500);
       })
       .catch(() => {});
+  });
+
+  document.addEventListener("click", () => {
+    closeOpenSquadMemberMenus();
   });
 }
 
@@ -1223,35 +1350,55 @@ function renderAdminActions(card, playerId, player, isMe) {
     return;
   }
 
-  const wrap = document.createElement("div");
-  wrap.className = "squad-member-actions";
+  const menuWrap = document.createElement("div");
+  menuWrap.className = "squad-member-menu-wrap";
 
-  const promoteBtn = document.createElement("button");
-  promoteBtn.className = "squad-mini-btn";
-  promoteBtn.textContent = "Leader";
-  promoteBtn.addEventListener("click", () => {
+  const trigger = document.createElement("button");
+  trigger.type = "button";
+  trigger.className = "squad-member-menu-trigger";
+  trigger.textContent = "...";
+  trigger.setAttribute("aria-label", `Aktionen fuer ${player.name}`);
+  trigger.setAttribute("aria-expanded", "false");
+
+  const menu = document.createElement("div");
+  menu.className = "squad-member-menu";
+  menu.hidden = true;
+
+  const triggerId = `squad-member-menu-${playerId}`;
+  trigger.id = triggerId;
+  menu.setAttribute("data-trigger-id", triggerId);
+
+  const transferBtn = document.createElement("button");
+  transferBtn.type = "button";
+  transferBtn.className = "squad-member-menu-item";
+  transferBtn.textContent = "Lead uebergeben";
+  transferBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
     transferLeader(squadState.code, squadState.playerId, playerId);
-  });
-
-  const roleBtn = document.createElement("button");
-  roleBtn.className = "squad-mini-btn";
-  roleBtn.textContent = player.role === "readonly" ? "RO aus" : "RO";
-  roleBtn.addEventListener("click", () => {
-    const next = player.role === "readonly" ? "member" : "readonly";
-    setPlayerRole(squadState.code, squadState.playerId, playerId, next);
+    closeOpenSquadMemberMenus();
   });
 
   const kickBtn = document.createElement("button");
-  kickBtn.className = "squad-mini-btn danger";
-  kickBtn.textContent = "Kick";
-  kickBtn.addEventListener("click", () => {
+  kickBtn.type = "button";
+  kickBtn.className = "squad-member-menu-item danger";
+  kickBtn.textContent = "Kicken";
+  kickBtn.addEventListener("click", (event) => {
+    event.stopPropagation();
     kickPlayer(squadState.code, squadState.playerId, playerId);
+    closeOpenSquadMemberMenus();
   });
 
-  wrap.appendChild(promoteBtn);
-  wrap.appendChild(roleBtn);
-  wrap.appendChild(kickBtn);
-  card.appendChild(wrap);
+  trigger.addEventListener("click", (event) => {
+    event.stopPropagation();
+    const willOpen = menu.hidden;
+    closeOpenSquadMemberMenus(menu);
+    menu.hidden = !willOpen;
+    trigger.setAttribute("aria-expanded", String(willOpen));
+  });
+
+  menu.append(transferBtn, kickBtn);
+  menuWrap.append(trigger, menu);
+  card.appendChild(menuWrap);
 }
 
 function onSquadUpdate(data) {
@@ -1317,15 +1464,12 @@ function onSquadUpdate(data) {
 
   const remoteCategories = data.filters?.selectedCategories;
   let shouldRenderFilters = previousIsLeader !== squadState.isLeader;
-  if (Array.isArray(remoteCategories) && remoteCategories.length > 0) {
+  if (Array.isArray(remoteCategories)) {
     const sanitizedCategories = remoteCategories.filter((category) =>
-      defaultSelectedCategories.includes(category),
+      allCategoryKeys.includes(category),
     );
 
-    if (
-      sanitizedCategories.length > 0 &&
-      !arraysEqual(sanitizedCategories, state.selectedCategories)
-    ) {
+    if (!arraysEqual(sanitizedCategories, state.selectedCategories)) {
       state.selectedCategories = sanitizedCategories;
       saveSelectedCategories(state.selectedCategories);
       syncVisibleCategories(elements, state.selectedCategories);

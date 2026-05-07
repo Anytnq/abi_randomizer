@@ -634,6 +634,13 @@ h1 {
   box-shadow: inset 0 0 0 1px #d4a83f22;
 }
 
+.filter-item--group-toggle {
+  grid-column: 1 / -1;
+  border-style: dashed;
+  font-size: 11px;
+  letter-spacing: 0.4px;
+}
+
 .filter-item.excluded,
 .filter-tier-btn.excluded {
   border-color: #7a6330;
@@ -1114,8 +1121,8 @@ input[type="number"]:focus {
   height: 0;
   border-left: 16px solid transparent;
   border-right: 16px solid transparent;
-  border-top: 0;
-  border-bottom: 22px solid #ffe498;
+  border-top: 22px solid #ffe498;
+  border-bottom: 0;
   transform: translateX(-50%);
   filter: drop-shadow(0 2px 5px #000);
 }
@@ -1599,6 +1606,7 @@ input[type="number"]:focus {
 }
 
 .squad-member {
+  position: relative;
   padding: 12px 14px;
   border: 2px solid #ffffff1a;
   border-radius: 14px;
@@ -1642,30 +1650,61 @@ input[type="number"]:focus {
   color: #ff9f9f;
 }
 
-.squad-member-actions {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin-top: 10px;
+.squad-member-menu-wrap {
+  position: absolute;
+  top: 8px;
+  right: 8px;
 }
 
-.squad-mini-btn {
+.squad-member-menu-trigger {
+  min-width: 34px;
+  min-height: 28px;
   border: 1px solid #ffffff2d;
-  border-radius: 7px;
-  padding: 4px 8px;
+  border-radius: 8px;
   background: #ffffff14;
   color: #f1f4ff;
-  font-size: 11px;
+  font-size: 16px;
   font-weight: 700;
-  letter-spacing: 0.2px;
+  line-height: 1;
   cursor: pointer;
 }
 
-.squad-mini-btn:hover {
-  background: #ffffff24;
+.squad-member-menu-trigger:hover {
+  background: #ffffff26;
 }
 
-.squad-mini-btn.danger {
+.squad-member-menu {
+  position: absolute;
+  top: calc(100% + 6px);
+  right: 0;
+  z-index: 25;
+  min-width: 160px;
+  padding: 6px;
+  border: 1px solid #ffffff2b;
+  border-radius: 10px;
+  background: #121820;
+  box-shadow: 0 12px 28px #000a;
+  display: grid;
+  gap: 6px;
+}
+
+.squad-member-menu-item {
+  border: 1px solid #ffffff2d;
+  border-radius: 8px;
+  padding: 7px 9px;
+  background: #ffffff12;
+  color: #e8eef7;
+  font-size: 12px;
+  font-weight: 700;
+  text-align: left;
+  cursor: pointer;
+}
+
+.squad-member-menu-item:hover {
+  background: #ffffff22;
+}
+
+.squad-member-menu-item.danger {
   border-color: #ff75757a;
   color: #ffbdbd;
   background: #ff60601f;
@@ -1700,8 +1739,44 @@ input[type="number"]:focus {
   grid-template-columns: 58px 1fr;
   gap: 8px;
   padding: 5px 7px;
+  border: 1px solid transparent;
+  border-left-width: 4px;
   border-radius: 8px;
   background: #ffffff10;
+}
+
+.squad-feed-item--default {
+  border-left-color: #7f8c99;
+}
+
+.squad-feed-item--join {
+  border-left-color: #63d997;
+  background: #1f6a4124;
+}
+
+.squad-feed-item--leave {
+  border-left-color: #ff8a8a;
+  background: #7c242424;
+}
+
+.squad-feed-item--leader {
+  border-left-color: #f1c35a;
+  background: #7a5a1126;
+}
+
+.squad-feed-item--wheel {
+  border-left-color: #79d7ff;
+  background: #16516b26;
+}
+
+.squad-feed-item--config {
+  border-left-color: #d2a6ff;
+  background: #4c2d7126;
+}
+
+.squad-feed-item--zth {
+  border-left-color: #ff6767;
+  background: #8a1e1e30;
 }
 
 .squad-feed-time {
@@ -2019,16 +2094,13 @@ input[type="number"]:focus {
     padding: 11px 12px;
   }
 
-  .squad-member-actions {
-    display: grid;
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 8px;
+  .squad-member-menu-wrap {
+    top: 7px;
+    right: 7px;
   }
 
-  .squad-mini-btn {
-    min-height: 36px;
-    padding: 6px 8px;
-    font-size: 12px;
+  .squad-member-menu {
+    min-width: 150px;
   }
 
   .squad-feed {

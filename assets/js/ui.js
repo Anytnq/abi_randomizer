@@ -51,28 +51,46 @@ export function getElements() {
 export function renderFilterButtons(elements, filters, handlers, options = {}) {
   const canEditCategories = options.canEditCategories ?? true;
   const selectedCategorySet = new Set(filters.selectedCategories);
+  const allCategoryKeys = [
+    ...categoryOptionsRow1,
+    ...categoryOptionsRow2,
+    ...categoryOptionsRow3,
+  ].map((category) => category.key);
+  const areAllCategoriesSelected = allCategoryKeys.every((category) =>
+    selectedCategorySet.has(category),
+  );
 
-  setClearButtonState(elements.clearAllCategoriesButton, canEditCategories);
+  setClearButtonState(
+    elements.clearAllCategoriesButton,
+    canEditCategories,
+    areAllCategoriesSelected,
+  );
 
   renderCategoryButtonsRow(
     elements.categoryContainer1,
+    "Map",
     categoryOptionsRow1,
     selectedCategorySet,
     handlers.onCategoryToggle,
+    handlers.onCategoryGroupToggle,
     canEditCategories,
   );
   renderCategoryButtonsRow(
     elements.categoryContainer2,
+    "Equipment",
     categoryOptionsRow2,
     selectedCategorySet,
     handlers.onCategoryToggle,
+    handlers.onCategoryGroupToggle,
     canEditCategories,
   );
   renderCategoryButtonsRow(
     elements.categoryContainer3,
+    "Weapons",
     categoryOptionsRow3,
     selectedCategorySet,
     handlers.onCategoryToggle,
+    handlers.onCategoryGroupToggle,
     canEditCategories,
   );
   renderTierButtons(
@@ -98,23 +116,46 @@ export function renderFilterButtons(elements, filters, handlers, options = {}) {
   );
 }
 
-function setClearButtonState(button, enabled) {
+function setClearButtonState(button, enabled, areAllSelected) {
   if (!button) {
     return;
   }
 
+  button.textContent = areAllSelected
+    ? "Alle Kategorien de-selecten"
+    : "Alle Kategorien selecten";
   button.disabled = !enabled;
   button.setAttribute("aria-disabled", String(!enabled));
 }
 
 function renderCategoryButtonsRow(
   container,
+  groupLabel,
   categoryOptions,
   selectedCategorySet,
   onToggle,
+  onGroupToggle,
   canEditCategories,
 ) {
   container.replaceChildren();
+
+  const groupKeys = categoryOptions.map((category) => category.key);
+  const areAllGroupCategoriesSelected = groupKeys.every((category) =>
+    selectedCategorySet.has(category),
+  );
+
+  const groupToggleButton = document.createElement("button");
+  groupToggleButton.type = "button";
+  groupToggleButton.className = "filter-item filter-item--group-toggle";
+  groupToggleButton.textContent = areAllGroupCategoriesSelected
+    ? `${groupLabel}: alles de-selecten`
+    : `${groupLabel}: alles selecten`;
+  groupToggleButton.classList.toggle("active", areAllGroupCategoriesSelected);
+  groupToggleButton.disabled = !canEditCategories;
+  groupToggleButton.classList.toggle("locked", !canEditCategories);
+  groupToggleButton.setAttribute("aria-disabled", String(!canEditCategories));
+  groupToggleButton.addEventListener("click", () => onGroupToggle(groupKeys));
+  container.appendChild(groupToggleButton);
 
   categoryOptions.forEach((category) => {
     const isSelected = selectedCategorySet.has(category.key);

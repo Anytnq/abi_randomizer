@@ -197,7 +197,12 @@ export function publishPresence(code, playerId) {
   });
 }
 
-export function publishSelectedCategories(code, playerId, selectedCategories) {
+export function publishSelectedCategories(
+  code,
+  playerId,
+  selectedCategories,
+  actorName,
+) {
   update(ref(db, `sessions/${code}`), {
     leaderId: playerId,
   });
@@ -208,26 +213,39 @@ export function publishSelectedCategories(code, playerId, selectedCategories) {
   ).then(() => {
     publishSquadEvent(code, "filters-updated", {
       by: playerId,
+      byName: actorName,
       selectedCategories,
     });
   });
 }
 
-export function publishWheelConfig(code, wheelConfig) {
+export function publishWheelConfig(
+  code,
+  wheelConfig,
+  actorId = null,
+  actorName = null,
+) {
   set(ref(db, `sessions/${code}/filters/wheel`), wheelConfig).then(() => {
     publishSquadEvent(code, "wheel-config-updated", {
+      by: actorId,
+      byName: actorName,
       manualMode: wheelConfig.manualMode,
     });
   });
 }
 
-export function publishWheelSpin(code, playerId, spinPayload) {
+export function publishWheelSpin(
+  code,
+  playerId,
+  spinPayload,
+  actorName = null,
+) {
   set(ref(db, `sessions/${code}/wheelSpin`), {
     ...spinPayload,
     initiatedBy: playerId,
     updatedAt: Date.now(),
   }).then(() => {
-    publishSquadEvent(code, "wheel-spun", { by: playerId });
+    publishSquadEvent(code, "wheel-spun", { by: playerId, byName: actorName });
   });
 }
 
@@ -265,6 +283,9 @@ export async function transferLeader(code, actorId, targetId) {
     return false;
   }
 
+  const actorName = players[actorId]?.name ?? "Jemand";
+  const targetName = players[targetId]?.name ?? "Jemand";
+
   await update(ref(db, `sessions/${code}`), {
     leaderId: targetId,
   });
@@ -279,7 +300,9 @@ export async function transferLeader(code, actorId, targetId) {
 
   await publishSquadEvent(code, "leader-changed", {
     by: actorId,
+    byName: actorName,
     targetId,
+    targetName,
   });
 
   return true;
@@ -328,10 +351,12 @@ export async function kickPlayer(code, actorId, targetId) {
     return false;
   }
 
+  const actorName = data.players?.[actorId]?.name ?? "Jemand";
   const playerName = data.players?.[targetId]?.name ?? "Unbekannt";
   await remove(ref(db, `sessions/${code}/players/${targetId}`));
   await publishSquadEvent(code, "member-kicked", {
     by: actorId,
+    byName: actorName,
     targetId,
     playerName,
   });
@@ -411,7 +436,9 @@ export function leaveSession(code, playerId) {
       });
       publishSquadEvent(code, "leader-changed", {
         by: playerId,
+        byName: playerName,
         targetId: nextLeaderId,
+        targetName: players[nextLeaderId]?.name ?? "Jemand",
       });
     });
   });

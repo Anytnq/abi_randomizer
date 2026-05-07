@@ -21,7 +21,10 @@ const STATIC_ASSETS = [
 
 self.addEventListener("install", (event) => {
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => cache.addAll(STATIC_ASSETS)),
+    caches
+      .open(CACHE_NAME)
+      .then((cache) => cache.addAll(STATIC_ASSETS))
+      .then(() => self.skipWaiting()),
   );
 });
 
@@ -54,26 +57,14 @@ function isExternalRealtimeRequest(url) {
   );
 }
 
-async function staleWhileRevalidate(request) {
-  const cache = await caches.open(CACHE_NAME);
-  const cached = await cache.match(request);
-
-  const networkPromise = fetch(request)
-    .then((response) => {
-      if (response.ok) {
-        cache.put(request, response.clone());
-      }
-      return response;
-    })
-    .catch(() => cached);
-
-  return cached || networkPromise;
-}
-
-async function networkFirst(request) {
+async function networkFirst(request, options = {}) {
+  const { noStore = false } = options;
   const cache = await caches.open(CACHE_NAME);
   try {
-    const response = await fetch(request);
+    const response = await fetch(
+      request,
+      noStore ? { cache: "no-store" } : undefined,
+    );
     if (response.ok) {
       cache.put(request, response.clone());
     }
@@ -103,7 +94,7 @@ self.addEventListener("fetch", (event) => {
   }
 
   if (request.mode === "navigate") {
-    event.respondWith(networkFirst(request));
+    event.respondWith(networkFirst(request, { noStore: true }));
     return;
   }
 
@@ -112,7 +103,7 @@ self.addEventListener("fetch", (event) => {
   );
 
   if (isStaticFile) {
-    event.respondWith(staleWhileRevalidate(request));
+    event.respondWith(networkFirst(request, { noStore: true }));
     return;
   }
 
