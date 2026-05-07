@@ -60,6 +60,7 @@ import {
   publishResult,
   publishSpinning,
   publishZeroToHero,
+  rejoinSession,
 } from "./squad.js";
 
 const defaultSelectedCategories = categoryOptions.map(
@@ -146,6 +147,7 @@ function initialize() {
   elements.spinButton.addEventListener("click", spinAll);
   window.addEventListener("resize", () => syncPaylinePosition());
   initSquad();
+  tryAutoRejoinSquad();
 }
 
 function toggleCategory(category) {
@@ -586,6 +588,32 @@ const squadState = {
   isLeader: false,
   playerName: null,
   lastZeroToHero: null,
+
+const SQUAD_STORAGE_KEY = "squadSession";
+
+function saveSquadToStorage(code, playerId, playerName) {
+  try {
+    localStorage.setItem(
+      SQUAD_STORAGE_KEY,
+      JSON.stringify({ code, playerId, playerName }),
+    );
+  } catch (_) {}
+}
+
+function loadSquadFromStorage() {
+  try {
+    const raw = localStorage.getItem(SQUAD_STORAGE_KEY);
+    return raw ? JSON.parse(raw) : null;
+  } catch (_) {
+    return null;
+  }
+}
+
+function clearSquadFromStorage() {
+  try {
+    localStorage.removeItem(SQUAD_STORAGE_KEY);
+  } catch (_) {}
+}
 };
 
 function initSquad() {
@@ -619,6 +647,7 @@ function initSquad() {
     squadState.playerName = name;
     wheelController.setSquadContext({ active: true, isLeader: true });
     showSquadSession(code);
+      saveSquadToStorage(code, playerId, name);
     renderFilters();
   });
 
@@ -644,6 +673,7 @@ function initSquad() {
     squadState.isLeader = false;
     squadState.playerName = name;
     wheelController.setSquadContext({ active: true, isLeader: false });
+      saveSquadToStorage(code, playerId, name);
     showSquadSession(code);
     renderFilters();
   });
@@ -655,6 +685,7 @@ function initSquad() {
     squadState.code = null;
     squadState.playerId = null;
     squadState.active = false;
+      clearSquadFromStorage();
     squadState.isLeader = false;
     document.getElementById("squadSession").hidden = true;
     document.getElementById("squadSetup").hidden = false;
@@ -733,8 +764,51 @@ function hideSquadError() {
   document.getElementById("squadError").hidden = true;
 }
 
+function resetSquadUi() {
+  squadState.code = null;
+  squadState.playerId = null;
+  squadState.active = false;
+  squadState.isLeader = false;
+  squadState.playerName = null;
+  clearSquadFromStorage();
+  document.getElementById("squadSession").hidden = true;
+  document.getElementById("squadSetup").hidden = false;
+  document.getElementById("squadMembers").innerHTML = "";
+  wheelController?.setSquadContext({ active: false, isLeader: false });
+  updateSquadRoleHint();
+  renderFilters();
+}
+
+function tryAutoRejoinSquad() {
+  const saved = loadSquadFromStorage();
+  if (!saved?.code || !saved?.playerId || !saved?.playerName) return;
+
+  rejoinSession(
+    saved.code,
+    saved.playerId,
+    saved.playerName,
+    onSquadUpdate,
+    () => {
+      // Session abgelaufen oder nicht mehr vorhanden
+      clearSquadFromStorage();
+    },
+  );
+
+  squadState.code = saved.code;
+  squadState.playerId = saved.playerId;
+  squadState.playerName = saved.playerName;
+  squadState.active = true;
+  // isLeader wird über onSquadUpdate gesetzt sobald die Daten ankommen
+  wheelController.setSquadContext({ active: true, isLeader: false });
+  showSquadSession(saved.code);
+  renderFilters();
+}
+
 function onSquadUpdate(data) {
-  if (!data) return;
+  if (!data) {
+    resetSquadUi();
+    return;
+  }
   squadState.isLeader = data.leaderId === squadState.playerId;
   wheelController.setSquadContext({
     active: squadState.active,

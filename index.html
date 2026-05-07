@@ -15,6 +15,11 @@
     />
     <link rel="stylesheet" href="./assets/css/styles.css" />
   </head>
+  <script>
+    if ("serviceWorker" in navigator) {
+      navigator.serviceWorker.register("./sw.js").catch(() => {});
+    }
+  </script>
   <body>
     <button class="vagari-mode-btn" id="vagariModeBtn" type="button">
       Vagari Mode

@@ -80,6 +80,45 @@ export function joinSession(code, playerName, onUpdate, onNotFound) {
   return { playerId };
 }
 
+export function rejoinSession(
+  code,
+  playerId,
+  playerName,
+  onUpdate,
+  onNotFound,
+) {
+  const sessionRef = ref(db, `sessions/${code}`);
+
+  get(sessionRef).then((snapshot) => {
+    if (!snapshot.exists()) {
+      onNotFound();
+      return;
+    }
+
+    const data = snapshot.val();
+    const age = Date.now() - (data.createdAt ?? 0);
+    if (age > SESSION_TTL_MS) {
+      onNotFound();
+      return;
+    }
+
+    // Spieler ggf. wieder eintragen falls er zwischenzeitlich entfernt wurde
+    const players = data.players ?? {};
+    if (!players[playerId]) {
+      set(ref(db, `sessions/${code}/players/${playerId}`), {
+        name: playerName,
+        result: null,
+        spinning: false,
+        joinedAt: Date.now(),
+      });
+    }
+
+    listenToSession(code, onUpdate);
+  });
+
+  return { playerId };
+}
+
 export function publishResult(code, playerId, result) {
   set(ref(db, `sessions/${code}/players/${playerId}/result`), result);
   set(ref(db, `sessions/${code}/players/${playerId}/spinning`), false);
