@@ -99,6 +99,7 @@ const state = {
   activeBackpacks: [...backpacks],
   weaponHistory: [],
   lastMap: null,
+  lastResult: {},
 };
 
 const elements = getElements();
@@ -234,6 +235,11 @@ function reloadMapOnly() {
     return;
   }
 
+  if (squadState.active && squadState.role === "readonly") {
+    showSquadError("Du bist im Read-only Modus und kannst nicht drehen.");
+    return;
+  }
+
   if (!isCategorySelected("map") || state.activeMaps.length === 0) {
     return;
   }
@@ -249,10 +255,25 @@ function reloadMapOnly() {
   const spinDurationMs = getSpinDuration(1);
   isMapReloading = true;
   playSpinSound(spinDurationMs);
+
+  if (squadState.active && squadState.code && squadState.playerId) {
+    publishSpinning(squadState.code, squadState.playerId, true);
+  }
+
   spinColumn("strip-map", state.activeMaps, 0, mapWinner, false);
 
   setTimeout(() => {
     stopSpinSound();
+
+    state.lastResult = {
+      ...state.lastResult,
+      Map: mapWinner.name,
+    };
+
+    if (squadState.active && squadState.code && squadState.playerId) {
+      publishResult(squadState.code, squadState.playerId, state.lastResult);
+    }
+
     isMapReloading = false;
   }, spinDurationMs);
 }
@@ -627,7 +648,8 @@ function spinAll() {
         weapon: isZeroToHero ? { name: "ZERO TO HERO" } : weaponWinner,
         secondary: secondaryWinner,
       };
-      publishResult(squadState.code, squadState.playerId, buildResult(winners));
+      state.lastResult = buildResult(winners);
+      publishResult(squadState.code, squadState.playerId, state.lastResult);
       if (isZeroToHero) {
         publishZeroToHero(
           squadState.code,
@@ -1228,6 +1250,8 @@ function onSquadUpdate(data) {
 
   if (me) {
     squadState.rejoinPending = false;
+    state.lastResult =
+      me.result && typeof me.result === "object" ? me.result : {};
   }
 
   squadState.role = me?.role || (squadState.isLeader ? "leader" : "member");
