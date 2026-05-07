@@ -34,25 +34,21 @@ export function getWeightedRandom(items) {
     return items?.[0];
   }
 
-  const weightedItems = items.map((item) => ({
-    item,
-    weight: item.weight ?? tierWeights[item.type] ?? 10,
-  }));
+  let totalWeight = 0;
+  for (const item of items) {
+    totalWeight += item.weight ?? tierWeights[item.type] ?? 10;
+  }
 
-  const totalWeight = weightedItems.reduce(
-    (sum, weightedItem) => sum + weightedItem.weight,
-    0,
-  );
   let randomValue = Math.random() * totalWeight;
 
-  for (const weightedItem of weightedItems) {
-    randomValue -= weightedItem.weight;
+  for (const item of items) {
+    randomValue -= item.weight ?? tierWeights[item.type] ?? 10;
     if (randomValue <= 0) {
-      return weightedItem.item;
+      return item;
     }
   }
 
-  return weightedItems[weightedItems.length - 1].item;
+  return items[items.length - 1];
 }
 
 export function pickMapWinner(maps, lastMap) {

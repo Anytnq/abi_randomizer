@@ -65,6 +65,7 @@ import {
   publishZeroToHero,
   rejoinSession,
   setPlayerRole,
+  subscribeToSession,
   transferLeader,
 } from "./squad.js?v=20260507-4";
 import {
@@ -345,24 +346,26 @@ function updateFilters() {
 }
 
 function updateActiveFilters() {
-  state.activeMaps = maps.filter(
-    (map) => !state.excludedMaps.includes(map.name),
-  );
+  const excludedMapSet = new Set(state.excludedMaps);
+  const excludedWeaponSet = new Set(state.excludedWeapons);
+  const excludedHelmetTierSet = new Set(state.excludedHelmetTiers);
+  const excludedArmorTierSet = new Set(state.excludedArmorTiers);
+
+  state.activeMaps = maps.filter((map) => !excludedMapSet.has(map.name));
   state.activeWeapons = weapons.filter(
-    (weapon) => !state.excludedWeapons.includes(weapon.name),
+    (weapon) => !excludedWeaponSet.has(weapon.name),
   );
   state.activeHelmets = helmets.filter(
-    (helmet) =>
-      !state.excludedHelmetTiers.includes(tierNumberByType[helmet.type]),
+    (helmet) => !excludedHelmetTierSet.has(tierNumberByType[helmet.type]),
   );
   state.activeArmors = armors.filter(
-    (armor) => !state.excludedArmorTiers.includes(tierNumberByType[armor.type]),
+    (armor) => !excludedArmorTierSet.has(tierNumberByType[armor.type]),
   );
-  state.activeChestRigs = [...chestRigs];
-  state.activeArmoredChestRigs = [...armoredChestRigs];
-  state.activeHeadsets = [...headsets];
-  state.activeSecondaries = [...secondaries];
-  state.activeBackpacks = [...backpacks];
+  state.activeChestRigs = chestRigs;
+  state.activeArmoredChestRigs = armoredChestRigs;
+  state.activeHeadsets = headsets;
+  state.activeSecondaries = secondaries;
+  state.activeBackpacks = backpacks;
 }
 
 function createInitialStrips() {
@@ -705,6 +708,14 @@ const squadState = {
   role: "member",
   playerName: null,
   lastZeroToHero: null,
+  hasProcessedInitialUpdate: false,
+  sessionUnsubscribe: null,
+  rejoinPending: false,
+  lastMembersSignature: "",
+  lastEventsSignature: "",
+  lastWheelConfigSignature: "",
+  lastAutoValuesSignature: "",
+  lastRemoteSpinId: null,
   lastSeenUpdateAt: 0,
   heartbeatTimerId: null,
   cleanupTimerId: null,
@@ -767,6 +778,26 @@ function saveSquadToStorage(code, playerId, playerName) {
       JSON.stringify(buildSquadStoragePayload(code, playerId, playerName)),
     );
   } catch (_) {}
+}
+
+function unsubscribeFromSession() {
+  if (typeof squadState.sessionUnsubscribe === "function") {
+    squadState.sessionUnsubscribe();
+  }
+
+  squadState.sessionUnsubscribe = null;
+}
+
+function ensureSessionSubscription() {
+  if (!squadState.code) {
+    return;
+  }
+
+  unsubscribeFromSession();
+  squadState.sessionUnsubscribe = subscribeToSession(
+    squadState.code,
+    onSquadUpdate,
+  );
 }
 
 function loadSquadFromStorage() {
@@ -931,11 +962,7 @@ function initSquad() {
     const name = getSquadName();
     if (!name) return;
 
-    const { code, playerId } = createSession(
-      name,
-      state.selectedCategories,
-      onSquadUpdate,
-    );
+    const { code, playerId } = createSession(name, state.selectedCategories);
 
     squadState.code = code;
     squadState.playerId = playerId;
@@ -945,6 +972,7 @@ function initSquad() {
     squadState.playerName = name;
 
     saveSquadToStorage(code, playerId, name);
+    ensureSessionSubscription();
     wheelController.setSquadContext({ active: true, isLeader: true });
     showSquadSession(code);
     startHeartbeat();
@@ -965,7 +993,7 @@ function initSquad() {
       return;
     }
 
-    const { playerId } = joinSession(code, name, onSquadUpdate, () => {
+    const { playerId } = joinSession(code, name, () => {
       showSquadError("Session nicht gefunden oder abgelaufen.");
     });
 
@@ -977,6 +1005,7 @@ function initSquad() {
     squadState.playerName = name;
 
     saveSquadToStorage(code, playerId, name);
+    ensureSessionSubscription();
     wheelController.setSquadContext({ active: true, isLeader: false });
     showSquadSession(code);
     startHeartbeat();
@@ -1080,12 +1109,21 @@ function hideSquadError() {
 function resetSquadUi(clearStorage = true) {
   stopHeartbeat();
   stopCleanupLoop();
+  unsubscribeFromSession();
   squadState.code = null;
   squadState.playerId = null;
   squadState.active = false;
   squadState.isLeader = false;
   squadState.role = "member";
   squadState.playerName = null;
+  squadState.lastZeroToHero = null;
+  squadState.hasProcessedInitialUpdate = false;
+  squadState.rejoinPending = false;
+  squadState.lastMembersSignature = "";
+  squadState.lastEventsSignature = "";
+  squadState.lastWheelConfigSignature = "";
+  squadState.lastAutoValuesSignature = "";
+  squadState.lastRemoteSpinId = null;
   squadState.lastSeenUpdateAt = 0;
   if (clearStorage) {
     clearSquadFromStorage();
@@ -1107,20 +1145,15 @@ function tryAutoRejoinSquad() {
     return;
   }
 
-  rejoinSession(
-    saved.code,
-    saved.playerId,
-    saved.playerName,
-    onSquadUpdate,
-    () => {
-      clearSquadFromStorage();
-    },
-  );
+  rejoinSession(saved.code, saved.playerId, saved.playerName, () => {
+    clearSquadFromStorage();
+  });
 
   squadState.code = saved.code;
   squadState.playerId = saved.playerId;
   squadState.playerName = saved.playerName;
   squadState.active = true;
+  ensureSessionSubscription();
   wheelController.setSquadContext({ active: true, isLeader: false });
   showSquadSession(saved.code);
   startHeartbeat();
@@ -1169,21 +1202,32 @@ function onSquadUpdate(data) {
     return;
   }
 
+  const previousIsLeader = squadState.isLeader;
   squadState.lastSeenUpdateAt = Date.now();
   showReconnectBanner(false);
   squadState.isLeader = data.leaderId === squadState.playerId;
 
   const players = data.players ?? {};
   const me = players[squadState.playerId];
-  if (!me && squadState.active && squadState.code && squadState.playerName) {
+  if (
+    !me &&
+    squadState.active &&
+    squadState.code &&
+    squadState.playerName &&
+    !squadState.rejoinPending
+  ) {
+    squadState.rejoinPending = true;
     rejoinSession(
       squadState.code,
       squadState.playerId,
       squadState.playerName,
-      onSquadUpdate,
       () => resetSquadUi(true),
     );
     return;
+  }
+
+  if (me) {
+    squadState.rejoinPending = false;
   }
 
   squadState.role = me?.role || (squadState.isLeader ? "leader" : "member");
@@ -1195,7 +1239,13 @@ function onSquadUpdate(data) {
   startCleanupLoop();
 
   const zth = data.zeroToHero;
-  if (zth?.triggeredAt && zth.triggeredAt !== squadState.lastZeroToHero) {
+  if (!squadState.hasProcessedInitialUpdate) {
+    squadState.lastZeroToHero = zth?.triggeredAt ?? null;
+    squadState.hasProcessedInitialUpdate = true;
+  } else if (
+    zth?.triggeredAt &&
+    zth.triggeredAt !== squadState.lastZeroToHero
+  ) {
     squadState.lastZeroToHero = zth.triggeredAt;
     showSquadZeroToHeroOverlay(
       zth.triggeredByName ?? "Jemand",
@@ -1204,6 +1254,7 @@ function onSquadUpdate(data) {
   }
 
   const remoteCategories = data.filters?.selectedCategories;
+  let shouldRenderFilters = previousIsLeader !== squadState.isLeader;
   if (Array.isArray(remoteCategories) && remoteCategories.length > 0) {
     const sanitizedCategories = remoteCategories.filter((category) =>
       defaultSelectedCategories.includes(category),
@@ -1211,23 +1262,56 @@ function onSquadUpdate(data) {
 
     if (
       sanitizedCategories.length > 0 &&
-      JSON.stringify(sanitizedCategories) !==
-        JSON.stringify(state.selectedCategories)
+      !arraysEqual(sanitizedCategories, state.selectedCategories)
     ) {
       state.selectedCategories = sanitizedCategories;
       saveSelectedCategories(state.selectedCategories);
       syncVisibleCategories(elements, state.selectedCategories);
       createInitialStrips();
+      shouldRenderFilters = true;
     }
   }
 
-  renderFilters();
+  if (shouldRenderFilters) {
+    renderFilters();
+  }
 
+  const autoValues = buildSquadWheelValues(players);
+  const autoValuesSignature = autoValues.join("\u0001");
+  if (autoValuesSignature !== squadState.lastAutoValuesSignature) {
+    squadState.lastAutoValuesSignature = autoValuesSignature;
+    wheelController.setAutoValues(autoValues);
+  }
+
+  const wheelConfig = data.filters?.wheel ?? {};
+  const wheelConfigSignature = `${wheelConfig.enabled === true ? 1 : 0}|${wheelConfig.manualMode === true ? 1 : 0}|${wheelConfig.manualValuesText ?? ""}`;
+  if (wheelConfigSignature !== squadState.lastWheelConfigSignature) {
+    squadState.lastWheelConfigSignature = wheelConfigSignature;
+    wheelController.applySquadConfig(wheelConfig);
+  }
+
+  const remoteSpinId = data.wheelSpin?.spinId ?? null;
+  if (remoteSpinId && remoteSpinId !== squadState.lastRemoteSpinId) {
+    squadState.lastRemoteSpinId = remoteSpinId;
+    wheelController.applyRemoteSpin(data.wheelSpin);
+  }
+
+  const membersSignature = buildMembersSignature(players, data.leaderId);
+  if (membersSignature !== squadState.lastMembersSignature) {
+    squadState.lastMembersSignature = membersSignature;
+    renderSquadMembers(players, data.leaderId);
+  }
+
+  const eventsSignature = buildEventsSignature(data.events ?? {});
+  if (eventsSignature !== squadState.lastEventsSignature) {
+    squadState.lastEventsSignature = eventsSignature;
+    renderActivityFeed(data.events ?? {}, players);
+  }
+}
+
+function renderSquadMembers(players, leaderId) {
   const membersEl = document.getElementById("squadMembers");
   membersEl.innerHTML = "";
-  wheelController.setAutoValues(buildSquadWheelValues(players));
-  wheelController.applySquadConfig(data.filters?.wheel ?? {});
-  wheelController.applyRemoteSpin(data.wheelSpin);
 
   Object.entries(players).forEach(([id, player]) => {
     const isMe = id === squadState.playerId;
@@ -1236,7 +1320,7 @@ function onSquadUpdate(data) {
 
     const nameEl = document.createElement("div");
     nameEl.className = "squad-member-name";
-    const isLeader = id === data.leaderId;
+    const isLeader = id === leaderId;
     const roleTag = player.role === "readonly" ? " [RO]" : "";
     nameEl.textContent =
       player.name + roleTag + (isLeader ? " 👑" : "") + (isMe ? " (Du)" : "");
@@ -1273,8 +1357,54 @@ function onSquadUpdate(data) {
     renderAdminActions(card, id, player, isMe);
     membersEl.appendChild(card);
   });
+}
 
-  renderActivityFeed(data.events ?? {}, players);
+function buildMembersSignature(players, leaderId) {
+  const now = Date.now();
+
+  return Object.entries(players)
+    .sort(([leftId], [rightId]) => leftId.localeCompare(rightId))
+    .map(([playerId, player]) => {
+      const stale =
+        typeof player?.lastSeenAt === "number"
+          ? now - player.lastSeenAt > PRESENCE_HEARTBEAT_MS * 3
+          : true;
+      const resultEntries = player?.result
+        ? Object.entries(player.result)
+            .map(([key, value]) => `${key}:${value}`)
+            .join(",")
+        : "";
+
+      return `${playerId}|${player?.name ?? ""}|${player?.role ?? ""}|${playerId === leaderId ? 1 : 0}|${player?.spinning ? 1 : 0}|${stale ? 1 : 0}|${resultEntries}`;
+    })
+    .join("||");
+}
+
+function buildEventsSignature(eventMap) {
+  const events = getRecentEvents(eventMap, 10);
+  return events.map((event) => `${event.id}:${event.createdAt}`).join("|");
+}
+
+function arraysEqual(left, right) {
+  if (left === right) {
+    return true;
+  }
+
+  if (!Array.isArray(left) || !Array.isArray(right)) {
+    return false;
+  }
+
+  if (left.length !== right.length) {
+    return false;
+  }
+
+  for (let index = 0; index < left.length; index += 1) {
+    if (left[index] !== right[index]) {
+      return false;
+    }
+  }
+
+  return true;
 }
 
 function showSquadZeroToHeroOverlay(triggerName, appliesToTeam) {

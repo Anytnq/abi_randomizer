@@ -11,6 +11,8 @@ import { getInactivePlayerIds } from "./squad-utils.js";
 
 const SESSION_TTL_MS = 4 * 60 * 60 * 1000;
 const MAX_EVENTS = 80;
+const EVENT_TRIM_INTERVAL_MS = 60_000;
+const lastTrimByCode = new Map();
 
 export const PRESENCE_HEARTBEAT_MS = 15_000;
 export const PRESENCE_TIMEOUT_MS = 60_000;
@@ -67,13 +69,21 @@ export async function publishSquadEvent(code, eventType, payload = {}) {
 
   await set(ref(db, `sessions/${code}/events/${eventId}`), event);
 
+  const now = Date.now();
+  const lastTrimAt = lastTrimByCode.get(code) ?? 0;
+  if (now - lastTrimAt < EVENT_TRIM_INTERVAL_MS) {
+    return;
+  }
+
+  lastTrimByCode.set(code, now);
+
   const snapshot = await get(ref(db, `sessions/${code}/events`));
   if (snapshot.exists()) {
     await trimOldEvents(code, snapshot.val());
   }
 }
 
-export function createSession(playerName, selectedCategories, onUpdate) {
+export function createSession(playerName, selectedCategories) {
   const code = generateCode();
   const sessionRef = ref(db, `sessions/${code}`);
   const playerId = crypto.randomUUID();
@@ -96,12 +106,10 @@ export function createSession(playerName, selectedCategories, onUpdate) {
   }).then(() => {
     publishSquadEvent(code, "session-created", { by: playerName });
   });
-
-  listenToSession(code, onUpdate);
   return { code, playerId };
 }
 
-export function joinSession(code, playerName, onUpdate, onNotFound) {
+export function joinSession(code, playerName, onNotFound) {
   const sessionRef = ref(db, `sessions/${code}`);
   const playerId = crypto.randomUUID();
 
@@ -128,8 +136,6 @@ export function joinSession(code, playerName, onUpdate, onNotFound) {
           by: playerName,
         });
       });
-
-      listenToSession(code, onUpdate);
     },
     { onlyOnce: true },
   );
@@ -137,13 +143,7 @@ export function joinSession(code, playerName, onUpdate, onNotFound) {
   return { playerId };
 }
 
-export function rejoinSession(
-  code,
-  playerId,
-  playerName,
-  onUpdate,
-  onNotFound,
-) {
+export function rejoinSession(code, playerId, playerName, onNotFound) {
   const sessionRef = ref(db, `sessions/${code}`);
 
   get(sessionRef).then((snapshot) => {
@@ -171,8 +171,6 @@ export function rejoinSession(
         by: playerName,
       });
     });
-
-    listenToSession(code, onUpdate);
   });
 
   return { playerId };
@@ -419,9 +417,9 @@ export function leaveSession(code, playerId) {
   });
 }
 
-function listenToSession(code, onUpdate) {
+export function subscribeToSession(code, onUpdate) {
   const sessionRef = ref(db, `sessions/${code}`);
-  onValue(sessionRef, (snapshot) => {
+  return onValue(sessionRef, (snapshot) => {
     if (!snapshot.exists()) {
       onUpdate(null);
       return;

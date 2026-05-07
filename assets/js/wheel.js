@@ -314,13 +314,18 @@ function buildSpinPayload(values) {
 }
 
 function parseManualValues(rawInput) {
-  return rawInput
+  const uniqueValues = new Set();
+
+  rawInput
     .split(/[,;\n\r]+/)
     .map((entry) => entry.trim())
-    .filter(
-      (entry, index, list) => entry.length > 0 && list.indexOf(entry) === index,
-    )
-    .slice(0, 32);
+    .forEach((entry) => {
+      if (entry.length > 0) {
+        uniqueValues.add(entry);
+      }
+    });
+
+  return Array.from(uniqueValues).slice(0, 32);
 }
 
 function sanitizeSpinValues(values) {

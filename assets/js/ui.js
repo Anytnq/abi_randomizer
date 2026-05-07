@@ -5,9 +5,21 @@ import {
   categoryOptionsRow1,
   categoryOptionsRow2,
   categoryOptionsRow3,
+  maps,
   weapons,
   weaponCategoryOptions,
 } from "./data.js";
+
+const mapOptions = maps.map((map) => map.name);
+
+const weaponsByCategory = new Map(
+  weaponCategoryOptions.map((weaponCategory) => [
+    weaponCategory.key,
+    weapons
+      .filter((weapon) => weapon.category === weaponCategory.key)
+      .sort((left, right) => left.name.localeCompare(right.name)),
+  ]),
+);
 
 export function getElements() {
   return {
@@ -38,27 +50,28 @@ export function getElements() {
 
 export function renderFilterButtons(elements, filters, handlers, options = {}) {
   const canEditCategories = options.canEditCategories ?? true;
+  const selectedCategorySet = new Set(filters.selectedCategories);
 
   setClearButtonState(elements.clearAllCategoriesButton, canEditCategories);
 
   renderCategoryButtonsRow(
     elements.categoryContainer1,
     categoryOptionsRow1,
-    filters.selectedCategories,
+    selectedCategorySet,
     handlers.onCategoryToggle,
     canEditCategories,
   );
   renderCategoryButtonsRow(
     elements.categoryContainer2,
     categoryOptionsRow2,
-    filters.selectedCategories,
+    selectedCategorySet,
     handlers.onCategoryToggle,
     canEditCategories,
   );
   renderCategoryButtonsRow(
     elements.categoryContainer3,
     categoryOptionsRow3,
-    filters.selectedCategories,
+    selectedCategorySet,
     handlers.onCategoryToggle,
     canEditCategories,
   );
@@ -97,26 +110,21 @@ function setClearButtonState(button, enabled) {
 function renderCategoryButtonsRow(
   container,
   categoryOptions,
-  selectedCategories,
+  selectedCategorySet,
   onToggle,
   canEditCategories,
 ) {
   container.replaceChildren();
 
   categoryOptions.forEach((category) => {
+    const isSelected = selectedCategorySet.has(category.key);
     const button = document.createElement("button");
     button.type = "button";
     button.className = "filter-item";
     button.dataset.category = category.key;
     button.textContent = category.label;
-    button.classList.toggle(
-      "active",
-      selectedCategories.includes(category.key),
-    );
-    button.setAttribute(
-      "aria-pressed",
-      String(selectedCategories.includes(category.key)),
-    );
+    button.classList.toggle("active", isSelected);
+    button.setAttribute("aria-pressed", String(isSelected));
     button.disabled = !canEditCategories;
     button.classList.toggle("locked", !canEditCategories);
     button.setAttribute("aria-disabled", String(!canEditCategories));
@@ -142,19 +150,18 @@ function renderTierButtons(container, excludedTiers, onToggle) {
 
 function renderMapButtons(container, excludedMaps, onToggle) {
   container.replaceChildren();
+  const excludedMapSet = new Set(excludedMaps);
 
-  ["Farm", "Northridge", "Armory", "TV Station", "Airport"].forEach(
-    (mapName) => {
-      const button = document.createElement("button");
-      button.type = "button";
-      button.className = "filter-item";
-      button.dataset.map = mapName;
-      button.textContent = mapName;
-      button.classList.toggle("excluded", excludedMaps.includes(mapName));
-      button.addEventListener("click", () => onToggle(mapName));
-      container.appendChild(button);
-    },
-  );
+  mapOptions.forEach((mapName) => {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.className = "filter-item";
+    button.dataset.map = mapName;
+    button.textContent = mapName;
+    button.classList.toggle("excluded", excludedMapSet.has(mapName));
+    button.addEventListener("click", () => onToggle(mapName));
+    container.appendChild(button);
+  });
 }
 
 function renderWeaponCategoryButtons(
@@ -164,6 +171,7 @@ function renderWeaponCategoryButtons(
   onGroupToggle,
 ) {
   container.replaceChildren();
+  const excludedWeaponSet = new Set(excludedWeapons);
 
   weaponCategoryOptions.forEach((weaponCategory) => {
     const groupElement = document.createElement("section");
@@ -176,11 +184,9 @@ function renderWeaponCategoryButtons(
     title.className = "weapon-filter-title";
     title.textContent = weaponCategory.label;
 
-    const groupWeapons = weapons
-      .filter((weapon) => weapon.category === weaponCategory.key)
-      .sort((left, right) => left.name.localeCompare(right.name));
+    const groupWeapons = weaponsByCategory.get(weaponCategory.key) ?? [];
     const includedWeapons = groupWeapons.filter(
-      (weapon) => !excludedWeapons.includes(weapon.name),
+      (weapon) => !excludedWeaponSet.has(weapon.name),
     );
 
     const groupToggleButton = document.createElement("button");
@@ -205,10 +211,7 @@ function renderWeaponCategoryButtons(
       button.type = "button";
       button.className = "weapon-filter-item";
       button.dataset.weapon = weapon.name;
-      button.classList.toggle(
-        "excluded",
-        excludedWeapons.includes(weapon.name),
-      );
+      button.classList.toggle("excluded", excludedWeaponSet.has(weapon.name));
       button.innerHTML = `<span class="weapon-filter-dot" aria-hidden="true"></span><span>${weapon.name}</span>`;
       button.addEventListener("click", () => onToggle(weapon.name));
       groupGrid.appendChild(button);
