@@ -21,7 +21,7 @@ const state = {
   route: [],
   currentIndex: 0,
   lastRaidResult:
-    "Schließe einen Raid ab, um auf der naechsten Stufe eine Upgrade-Chance zu erhalten.",
+    "Schließe einen Raid ab, um auf die nächsten Stufe zu gelangen.",
 };
 
 initialize();
@@ -43,7 +43,7 @@ function regenerateRoute() {
   state.route = buildRoute(stageCount);
   state.currentIndex = 0;
   state.lastRaidResult =
-    "Neue Route generiert. Schließe einen Raid ab, um Upgrade-Chancen zu nutzen.";
+    "Neue Route generiert. Schließe einen Raid ab, um auf die nächsten Stufe zu gelangen.";
 
   render();
 }
@@ -74,10 +74,10 @@ function completeRaid() {
     const upgradedWeapon = pickHigherWeapon(nextEntry.value, nextEntry.name);
     if (upgradedWeapon) {
       state.route[nextIndex] = createRouteEntry(upgradedWeapon, nextIndex + 1);
-      raidResultText += ` Upgrade aktiv: Stufe ${nextIndex + 1} wurde auf ${upgradedWeapon.name} (Wert ${state.route[nextIndex].value}) erhoeht.`;
+      raidResultText += ` Upgrade aktiv: Stufe ${nextIndex + 1} wurde auf ${upgradedWeapon.name} (Wert ${state.route[nextIndex].value}) erhöht.`;
     } else {
       raidResultText +=
-        " Upgrade gewuerfelt, aber keine hoehere Waffe verfuegbar.";
+        " Upgrade gewürfelt, aber keine höhere Waffe verfügbar.";
     }
   } else {
     const percent = Math.round(upgradeChance * 100);
