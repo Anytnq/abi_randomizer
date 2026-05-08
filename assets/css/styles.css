@@ -1147,6 +1147,44 @@ input[type="number"]:focus {
   line-height: 1;
 }
 
+.mode-link-btn {
+  position: fixed;
+  top: 18px;
+  right: 18px;
+  z-index: 121;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 44px;
+  padding: 9px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 12px;
+  background: linear-gradient(180deg, #1c2026 0%, #14181d 100%);
+  color: var(--color-accent-strong);
+  font-family: var(--font-display);
+  font-size: 19px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  text-decoration: none;
+  box-shadow:
+    0 10px 24px #0007,
+    inset 0 1px 0 #ffffff14;
+  transition: transform 0.16s, border-color 0.16s, box-shadow 0.16s;
+}
+
+.mode-link-btn:hover {
+  border-color: var(--color-accent);
+  box-shadow:
+    0 12px 28px #0009,
+    inset 0 1px 0 #ffffff1f;
+  transform: translateY(-2px);
+}
+
+.mode-link-btn:focus-visible {
+  outline: 2px solid #ffe7a9;
+  outline-offset: 2px;
+}
+
 .switch-mode-btn {
   position: fixed;
   right: 18px;
@@ -1222,6 +1260,177 @@ input[type="number"]:focus {
 
 .compact-side-controls {
   display: none;
+}
+
+.gungame-shell {
+  width: 100%;
+  max-width: var(--max-width);
+}
+
+.gungame-panel {
+  margin-bottom: 16px;
+  padding: 16px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #171b20f7 0%, #111418f7 100%);
+  box-shadow: 0 18px 34px #0008;
+}
+
+.gungame-controls {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.gungame-stage-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  font-family: var(--font-ui);
+  color: var(--color-text-soft);
+}
+
+.gungame-stage-field input {
+  width: 100%;
+  min-height: 44px;
+  padding: 8px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: 10px;
+  background: #10151c;
+  color: var(--color-text);
+  font-family: var(--font-ui);
+  font-size: 20px;
+}
+
+.gungame-actions {
+  display: flex;
+  align-items: end;
+}
+
+.gungame-generate-btn,
+.gungame-step-btn,
+.gungame-reset-btn {
+  min-height: 44px;
+  padding: 8px 14px;
+  border: 1px solid var(--color-border-strong);
+  border-radius: 10px;
+  background: linear-gradient(180deg, #1c2026 0%, #14181d 100%);
+  color: var(--color-accent-strong);
+  font-family: var(--font-display);
+  font-size: 20px;
+  text-transform: uppercase;
+  letter-spacing: 0.8px;
+  cursor: pointer;
+  transition: transform 0.16s, border-color 0.16s, box-shadow 0.16s;
+}
+
+.gungame-generate-btn {
+  width: 100%;
+}
+
+.gungame-generate-btn:hover,
+.gungame-step-btn:hover,
+.gungame-reset-btn:hover {
+  border-color: var(--color-accent);
+  box-shadow: 0 10px 24px #0007;
+  transform: translateY(-2px);
+}
+
+.gungame-status {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.gungame-status-text {
+  color: var(--color-text-soft);
+  font-size: 18px;
+  letter-spacing: 0.3px;
+}
+
+.gungame-status-text strong {
+  color: var(--color-accent-strong);
+}
+
+.gungame-status-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.gungame-raid-btn {
+  border-color: #72c28f66;
+  color: #cbffe0;
+  background: linear-gradient(180deg, #1b2b20 0%, #15211a 100%);
+}
+
+.gungame-raid-result {
+  flex-basis: 100%;
+  margin: 2px 0 0;
+  color: var(--color-text-soft);
+  font-size: 14px;
+  line-height: 1.35;
+}
+
+.gungame-list {
+  display: grid;
+  gap: 8px;
+  list-style: none;
+}
+
+.gungame-item {
+  display: grid;
+  grid-template-columns: 36px 1fr auto auto;
+  align-items: center;
+  gap: 10px;
+  min-height: 56px;
+  padding: 8px 12px;
+  border: 1px solid #ffffff14;
+  border-radius: 10px;
+  background: linear-gradient(180deg, #1c2128 0%, #151920 100%);
+}
+
+.gungame-item.is-current {
+  border-color: var(--color-accent);
+  box-shadow: 0 0 0 1px #d4a83f22 inset;
+}
+
+.gungame-item.is-done {
+  opacity: 0.65;
+}
+
+.gungame-step {
+  color: var(--color-text-soft);
+  font-family: var(--font-display);
+  font-size: 22px;
+}
+
+.gungame-weapon {
+  color: var(--color-text);
+  font-size: 20px;
+  font-weight: 600;
+}
+
+.gungame-category {
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid #d4a83f44;
+  color: #ffe5a5;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.6px;
+}
+
+.gungame-value {
+  justify-self: end;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid #7fb8ff55;
+  color: #cbe6ff;
+  font-size: 13px;
+  letter-spacing: 0.5px;
 }
 
 body.compact-mode {
@@ -2349,6 +2558,14 @@ body.compact-mode .squad-content {
     padding: 6px 9px;
     font-size: 12px;
   }
+
+  .mode-link-btn {
+    top: 12px;
+    right: 12px;
+    min-height: 40px;
+    padding: 7px 10px;
+    font-size: 16px;
+  }
 }
 
 @media (max-width: 768px) {
@@ -2846,6 +3063,33 @@ body.compact-mode .squad-content {
     right: -32px;
     content: "```";
     font-size: 12px;
+  }
+
+  .gungame-controls {
+    grid-template-columns: 1fr;
+  }
+
+  .gungame-stage-field input {
+    font-size: 18px;
+  }
+
+  .gungame-generate-btn,
+  .gungame-step-btn,
+  .gungame-reset-btn {
+    font-size: 18px;
+  }
+
+  .gungame-item {
+    grid-template-columns: 30px 1fr;
+    row-gap: 6px;
+  }
+
+  .gungame-category {
+    justify-self: start;
+  }
+
+  .gungame-value {
+    justify-self: start;
   }
 
   .page-footer {

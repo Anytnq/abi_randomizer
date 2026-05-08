@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="GunGame Modus fuer den ABI Randomizer." />
+    <meta name="theme-color" content="#0d0d0d" />
+    <title>OPERATION: RNG | Gungame</title>
+    <link
+      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Teko:wght@500;600;700&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="./assets/css/styles.css" />
+  </head>
+  <body>
+    <main class="page-shell">
+      <header class="header-container">
+        <h1 id="mainTitle">OPERATION: RNG</h1>
+        <p class="subtitle">Gungame Modus</p>
+      </header>
+
+      <section class="gungame-shell" aria-label="Gungame Modus">
+        <div class="gungame-panel">
+          <div class="gungame-controls">
+            <label class="gungame-stage-field" for="gungameStageCount">
+              <span>Anzahl Waffenstufen</span>
+              <input
+                id="gungameStageCount"
+                type="number"
+                min="3"
+                max="30"
+                value="12"
+              />
+            </label>
+            <label class="gungame-stage-field" for="gungameUpgradeChance">
+              <span>Upgrade-Chance (%)</span>
+              <input
+                id="gungameUpgradeChance"
+                type="number"
+                min="0"
+                max="100"
+                value="25"
+              />
+            </label>
+            <div class="gungame-actions">
+              <button
+                class="gungame-generate-btn"
+                id="gungameGenerateBtn"
+                type="button"
+              >
+                Neue Route
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <div class="gungame-panel gungame-status">
+          <p class="gungame-status-text" id="gungameStatusText">
+            Aktuelle Stufe: <strong>1 / 12</strong>
+          </p>
+          <div class="gungame-status-actions">
+            <button
+              class="gungame-step-btn gungame-raid-btn"
+              id="gungameRaidDoneBtn"
+              type="button"
+            >
+              Raid abgeschlossen
+            </button>
+            <button class="gungame-step-btn" id="gungamePrevBtn" type="button">
+              Zurueck
+            </button>
+            <button class="gungame-step-btn" id="gungameNextBtn" type="button">
+              Weiter
+            </button>
+            <button
+              class="gungame-reset-btn"
+              id="gungameResetBtn"
+              type="button"
+            >
+              Reset
+            </button>
+          </div>
+          <p class="gungame-raid-result" id="gungameRaidResult">
+            Schließe einen Raid ab, um auf der naechsten Stufe eine
+            Upgrade-Chance zu erhalten.
+          </p>
+        </div>
+
+        <div class="gungame-panel">
+          <ol class="gungame-list" id="gungameList"></ol>
+        </div>
+      </section>
+    </main>
+
+    <a
+      class="mode-link-btn"
+      href="./randomizer.html"
+      aria-label="Zurueck zum Randomizer"
+      >Zum Randomizer</a
+    >
+    <script type="module" src="./assets/js/gungame/gungame.js"></script>
+  </body>
+</html>

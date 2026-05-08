@@ -6,7 +6,7 @@ import {
   set,
   update,
 } from "https://www.gstatic.com/firebasejs/11.8.1/firebase-database.js";
-import { db } from "./firebase.js";
+import { db } from "../firebase.js";
 import { getInactivePlayerIds } from "./squad-utils.js";
 
 const SESSION_TTL_MS = 4 * 60 * 60 * 1000;

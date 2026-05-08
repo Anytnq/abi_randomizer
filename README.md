@@ -5,6 +5,7 @@ Static browser randomizer for GitHub Pages with squad sync, wheel spin, advanced
 ## Features
 
 - Slot-based randomizer for map, equipment, weapon, and secondary categories.
+- Separate Gungame mode with own page and progressive weapon route.
 - Advanced filters with quick select/de-select actions:
 	- Global toggle for all categories.
 	- Per-group toggle for Map, Equipment, and Weapons.
@@ -31,23 +32,30 @@ Static browser randomizer for GitHub Pages with squad sync, wheel spin, advanced
 .
 ├── index.html
 ├── randomizer.html
+├── gungame.html
 ├── offline.html
 ├── sw.js
 ├── assets
 │   ├── css
 │   │   └── styles.css
 │   └── js
-│       ├── app.js
-│       ├── data.js
 │       ├── firebase.js
-│       ├── game.js
-│       ├── sound.js
-│       ├── squad-utils.js
-│       ├── squad-utils.test.js
-│       ├── squad.js
-│       ├── storage.js
-│       ├── ui.js
-│       └── wheel.js
+│       ├── gungame/
+│       │   ├── data.js
+│       │   └── gungame.js
+│       └── randomizer/
+│           ├── app.js
+│           ├── data.js
+│           ├── firebase.js
+│           ├── game.js
+│           ├── responsive-layout.js
+│           ├── sound.js
+│           ├── squad-utils.js
+│           ├── squad-utils.test.js
+│           ├── squad.js
+│           ├── storage.js
+│           ├── ui.js
+│           └── wheel.js
 └── README.md
 ```
 
@@ -59,7 +67,7 @@ Static browser randomizer for GitHub Pages with squad sync, wheel spin, advanced
 4. Choose main branch and root folder.
 5. Save.
 
-`index.html` is served automatically.
+`index.html` is served automatically and now acts as the landing page.
 
 ## Local Development
 
@@ -69,6 +77,7 @@ Static browser randomizer for GitHub Pages with squad sync, wheel spin, advanced
 
 ## Notes
 
-- `randomizer.html` remains as compatibility redirect to `index.html`.
+- `randomizer.html` is the main classic randomizer app page.
+- GunGame weapon values are maintained in `assets/js/gungame/data.js` and can be adjusted manually per weapon.
 - The app is fully static (HTML/CSS/JavaScript modules).
 - Cache updates are handled automatically; manual cache clearing should rarely be needed.
