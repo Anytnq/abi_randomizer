@@ -145,7 +145,10 @@ function getWeaponValue(weapon) {
 }
 
 function readUpgradeChance() {
-  const raw = Number.parseInt(String(elements.upgradeChanceInput?.value ?? "25"), 10);
+  const raw = Number.parseInt(
+    String(elements.upgradeChanceInput?.value ?? "25"),
+    10,
+  );
   const percent = Number.isFinite(raw) ? Math.max(0, Math.min(100, raw)) : 25;
   elements.upgradeChanceInput.value = String(percent);
   return percent / 100;
