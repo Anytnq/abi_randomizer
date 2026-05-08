@@ -3,12 +3,12 @@ export const TOTAL_CARDS = 60;
 export const VISUAL_OFFSET = -5;
 
 export const tierWeights = {
-  t1: 5,
-  t2: 10,
-  t3: 20,
-  t4: 60,
-  t5: 60,
-  t6: 15,
+  t1: 50,
+  t2: 50,
+  t3: 50,
+  t4: 50,
+  t5: 50,
+  t6: 45,
 };
 
 export const tierNumberByType = {
@@ -54,12 +54,12 @@ export const weaponCategoryOptions = [
 ];
 
 export const maps = [
-  { name: "Farm", type: "t2", weight: 20 },
-  { name: "Northridge", type: "t3", weight: 20 },
-  { name: "Armory", type: "t5", weight: 20 },
-  { name: "TV Station", type: "t6", weight: 20 },
-  { name: "Airport", type: "t4", weight: 20 },
-  { name: "Valley", type: "t4", weight: 20 },
+  { name: "Farm", type: "t1", weight: 20 },
+  { name: "Northridge", type: "t1", weight: 19 },
+  { name: "Armory", type: "t1", weight: 19 },
+  { name: "TV Station", type: "t1", weight: 19 },
+  { name: "Airport", type: "t1", weight: 20 },
+  { name: "Valley", type: "t1", weight: 19 },
 ];
 
 export const helmets = [
