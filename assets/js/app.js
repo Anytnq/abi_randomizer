@@ -25,6 +25,7 @@ import {
   loadExcludedArmorTiers,
   loadExcludedHelmetTiers,
   loadExcludedMaps,
+  loadStreamerMode,
   loadExcludedWeaponCategories,
   loadExcludedWeapons,
   loadSelectedCategories,
@@ -34,6 +35,7 @@ import {
   saveExcludedMaps,
   saveExcludedWeapons,
   saveSelectedCategories,
+  saveStreamerMode,
   saveWeaponHistory,
 } from "./storage.js";
 import { playSpinSound, stopSpinSound } from "./sound.js";
@@ -191,6 +193,7 @@ async function initialize() {
   syncVisibleCategories(elements, state.selectedCategories);
   createInitialStrips();
   initCompactMode();
+  initStreamerMode();
   syncPaylinePosition();
   elements.spinButton.addEventListener("click", spinAll);
   elements.clearAllCategoriesButton?.addEventListener("click", () => {
@@ -233,6 +236,65 @@ function applyCompactMode(enabled) {
   window.requestAnimationFrame(() => {
     syncPaylinePosition();
   });
+}
+
+function initStreamerMode() {
+  const streamerModeButton = elements.streamerModeButton;
+  if (!streamerModeButton) {
+    return;
+  }
+
+  const savedMode = loadStreamerMode();
+  applyStreamerMode(savedMode);
+
+  streamerModeButton.addEventListener("click", () => {
+    const currentMode = streamerModeButton.dataset.mode || "off";
+    const nextMode = getNextStreamerMode(currentMode);
+    applyStreamerMode(nextMode);
+    saveStreamerMode(nextMode);
+  });
+}
+
+function getNextStreamerMode(currentMode) {
+  switch (currentMode) {
+    case "off":
+      return "transparent";
+    case "transparent":
+      return "greenscreen";
+    default:
+      return "off";
+  }
+}
+
+function applyStreamerMode(mode) {
+  const normalizedMode =
+    mode === "transparent" || mode === "greenscreen" ? mode : "off";
+
+  elements.body.classList.toggle(
+    "streamer-mode-transparent",
+    normalizedMode === "transparent",
+  );
+  elements.body.classList.toggle(
+    "streamer-mode-greenscreen",
+    normalizedMode === "greenscreen",
+  );
+
+  if (!elements.streamerModeButton) {
+    return;
+  }
+
+  const labelByMode = {
+    off: "Streamer Modus: AUS",
+    transparent: "Streamer Modus: Transparent",
+    greenscreen: "Streamer Modus: Greenscreen",
+  };
+
+  elements.streamerModeButton.dataset.mode = normalizedMode;
+  elements.streamerModeButton.textContent = labelByMode[normalizedMode];
+  elements.streamerModeButton.setAttribute(
+    "aria-pressed",
+    String(normalizedMode !== "off"),
+  );
 }
 
 function relocateCompactSideControls(compactModeEnabled) {
@@ -1347,8 +1409,7 @@ function updateSquadRoleHint() {
 
   if (squadState.isLeader) {
     hintEl.classList.add("leader");
-    hintEl.textContent =
-      "Du bist Squad Leader. Du kannst Rollen verwalten, inaktive Spieler entfernen und Filter steuern.";
+    hintEl.textContent = "Du bist Squad Leader.";
     return;
   }
 
@@ -1431,59 +1492,7 @@ function tryAutoRejoinSquad() {
 }
 
 function renderAdminActions(card, playerId, player, isMe) {
-  if (!squadState.isLeader || isMe) {
-    return;
-  }
-
-  const menuWrap = document.createElement("div");
-  menuWrap.className = "squad-member-menu-wrap";
-
-  const trigger = document.createElement("button");
-  trigger.type = "button";
-  trigger.className = "squad-member-menu-trigger";
-  trigger.textContent = "...";
-  trigger.setAttribute("aria-label", `Aktionen fuer ${player.name}`);
-  trigger.setAttribute("aria-expanded", "false");
-
-  const menu = document.createElement("div");
-  menu.className = "squad-member-menu";
-  menu.hidden = true;
-
-  const triggerId = `squad-member-menu-${playerId}`;
-  trigger.id = triggerId;
-  menu.setAttribute("data-trigger-id", triggerId);
-
-  const transferBtn = document.createElement("button");
-  transferBtn.type = "button";
-  transferBtn.className = "squad-member-menu-item";
-  transferBtn.textContent = "Lead uebergeben";
-  transferBtn.addEventListener("click", (event) => {
-    event.stopPropagation();
-    transferLeader(squadState.code, squadState.playerId, playerId);
-    closeOpenSquadMemberMenus();
-  });
-
-  const kickBtn = document.createElement("button");
-  kickBtn.type = "button";
-  kickBtn.className = "squad-member-menu-item danger";
-  kickBtn.textContent = "Kicken";
-  kickBtn.addEventListener("click", (event) => {
-    event.stopPropagation();
-    kickPlayer(squadState.code, squadState.playerId, playerId);
-    closeOpenSquadMemberMenus();
-  });
-
-  trigger.addEventListener("click", (event) => {
-    event.stopPropagation();
-    const willOpen = menu.hidden;
-    closeOpenSquadMemberMenus(menu);
-    menu.hidden = !willOpen;
-    trigger.setAttribute("aria-expanded", String(willOpen));
-  });
-
-  menu.append(transferBtn, kickBtn);
-  menuWrap.append(trigger, menu);
-  card.appendChild(menuWrap);
+  return;
 }
 
 function onSquadUpdate(data) {

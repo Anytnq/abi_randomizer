@@ -129,6 +129,38 @@ body.alarm-mode {
     linear-gradient(120deg, #270808 0%, #360a0a 55%, #140505 100%);
 }
 
+body.streamer-mode-transparent,
+body.streamer-mode-transparent.alarm-mode {
+  background: transparent;
+}
+
+body.streamer-mode-transparent .slot-machine {
+  background: transparent;
+  box-shadow: none;
+}
+
+body.streamer-mode-transparent .slot-machine {
+  border-color: #ffffff2e;
+}
+
+body.streamer-mode-greenscreen,
+body.streamer-mode-greenscreen.alarm-mode {
+  background: #00b140;
+}
+
+body.streamer-mode-greenscreen .slot-machine {
+  border-color: #00b140;
+  background: #00b140;
+  box-shadow: none;
+}
+
+body.streamer-mode-transparent::before,
+body.streamer-mode-transparent::after,
+body.streamer-mode-greenscreen::before,
+body.streamer-mode-greenscreen::after {
+  display: none;
+}
+
 body.alarm-mode h1 {
   color: var(--color-danger-strong);
   text-shadow: 0 0 18px #ff1f1fb8, 2px 2px 0 #000;
@@ -891,7 +923,7 @@ h1 {
   padding: 0 6px;
   border-bottom: 1px solid #ffffff10;
   background: linear-gradient(180deg, #2a3038 0%, #20252c 100%);
-  font-size: 13px;
+  font-size: 14px;
   font-family: var(--font-ui);
   font-weight: 700;
   line-height: 1.25;
@@ -955,7 +987,7 @@ h1 {
 .slot-machine[data-visible-count="8"] .card,
 .slot-machine[data-visible-count="9"] .card {
   padding: 0 4px;
-  font-size: 11px;
+  font-size: 12px;
 }
 
 .card.t1 {
@@ -1162,6 +1194,27 @@ input[type="number"]:focus {
   outline-offset: 2px;
 }
 
+.streamer-mode-btn {
+  bottom: 78px;
+  min-width: 176px;
+  min-height: 40px;
+  padding: 7px 10px;
+  font-size: 14px;
+  letter-spacing: 0.5px;
+}
+
+.streamer-mode-btn[data-mode="transparent"] {
+  border-color: #7fb8ff88;
+  background: linear-gradient(180deg, #1a2533 0%, #101a25 100%);
+  color: #cbe6ff;
+}
+
+.streamer-mode-btn[data-mode="greenscreen"] {
+  border-color: #4ec66f99;
+  background: linear-gradient(180deg, #193021 0%, #122319 100%);
+  color: #beffd0;
+}
+
 .compact-left-stack {
   width: 100%;
   max-width: var(--max-width);
@@ -1258,7 +1311,7 @@ body.compact-mode .label {
 }
 
 body.compact-mode .card {
-  font-size: 11px;
+  font-size: 12px;
   padding: 0 4px;
 }
 
@@ -1406,7 +1459,7 @@ body.compact-mode .squad-feed-list {
   }
 
   body.compact-mode .card {
-    font-size: 10px;
+    font-size: 11px;
   }
 
   body.compact-mode .compact-left-stack,
@@ -2075,6 +2128,16 @@ body.compact-mode .squad-content {
   background: #ffffff22;
 }
 
+.squad-member-menu-item:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #ffffff0d;
+}
+
+.squad-member-menu-item:disabled:hover {
+  background: #ffffff0d;
+}
+
 .squad-member-menu-item.danger {
   border-color: #ff75757a;
   color: #ffbdbd;
@@ -2263,7 +2326,7 @@ body.compact-mode .squad-content {
 
   .card {
     height: 56px;
-    font-size: 12px;
+    font-size: 13px;
   }
 
   .wheel-section {
@@ -2277,6 +2340,14 @@ body.compact-mode .squad-content {
     padding: 8px 12px;
     font-size: 16px;
     letter-spacing: 0.6px;
+  }
+
+  .streamer-mode-btn {
+    bottom: 58px;
+    min-width: 162px;
+    min-height: 36px;
+    padding: 6px 9px;
+    font-size: 12px;
   }
 }
 
@@ -2396,7 +2467,7 @@ body.compact-mode .squad-content {
 
   .card {
     height: 48px;
-    font-size: 11px;
+    font-size: 12px;
     padding: 0 4px;
   }
 
@@ -2669,7 +2740,7 @@ body.compact-mode .squad-content {
 
   .card {
     height: 40px;
-    font-size: 9px;
+    font-size: 10px;
     padding: 0 3px;
     border-radius: 4px;
   }
@@ -2866,7 +2937,7 @@ body.compact-mode .squad-content {
 
   .card {
     height: 36px;
-    font-size: 8px;
+    font-size: 9px;
   }
 
   .spin-btn {

@@ -30,6 +30,7 @@ export function getElements() {
     subTitle: document.getElementById("subTitle"),
     spinButton: document.getElementById("spinBtn"),
     switchModeButton: document.getElementById("switchModeBtn"),
+    streamerModeButton: document.getElementById("streamerModeBtn"),
     chanceInput: document.getElementById("chanceInput"),
     filterToggle: document.getElementById("filterToggle"),
     filterChevron: document.getElementById("filterChevron"),

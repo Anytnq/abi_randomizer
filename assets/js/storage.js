@@ -5,6 +5,7 @@ const EXCLUDED_HELMET_TIERS_KEY = "excludedHelmetTiers";
 const EXCLUDED_MAPS_KEY = "excludedMaps";
 const EXCLUDED_WEAPON_CATEGORIES_KEY = "excludedWeaponCategories";
 const EXCLUDED_WEAPONS_KEY = "excludedWeapons";
+const STREAMER_MODE_KEY = "streamerMode";
 
 export function loadWeaponHistory() {
   try {
@@ -92,6 +93,23 @@ export function loadExcludedWeapons() {
 
 export function saveExcludedWeapons(weapons) {
   saveArray(EXCLUDED_WEAPONS_KEY, weapons);
+}
+
+export function loadStreamerMode() {
+  try {
+    const saved = localStorage.getItem(STREAMER_MODE_KEY);
+    return saved === "transparent" || saved === "greenscreen" ? saved : "off";
+  } catch {
+    return "off";
+  }
+}
+
+export function saveStreamerMode(mode) {
+  try {
+    localStorage.setItem(STREAMER_MODE_KEY, mode);
+  } catch {
+    // Ignore storage write failures to keep the randomizer usable.
+  }
 }
 
 function loadArray(key) {
