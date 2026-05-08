@@ -38,6 +38,7 @@ import {
 } from "./storage.js";
 import { playSpinSound, stopSpinSound } from "./sound.js";
 import { initializeWheelSpin } from "./wheel.js";
+import { initializeResponsiveLayout } from "./responsive-layout.js";
 import {
   createStripContent,
   enableAlarmMode,
@@ -76,6 +77,7 @@ import {
 const CACHE_HOTFIX_VERSION = "20260507-4";
 const SW_SCRIPT_URL = "./sw.js?v=20260507-4";
 const SQUAD_ZTH_TEAM_BANNER_CHANCE = 0.2;
+const COMPACT_MODE_STORAGE_KEY = "compactModeEnabled";
 
 const allCategoryKeys = categoryOptions.map((category) => category.key);
 const defaultSelectedCategories = ["map", "weapon", "secondary"];
@@ -101,6 +103,11 @@ const state = {
 };
 
 const elements = getElements();
+const compactControlsHost = document.getElementById("compactSideControls");
+const filterHeaderActions = document.querySelector(".filters-header-actions");
+const filterHeader = document.querySelector(".filters-header");
+const initialFilterHeaderActionsNextSibling =
+  filterHeaderActions?.nextElementSibling ?? null;
 let wheelController;
 let isMapReloading = false;
 
@@ -183,6 +190,7 @@ async function initialize() {
   });
   syncVisibleCategories(elements, state.selectedCategories);
   createInitialStrips();
+  initCompactMode();
   syncPaylinePosition();
   elements.spinButton.addEventListener("click", spinAll);
   elements.clearAllCategoriesButton?.addEventListener("click", () => {
@@ -194,6 +202,83 @@ async function initialize() {
   initConnectionWatchers();
   initSquad();
   tryAutoRejoinSquad();
+  initializeResponsiveLayout();
+}
+
+function initCompactMode() {
+  const switchModeButton = elements.switchModeButton;
+  if (!switchModeButton) {
+    return;
+  }
+
+  const savedCompactMode = loadCompactModePreference();
+  applyCompactMode(savedCompactMode);
+
+  switchModeButton.addEventListener("click", () => {
+    const compactModeEnabled =
+      !elements.body.classList.contains("compact-mode");
+    applyCompactMode(compactModeEnabled);
+    saveCompactModePreference(compactModeEnabled);
+  });
+}
+
+function applyCompactMode(enabled) {
+  elements.body.classList.toggle("compact-mode", enabled);
+  if (elements.switchModeButton) {
+    elements.switchModeButton.setAttribute("aria-pressed", String(enabled));
+  }
+
+  relocateCompactSideControls(enabled);
+
+  window.requestAnimationFrame(() => {
+    syncPaylinePosition();
+  });
+}
+
+function relocateCompactSideControls(compactModeEnabled) {
+  if (!compactControlsHost || !filterHeaderActions || !filterHeader) {
+    return;
+  }
+
+  if (compactModeEnabled) {
+    compactControlsHost.hidden = false;
+    if (filterHeaderActions.parentElement !== compactControlsHost) {
+      compactControlsHost.appendChild(filterHeaderActions);
+    }
+    return;
+  }
+
+  compactControlsHost.hidden = true;
+  if (filterHeaderActions.parentElement === filterHeader) {
+    return;
+  }
+
+  if (
+    initialFilterHeaderActionsNextSibling &&
+    initialFilterHeaderActionsNextSibling.parentElement === filterHeader
+  ) {
+    filterHeader.insertBefore(
+      filterHeaderActions,
+      initialFilterHeaderActionsNextSibling,
+    );
+    return;
+  }
+
+  filterHeader.appendChild(filterHeaderActions);
+}
+
+function loadCompactModePreference() {
+  try {
+    return localStorage.getItem(COMPACT_MODE_STORAGE_KEY) === "1";
+  } catch (_) {
+    return false;
+  }
+}
+
+function saveCompactModePreference(enabled) {
+  try {
+    localStorage.setItem(COMPACT_MODE_STORAGE_KEY, enabled ? "1" : "0");
+  } catch (_) {}
 }
 
 function setSelectedCategories(nextSelection) {
