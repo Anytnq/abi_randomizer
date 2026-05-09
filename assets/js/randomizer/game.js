@@ -2,7 +2,7 @@ import {
   CARD_HEIGHT,
   TOTAL_CARDS,
   VISUAL_OFFSET,
-  tierWeights,
+  tierChancePercent,
 } from "./data.js";
 
 export const SPIN_START_OFFSET_MS = 50;
@@ -34,15 +34,16 @@ export function getWeightedRandom(items) {
     return items?.[0];
   }
 
-  let totalWeight = 0;
+  let totalChancePercent = 0;
   for (const item of items) {
-    totalWeight += item.weight ?? tierWeights[item.type] ?? 10;
+    totalChancePercent +=
+      item.chancePercent ?? tierChancePercent[item.type] ?? 10;
   }
 
-  let randomValue = Math.random() * totalWeight;
+  let randomValue = Math.random() * totalChancePercent;
 
   for (const item of items) {
-    randomValue -= item.weight ?? tierWeights[item.type] ?? 10;
+    randomValue -= item.chancePercent ?? tierChancePercent[item.type] ?? 10;
     if (randomValue <= 0) {
       return item;
     }
