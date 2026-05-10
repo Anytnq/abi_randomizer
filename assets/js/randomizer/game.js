@@ -20,13 +20,38 @@ function formatWeaponCategory(category) {
     .join(" ");
 }
 
+function getWeaponValueLabel(item) {
+  if (!item?.category) {
+    return "";
+  }
+
+  const valueByTier = {
+    t1: "Low Roll",
+    t2: "Budget",
+    t3: "Solid",
+    t4: "Value",
+    t5: "High Value",
+    t6: "Jackpot",
+  };
+
+  return valueByTier[item.type] ?? "Value";
+}
+
 function buildCardContent(item) {
   const categoryLabel = formatWeaponCategory(item.category);
   const categoryLine = categoryLabel
     ? `<span class="card-category">(${categoryLabel})</span>`
     : "";
+  const isWeapon = Boolean(item?.category);
+  const valueLine = isWeapon
+    ? `<span class="card-value card-value--${item.type}">${getWeaponValueLabel(item)}</span>`
+    : "";
+  const imageLine = isWeapon
+    ? '<span class="card-weapon-icon" aria-hidden="true">🔧</span>'
+    : "";
+  const wrapperClass = isWeapon ? "card-text card-text--weapon" : "card-text";
 
-  return `<span class="card-text">${item.name}${categoryLine}</span>`;
+  return `<span class="${wrapperClass}">${imageLine}<span class="card-title">${item.name}</span>${categoryLine}${valueLine}</span>`;
 }
 
 export function getWeightedRandom(items) {
@@ -74,6 +99,29 @@ export function pickWeaponWinner(weapons, weaponHistory) {
   } while (weaponHistory.includes(winner.name) && attempts < 50);
 
   return winner;
+}
+
+export function pickEliteWeaponWinner(weapons) {
+  if (!Array.isArray(weapons) || weapons.length === 0) {
+    return null;
+  }
+
+  const tierRank = {
+    t1: 1,
+    t2: 2,
+    t3: 3,
+    t4: 4,
+    t5: 5,
+    t6: 6,
+  };
+
+  const sorted = [...weapons].sort(
+    (left, right) => (tierRank[right.type] ?? 0) - (tierRank[left.type] ?? 0),
+  );
+
+  const topPoolSize = Math.max(3, Math.ceil(sorted.length * 0.22));
+  const topPool = sorted.slice(0, topPoolSize);
+  return getWeightedRandom(topPool);
 }
 
 export function updateWeaponHistory(weaponHistory, weaponName) {

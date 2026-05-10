@@ -81,3 +81,4 @@ Static browser randomizer for GitHub Pages with squad sync, wheel spin, advanced
 - GunGame weapon values are maintained in `assets/js/gungame/data.js` and can be adjusted manually per weapon.
 - The app is fully static (HTML/CSS/JavaScript modules).
 - Cache updates are handled automatically; manual cache clearing should rarely be needed.
+- Optional Hero song for 0-to-Hero mode: place your licensed track at `assets/audio/i-need-a-hero.mp3`.

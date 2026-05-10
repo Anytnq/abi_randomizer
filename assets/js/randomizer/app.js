@@ -16,6 +16,7 @@ import {
   SPIN_STAGGER_MS,
   SPIN_START_OFFSET_MS,
   getWeightedRandom,
+  pickEliteWeaponWinner,
   pickMapWinner,
   pickWeaponWinner,
   spinColumn,
@@ -38,7 +39,14 @@ import {
   saveStreamerMode,
   saveWeaponHistory,
 } from "./storage.js";
-import { playSpinSound, stopSpinSound } from "./sound.js";
+import {
+  playCrateRevealSound,
+  playHeroSong,
+  playMusselDecisionSound,
+  playSpinSound,
+  stopHeroSong,
+  stopSpinSound,
+} from "./sound.js";
 import { initializeWheelSpin } from "./wheel.js";
 import { initializeResponsiveLayout } from "./responsive-layout.js";
 import {
@@ -80,6 +88,10 @@ const CACHE_HOTFIX_VERSION = "20260507-4";
 const SW_SCRIPT_URL = "./sw.js?v=20260507-4";
 const SQUAD_ZTH_TEAM_BANNER_CHANCE = 0.2;
 const COMPACT_MODE_STORAGE_KEY = "compactModeEnabled";
+const MUSSEL_MODE_STORAGE_KEY = "musselModeEnabled";
+const MUSSEL_ALLOW_CHANCE = 0.52;
+const CRATE_REVEAL_DELAY_MS = 440;
+const CRATE_REVEAL_DISPLAY_MS = 3800;
 
 const allCategoryKeys = categoryOptions.map((category) => category.key);
 const defaultSelectedCategories = ["map", "weapon", "secondary"];
@@ -102,6 +114,8 @@ const state = {
   weaponHistory: [],
   lastMap: null,
   lastResult: {},
+  musselModeEnabled: false,
+  activeOverlayTimeoutId: null,
 };
 
 const elements = getElements();
@@ -194,6 +208,7 @@ async function initialize() {
   createInitialStrips();
   initCompactMode();
   initStreamerMode();
+  initMusselMode();
   syncPaylinePosition();
   elements.spinButton.addEventListener("click", spinAll);
   elements.clearAllCategoriesButton?.addEventListener("click", () => {
@@ -253,6 +268,50 @@ function initStreamerMode() {
     applyStreamerMode(nextMode);
     saveStreamerMode(nextMode);
   });
+}
+
+function initMusselMode() {
+  const musselModeButton = elements.musselModeButton;
+  if (!musselModeButton) {
+    return;
+  }
+
+  state.musselModeEnabled = loadMusselModePreference();
+  applyMusselModeButtonState();
+
+  musselModeButton.addEventListener("click", () => {
+    state.musselModeEnabled = !state.musselModeEnabled;
+    applyMusselModeButtonState();
+    saveMusselModePreference(state.musselModeEnabled);
+  });
+}
+
+function applyMusselModeButtonState() {
+  if (!elements.musselModeButton) {
+    return;
+  }
+
+  elements.musselModeButton.setAttribute(
+    "aria-pressed",
+    String(state.musselModeEnabled),
+  );
+  elements.musselModeButton.textContent = state.musselModeEnabled
+    ? "Magische Miesmuschel: AN"
+    : "Magische Miesmuschel: AUS";
+}
+
+function loadMusselModePreference() {
+  try {
+    return localStorage.getItem(MUSSEL_MODE_STORAGE_KEY) === "1";
+  } catch (_) {
+    return false;
+  }
+}
+
+function saveMusselModePreference(enabled) {
+  try {
+    localStorage.setItem(MUSSEL_MODE_STORAGE_KEY, enabled ? "1" : "0");
+  } catch (_) {}
 }
 
 function getNextStreamerMode(currentMode) {
@@ -680,6 +739,10 @@ function spinAll() {
   const weaponWinner = isCategorySelected("weapon")
     ? pickWeaponWinner(state.activeWeapons, state.weaponHistory)
     : null;
+  const eliteWeaponWinner =
+    !isZeroToHero && isCategorySelected("weapon")
+      ? pickEliteWeaponWinner(state.activeWeapons)
+      : null;
   const chestRigWinner = isCategorySelected("chestRig")
     ? getWeightedRandom(state.activeChestRigs)
     : null;
@@ -792,7 +855,10 @@ function spinAll() {
   }
 
   if (isZeroToHero) {
+    playHeroSong();
     setTimeout(() => enableAlarmMode(elements), 500);
+  } else {
+    stopHeroSong();
   }
 
   const spinDurationMs = getSpinDuration(spinQueue.length);
@@ -812,23 +878,51 @@ function spinAll() {
     );
   });
 
-  setTimeout(() => {
+  setTimeout(async () => {
     stopSpinSound();
     setSpinButtonState(elements, false);
 
+    const winners = {
+      map: mapWinner,
+      helmet: helmetWinner,
+      headset: headsetWinner,
+      armor: armorWinner,
+      chestRig: chestRigWinner,
+      armoredChestRig: armoredChestRigWinner,
+      backpack: backpackWinner,
+      weapon: isZeroToHero ? { name: "ZERO TO HERO" } : weaponWinner,
+      secondary: secondaryWinner,
+    };
+
+    state.lastResult = buildResult(winners);
+
+    let grantedByMussel = true;
+    if (!isZeroToHero && eliteWeaponWinner) {
+      await showEliteCrateReveal(eliteWeaponWinner);
+    }
+
+    if (
+      state.musselModeEnabled &&
+      !isZeroToHero &&
+      Object.keys(state.lastResult).length > 0
+    ) {
+      grantedByMussel = await resolveMusselDecision();
+    }
+
+    if (eliteWeaponWinner) {
+      state.lastResult["Vollmodded"] = eliteWeaponWinner.name;
+    }
+
+    if (state.musselModeEnabled && !isZeroToHero) {
+      state.lastResult["Miesmuschel"] = grantedByMussel
+        ? "Gear erlaubt"
+        : "Gear verweigert";
+      if (!grantedByMussel) {
+        state.lastResult["Waffe"] = "Pistole Challenge";
+      }
+    }
+
     if (squadState.active && squadState.code && squadState.playerId) {
-      const winners = {
-        map: mapWinner,
-        helmet: helmetWinner,
-        headset: headsetWinner,
-        armor: armorWinner,
-        chestRig: chestRigWinner,
-        armoredChestRig: armoredChestRigWinner,
-        backpack: backpackWinner,
-        weapon: isZeroToHero ? { name: "ZERO TO HERO" } : weaponWinner,
-        secondary: secondaryWinner,
-      };
-      state.lastResult = buildResult(winners);
       publishResult(squadState.code, squadState.playerId, state.lastResult);
       if (isZeroToHero) {
         publishZeroToHero(
@@ -847,6 +941,95 @@ function spinAll() {
 function getSpinDuration(columnCount) {
   const lastColumnDelay = Math.max(0, columnCount - 1) * SPIN_STAGGER_MS;
   return SPIN_START_OFFSET_MS + SPIN_ANIMATION_MS + lastColumnDelay;
+}
+
+function clearOverlay() {
+  const overlay = document.getElementById("eventOverlay");
+  if (overlay) {
+    overlay.remove();
+  }
+
+  if (state.activeOverlayTimeoutId) {
+    clearTimeout(state.activeOverlayTimeoutId);
+    state.activeOverlayTimeoutId = null;
+  }
+}
+
+function showEliteCrateReveal(weapon) {
+  return new Promise((resolve) => {
+    clearOverlay();
+
+    const overlay = document.createElement("div");
+    overlay.id = "eventOverlay";
+    overlay.className = "event-overlay event-overlay--crate";
+    overlay.innerHTML = `
+      <div class="event-modal crate-modal">
+        <div class="crate-box" aria-hidden="true">📦</div>
+        <h2 class="event-title">Elite-Kiste geoffnet</h2>
+        <p class="event-subtitle">Vollmodded Waffe gezogen</p>
+        <p class="event-highlight">${escapeHtml(weapon.name)}</p>
+      </div>
+    `;
+
+    overlay.addEventListener("click", () => {
+      clearOverlay();
+      resolve();
+    });
+
+    document.body.appendChild(overlay);
+    playCrateRevealSound();
+
+    state.activeOverlayTimeoutId = window.setTimeout(() => {
+      clearOverlay();
+      resolve();
+    }, CRATE_REVEAL_DISPLAY_MS);
+  });
+}
+
+function resolveMusselDecision() {
+  return new Promise((resolve) => {
+    clearOverlay();
+
+    const allowGear = Math.random() < MUSSEL_ALLOW_CHANCE;
+    const overlay = document.createElement("div");
+    overlay.id = "eventOverlay";
+    overlay.className = "event-overlay event-overlay--mussel";
+
+    const resultText = allowGear
+      ? "Die Miesmuschel sagt: JA, du darfst das Gear nehmen."
+      : "Die Miesmuschel sagt: NEIN, nur Pistole in dieser Runde.";
+
+    overlay.innerHTML = `
+      <div class="event-modal mussel-modal">
+        <div class="mussel-icon" aria-hidden="true">🦪</div>
+        <h2 class="event-title">Magische Miesmuschel</h2>
+        <p class="event-subtitle">Entscheidung zum erlangten Gear</p>
+        <p class="event-decision ${allowGear ? "allow" : "deny"}">${resultText}</p>
+      </div>
+    `;
+
+    overlay.addEventListener("click", () => {
+      clearOverlay();
+      resolve(allowGear);
+    });
+
+    document.body.appendChild(overlay);
+    playMusselDecisionSound(allowGear);
+
+    state.activeOverlayTimeoutId = window.setTimeout(() => {
+      clearOverlay();
+      resolve(allowGear);
+    }, 3200);
+  });
+}
+
+function escapeHtml(value) {
+  return String(value)
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\"/g, "&quot;")
+    .replace(/'/g, "&#39;");
 }
 
 function isCategorySelected(category) {

@@ -32,6 +32,7 @@ export function getElements() {
     switchModeButton: document.getElementById("switchModeBtn"),
     streamerModeButton: document.getElementById("streamerModeBtn"),
     chanceInput: document.getElementById("chanceInput"),
+    musselModeButton: document.getElementById("musselModeBtn"),
     filterToggle: document.getElementById("filterToggle"),
     filterChevron: document.getElementById("filterChevron"),
     filterContent: document.getElementById("filterContent"),
@@ -254,8 +255,9 @@ function renderWeaponCategoryButtons(
       button.type = "button";
       button.className = "weapon-filter-item";
       button.dataset.weapon = weapon.name;
+      button.dataset.tier = weapon.type;
       button.classList.toggle("excluded", excludedWeaponSet.has(weapon.name));
-      button.innerHTML = `<span class="weapon-filter-dot" aria-hidden="true"></span><span>${weapon.name}</span>`;
+      button.innerHTML = `<span class="weapon-filter-dot weapon-filter-dot--${weapon.type}" aria-hidden="true"></span><span class="weapon-filter-text weapon-filter-text--${weapon.type}">${weapon.name}</span>`;
       button.addEventListener("click", () => onToggle(weapon.name));
       groupGrid.appendChild(button);
     });
@@ -284,13 +286,38 @@ function formatWeaponCategory(category) {
     .join(" ");
 }
 
+function getWeaponValueLabel(item) {
+  if (!item?.category) {
+    return "";
+  }
+
+  const valueByTier = {
+    t1: "Low Roll",
+    t2: "Budget",
+    t3: "Solid",
+    t4: "Value",
+    t5: "High Value",
+    t6: "Jackpot",
+  };
+
+  return valueByTier[item.type] ?? "Value";
+}
+
 function buildCardContent(item) {
   const categoryLabel = formatWeaponCategory(item.category);
   const categoryLine = categoryLabel
     ? `<span class="card-category">(${categoryLabel})</span>`
     : "";
+  const isWeapon = Boolean(item?.category);
+  const valueLine = isWeapon
+    ? `<span class="card-value card-value--${item.type}">${getWeaponValueLabel(item)}</span>`
+    : "";
+  const imageLine = isWeapon
+    ? '<span class="card-weapon-icon" aria-hidden="true">🔧</span>'
+    : "";
+  const wrapperClass = isWeapon ? "card-text card-text--weapon" : "card-text";
 
-  return `<span class="card-text">${item.name}${categoryLine}</span>`;
+  return `<span class="${wrapperClass}">${imageLine}<span class="card-title">${item.name}</span>${categoryLine}${valueLine}</span>`;
 }
 
 export function createStripContent(elementId, items, addHiddenZth) {
