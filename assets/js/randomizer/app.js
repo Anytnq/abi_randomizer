@@ -40,10 +40,12 @@ import {
   saveWeaponHistory,
 } from "./storage.js";
 import {
+  getMasterVolume,
+  isHeroSongPlaying,
   playCrateRevealSound,
   playHeroSong,
-  playMusselDecisionSound,
   playSpinSound,
+  setMasterVolume,
   stopHeroSong,
   stopSpinSound,
 } from "./sound.js";
@@ -88,10 +90,9 @@ const CACHE_HOTFIX_VERSION = "20260507-4";
 const SW_SCRIPT_URL = "./sw.js?v=20260507-4";
 const SQUAD_ZTH_TEAM_BANNER_CHANCE = 0.2;
 const COMPACT_MODE_STORAGE_KEY = "compactModeEnabled";
-const MUSSEL_MODE_STORAGE_KEY = "musselModeEnabled";
-const MUSSEL_ALLOW_CHANCE = 0.52;
-const CRATE_REVEAL_DELAY_MS = 440;
 const CRATE_REVEAL_DISPLAY_MS = 3800;
+const MASTER_VOLUME_STORAGE_KEY = "masterVolumeLevel";
+const MYSTERY_WEAPON_CHANCE_PERCENT = 6;
 
 const debugState = {
   enabled: false,
@@ -119,7 +120,6 @@ const state = {
   weaponHistory: [],
   lastMap: null,
   lastResult: {},
-  musselModeEnabled: false,
   activeOverlayTimeoutId: null,
 };
 
@@ -131,6 +131,49 @@ const initialFilterHeaderActionsNextSibling =
   filterHeaderActions?.nextElementSibling ?? null;
 let wheelController;
 let isMapReloading = false;
+
+const MYSTERY_WEAPON_CARD = {
+  name: "?",
+  type: "t6",
+  value: 6,
+};
+const MYSTERY_CRATE_STATIC_REWARDS = [
+  {
+    title: "?-Kisten Bonus",
+    subtitle: "Freie Auswahl erhalten",
+    highlight: "Waffe nach Wahl",
+    resultKey: "?-Kiste",
+    resultValue: "Waffe nach Wahl",
+  },
+  {
+    title: "?-Kisten Bonus",
+    subtitle: "Team-Bonus erhalten",
+    highlight: "Waffe fuer 1 Squad Member aussuchen",
+    resultKey: "?-Kiste",
+    resultValue: "Waffe fuer 1 Squad Member aussuchen",
+  },
+  {
+    title: "?-Kisten Bonus",
+    subtitle: "Map-Bonus erhalten",
+    highlight: "Map aussuchen",
+    resultKey: "?-Kiste",
+    resultValue: "Map aussuchen",
+  },
+  {
+    title: "?-Kisten Bonus",
+    subtitle: "Kommunikations-Bonus erhalten",
+    highlight: "Shot Caller 1 Runde",
+    resultKey: "?-Kiste",
+    resultValue: "Shot Caller 1 Runde",
+  },
+  {
+    title: "?-Kisten Bonus",
+    subtitle: "Start-Bonus erhalten",
+    highlight: "1. Red fuer Dich",
+    resultKey: "?-Kiste",
+    resultValue: "1. Red fuer Dich",
+  },
+];
 
 function canEditCategoryFilters() {
   return !squadState.active || squadState.isLeader;
@@ -213,7 +256,7 @@ async function initialize() {
   createInitialStrips();
   initCompactMode();
   initStreamerMode();
-  initMusselMode();
+  initVolumeControl();
   initDebugMode();
   syncPaylinePosition();
   elements.spinButton.addEventListener("click", spinAll);
@@ -276,48 +319,57 @@ function initStreamerMode() {
   });
 }
 
-function initMusselMode() {
-  const musselModeButton = elements.musselModeButton;
-  if (!musselModeButton) {
-    return;
-  }
-
-  state.musselModeEnabled = loadMusselModePreference();
-  applyMusselModeButtonState();
-
-  musselModeButton.addEventListener("click", () => {
-    state.musselModeEnabled = !state.musselModeEnabled;
-    applyMusselModeButtonState();
-    saveMusselModePreference(state.musselModeEnabled);
-  });
-}
-
-function applyMusselModeButtonState() {
-  if (!elements.musselModeButton) {
-    return;
-  }
-
-  elements.musselModeButton.setAttribute(
-    "aria-pressed",
-    String(state.musselModeEnabled),
-  );
-  elements.musselModeButton.textContent = state.musselModeEnabled
-    ? "Magische Miesmuschel: AN"
-    : "Magische Miesmuschel: AUS";
-}
-
-function loadMusselModePreference() {
+function loadMasterVolumePreference() {
   try {
-    return localStorage.getItem(MUSSEL_MODE_STORAGE_KEY) === "1";
+    const raw = localStorage.getItem(MASTER_VOLUME_STORAGE_KEY);
+    if (raw === null) {
+      return getMasterVolume();
+    }
+
+    const parsed = Number.parseFloat(raw);
+    if (!Number.isFinite(parsed)) {
+      return getMasterVolume();
+    }
+
+    return Math.min(1, Math.max(0, parsed));
   } catch (_) {
-    return false;
+    return getMasterVolume();
   }
 }
 
-function saveMusselModePreference(enabled) {
+function saveMasterVolumePreference(volume) {
   try {
-    localStorage.setItem(MUSSEL_MODE_STORAGE_KEY, enabled ? "1" : "0");
+    localStorage.setItem(MASTER_VOLUME_STORAGE_KEY, String(volume));
   } catch (_) {}
+}
+
+function updateVolumeValueLabel(volume) {
+  const volumeValue = document.getElementById("masterVolumeValue");
+  if (!volumeValue) {
+    return;
+  }
+
+  volumeValue.textContent = `${Math.round(volume * 100)}%`;
+}
+
+function initVolumeControl() {
+  const volumeSlider = document.getElementById("masterVolumeSlider");
+  if (!volumeSlider) {
+    return;
+  }
+
+  const initialVolume = loadMasterVolumePreference();
+  setMasterVolume(initialVolume);
+  volumeSlider.value = String(Math.round(initialVolume * 100));
+  updateVolumeValueLabel(initialVolume);
+
+  volumeSlider.addEventListener("input", () => {
+    const sliderValue = Number.parseInt(volumeSlider.value, 10);
+    const normalizedVolume = Math.min(1, Math.max(0, sliderValue / 100));
+    setMasterVolume(normalizedVolume);
+    saveMasterVolumePreference(normalizedVolume);
+    updateVolumeValueLabel(normalizedVolume);
+  });
 }
 
 function isLocalDebugContext() {
@@ -354,7 +406,7 @@ function initDebugMode() {
   runButton.addEventListener("click", async () => {
     const action = select.value;
     if (!action) {
-      setDebugStatus("Bitte eine Debug-Aktion auswaehlen.", true);
+      setDebugStatus("Bitte eine Debug-Aktion auswählen.", true);
       return;
     }
 
@@ -369,16 +421,6 @@ function setDebugStatus(message, isError = false) {
 
   debugState.statusElement.textContent = message;
   debugState.statusElement.classList.toggle("debug-status--error", isError);
-}
-
-function ensureMusselModeEnabledForDebug() {
-  if (state.musselModeEnabled) {
-    return;
-  }
-
-  state.musselModeEnabled = true;
-  applyMusselModeButtonState();
-  saveMusselModePreference(true);
 }
 
 async function runDebugAction(action) {
@@ -396,26 +438,8 @@ async function runDebugAction(action) {
       spinAll({ forceZeroToHero: true });
       return;
     case "spin-elite":
-      setDebugStatus("Debug: erzwungener Elite-Kisten-Spin gestartet.");
-      spinAll({ forceZeroToHero: false, forceEliteCrate: true });
-      return;
-    case "spin-mussel-allow":
-      ensureMusselModeEnabledForDebug();
-      setDebugStatus("Debug: Miesmuschel-Spin mit JA gestartet.");
-      spinAll({
-        forceZeroToHero: false,
-        forceEliteCrate: true,
-        forceMusselDecision: true,
-      });
-      return;
-    case "spin-mussel-deny":
-      ensureMusselModeEnabledForDebug();
-      setDebugStatus("Debug: Miesmuschel-Spin mit NEIN gestartet.");
-      spinAll({
-        forceZeroToHero: false,
-        forceEliteCrate: true,
-        forceMusselDecision: false,
-      });
+      setDebugStatus("Debug: erzwungener ?-Kisten-Spin gestartet.");
+      spinAll({ forceZeroToHero: false, forceMysteryWeapon: true });
       return;
     case "map-reload":
       setDebugStatus("Debug: Map-Reload gestartet.");
@@ -426,24 +450,15 @@ async function runDebugAction(action) {
       showSquadZeroToHeroOverlay("Debug", false);
       return;
     case "overlay-crate": {
-      const testWeapon =
-        pickEliteWeaponWinner(state.activeWeapons) ?? state.activeWeapons[0];
-      if (!testWeapon) {
-        setDebugStatus("Debug: Keine Waffe verfuegbar.", true);
+      const testReward = pickMysteryCrateReward(state.activeWeapons);
+      if (!testReward) {
+        setDebugStatus("Debug: Kein Kisten-Reward verfuegbar.", true);
         return;
       }
       setDebugStatus("Debug: Elite-Kisten Overlay angezeigt.");
-      await showEliteCrateReveal(testWeapon);
+      await showEliteCrateReveal(testReward);
       return;
     }
-    case "overlay-mussel-allow":
-      setDebugStatus("Debug: Miesmuschel Overlay (JA) angezeigt.");
-      await resolveMusselDecision(true);
-      return;
-    case "overlay-mussel-deny":
-      setDebugStatus("Debug: Miesmuschel Overlay (NEIN) angezeigt.");
-      await resolveMusselDecision(false);
-      return;
     case "audio-hero-play":
       setDebugStatus("Debug: Hero-Song gestartet.");
       playHeroSong();
@@ -556,7 +571,7 @@ function saveCompactModePreference(enabled) {
 
 function setSelectedCategories(nextSelection) {
   if (!canEditCategoryFilters()) {
-    showSquadError("Nur der Squad Leader kann Kategorien aendern.");
+    showSquadError("Nur der Squad Leader kann Kategorien ändern.");
     return;
   }
 
@@ -684,7 +699,12 @@ function reloadMapOnly() {
     }
 
     if (squadState.active && squadState.code && squadState.playerId) {
-      publishResult(squadState.code, squadState.playerId, state.lastResult);
+       publishResult(
+         squadState.code,
+         squadState.playerId,
+         state.lastResult,
+         squadState.playerName,
+       );
     }
 
     isMapReloading = false;
@@ -692,11 +712,6 @@ function reloadMapOnly() {
 }
 
 function toggleCategory(category) {
-  if (!canEditCategoryFilters()) {
-    showSquadError("Nur der Squad Leader kann Kategorien aendern.");
-    return;
-  }
-
   setSelectedCategories(toggleValue(state.selectedCategories, category));
 }
 
@@ -891,18 +906,19 @@ function spinAll(options = {}) {
   const armorWinner = isCategorySelected("armor")
     ? getWeightedRandom(state.activeArmors)
     : null;
-  const weaponWinner = isCategorySelected("weapon")
-    ? pickWeaponWinner(state.activeWeapons, state.weaponHistory)
+  const mysteryWeaponTriggered =
+    !isZeroToHero &&
+    isCategorySelected("weapon") &&
+    (options.forceMysteryWeapon === true ||
+      Math.random() < MYSTERY_WEAPON_CHANCE_PERCENT / 100);
+  const rolledWeaponWinner = isCategorySelected("weapon")
+    ? mysteryWeaponTriggered
+      ? MYSTERY_WEAPON_CARD
+      : pickWeaponWinner(state.activeWeapons, state.weaponHistory)
     : null;
-  const eliteWeaponWinner =
-    !isZeroToHero && isCategorySelected("weapon")
-      ? pickEliteWeaponWinner(state.activeWeapons)
-      : null;
-  const effectiveEliteWeaponWinner =
-    !isZeroToHero && isCategorySelected("weapon")
-      ? options.forceEliteCrate
-        ? pickEliteWeaponWinner(state.activeWeapons)
-        : eliteWeaponWinner
+  const mysteryCrateReward =
+    mysteryWeaponTriggered && isCategorySelected("weapon")
+      ? pickMysteryCrateReward(state.activeWeapons)
       : null;
   const chestRigWinner = isCategorySelected("chestRig")
     ? getWeightedRandom(state.activeChestRigs)
@@ -924,10 +940,10 @@ function spinAll(options = {}) {
     state.lastMap = mapWinner.name;
   }
 
-  if (weaponWinner) {
+  if (rolledWeaponWinner && rolledWeaponWinner.name !== "?") {
     state.weaponHistory = updateWeaponHistory(
       state.weaponHistory,
-      weaponWinner.name,
+      rolledWeaponWinner.name,
     );
     saveWeaponHistory(state.weaponHistory);
   }
@@ -965,7 +981,7 @@ function spinAll(options = {}) {
     spinQueue.push({
       stripId: "strip-weapon",
       dataset: state.activeWeapons,
-      winner: weaponWinner,
+      winner: rolledWeaponWinner,
       forceZth: isZeroToHero,
     });
   }
@@ -1023,7 +1039,9 @@ function spinAll(options = {}) {
   }
 
   const spinDurationMs = getSpinDuration(spinQueue.length);
-  playSpinSound(spinDurationMs);
+  if (!isZeroToHero && !isHeroSongPlaying()) {
+    playSpinSound(spinDurationMs);
+  }
 
   if (squadState.active && squadState.code && squadState.playerId) {
     publishSpinning(squadState.code, squadState.playerId, true);
@@ -1051,42 +1069,37 @@ function spinAll(options = {}) {
       chestRig: chestRigWinner,
       armoredChestRig: armoredChestRigWinner,
       backpack: backpackWinner,
-      weapon: isZeroToHero ? { name: "ZERO TO HERO" } : weaponWinner,
+      weapon: isZeroToHero ? { name: "ZERO TO HERO" } : rolledWeaponWinner,
       secondary: secondaryWinner,
     };
 
     state.lastResult = buildResult(winners);
 
-    let grantedByMussel = true;
-    if (!isZeroToHero && effectiveEliteWeaponWinner) {
-      await showEliteCrateReveal(effectiveEliteWeaponWinner);
+    if (mysteryWeaponTriggered && mysteryCrateReward) {
+      await showEliteCrateReveal(mysteryCrateReward);
     }
 
-    if (
-      state.musselModeEnabled &&
-      !isZeroToHero &&
-      Object.keys(state.lastResult).length > 0
-    ) {
-      grantedByMussel = await resolveMusselDecision(
-        options.forceMusselDecision,
+    if (mysteryCrateReward) {
+      state.lastResult[mysteryCrateReward.resultKey] = mysteryCrateReward.resultValue;
+    }
+
+    if (mysteryCrateReward?.weaponName) {
+      state.lastResult["Waffe"] = mysteryCrateReward.weaponName;
+      state.lastResult["Vollmodded"] = mysteryCrateReward.weaponName;
+      state.weaponHistory = updateWeaponHistory(
+        state.weaponHistory,
+        mysteryCrateReward.weaponName,
       );
-    }
-
-    if (effectiveEliteWeaponWinner) {
-      state.lastResult["Vollmodded"] = effectiveEliteWeaponWinner.name;
-    }
-
-    if (state.musselModeEnabled && !isZeroToHero) {
-      state.lastResult["Miesmuschel"] = grantedByMussel
-        ? "Gear erlaubt"
-        : "Gear verweigert";
-      if (!grantedByMussel) {
-        state.lastResult["Waffe"] = "Pistole Challenge";
-      }
+      saveWeaponHistory(state.weaponHistory);
     }
 
     if (squadState.active && squadState.code && squadState.playerId) {
-      publishResult(squadState.code, squadState.playerId, state.lastResult);
+      publishResult(
+        squadState.code,
+        squadState.playerId,
+        state.lastResult,
+        squadState.playerName,
+      );
       if (isZeroToHero) {
         publishZeroToHero(
           squadState.code,
@@ -1118,7 +1131,25 @@ function clearOverlay() {
   }
 }
 
-function showEliteCrateReveal(weapon) {
+function pickMysteryCrateReward(activeWeapons) {
+  const rewards = [...MYSTERY_CRATE_STATIC_REWARDS];
+  const eliteWeapon = pickEliteWeaponWinner(activeWeapons);
+
+  if (eliteWeapon) {
+    rewards.push({
+      title: "?-Kiste geoeffnet",
+      subtitle: "Vollmodded Waffe gezogen",
+      highlight: eliteWeapon.name,
+      resultKey: "Vollmodded",
+      resultValue: eliteWeapon.name,
+      weaponName: eliteWeapon.name,
+    });
+  }
+
+  return getWeightedRandom(rewards);
+}
+
+function showEliteCrateReveal(reward) {
   return new Promise((resolve) => {
     clearOverlay();
 
@@ -1128,9 +1159,9 @@ function showEliteCrateReveal(weapon) {
     overlay.innerHTML = `
       <div class="event-modal crate-modal">
         <div class="crate-box" aria-hidden="true">📦</div>
-        <h2 class="event-title">Elite-Kiste geoffnet</h2>
-        <p class="event-subtitle">Vollmodded Waffe gezogen</p>
-        <p class="event-highlight">${escapeHtml(weapon.name)}</p>
+        <h2 class="event-title">${escapeHtml(reward.title)}</h2>
+        <p class="event-subtitle">${escapeHtml(reward.subtitle)}</p>
+        <p class="event-highlight">${escapeHtml(reward.highlight)}</p>
       </div>
     `;
 
@@ -1146,46 +1177,6 @@ function showEliteCrateReveal(weapon) {
       clearOverlay();
       resolve();
     }, CRATE_REVEAL_DISPLAY_MS);
-  });
-}
-
-function resolveMusselDecision(forcedDecision) {
-  return new Promise((resolve) => {
-    clearOverlay();
-
-    const allowGear =
-      typeof forcedDecision === "boolean"
-        ? forcedDecision
-        : Math.random() < MUSSEL_ALLOW_CHANCE;
-    const overlay = document.createElement("div");
-    overlay.id = "eventOverlay";
-    overlay.className = "event-overlay event-overlay--mussel";
-
-    const resultText = allowGear
-      ? "Die Miesmuschel sagt: JA, du darfst das Gear nehmen."
-      : "Die Miesmuschel sagt: NEIN, nur Pistole in dieser Runde.";
-
-    overlay.innerHTML = `
-      <div class="event-modal mussel-modal">
-        <div class="mussel-icon" aria-hidden="true">🦪</div>
-        <h2 class="event-title">Magische Miesmuschel</h2>
-        <p class="event-subtitle">Entscheidung zum erlangten Gear</p>
-        <p class="event-decision ${allowGear ? "allow" : "deny"}">${resultText}</p>
-      </div>
-    `;
-
-    overlay.addEventListener("click", () => {
-      clearOverlay();
-      resolve(allowGear);
-    });
-
-    document.body.appendChild(overlay);
-    playMusselDecisionSound(allowGear);
-
-    state.activeOverlayTimeoutId = window.setTimeout(() => {
-      clearOverlay();
-      resolve(allowGear);
-    }, 3200);
   });
 }
 
@@ -1490,13 +1481,17 @@ function formatActivityMessage(event, players) {
     case "role-changed":
       return `${actorName} hat ${targetName} auf ${payload.role === "readonly" ? "Read-only" : "Member"} gesetzt.`;
     case "filters-updated":
-      return `${actorName} hat die Kategorien geaendert: ${formatSelectedCategoryNames(payload.selectedCategories)}.`;
+      return `${actorName} hat die Kategorien geändert: ${formatSelectedCategoryNames(payload.selectedCategories)}.`;
     case "wheel-config-updated":
       return payload.manualMode
         ? `${actorName} hat den Wheel-Modus auf Manuell gesetzt.`
         : `${actorName} hat den Wheel-Modus auf Auto gesetzt.`;
     case "wheel-spun":
       return `${actorName} hat das Wheel gedreht.`;
+    case "result-published":
+      return payload.crateReward
+        ? `${actorName} hat ?-Kiste gezogen: ${payload.crateReward}.`
+        : `${actorName} hat ein Ergebnis veroeffentlicht.`;
     case "zero-to-hero":
       return payload.appliesToTeam
         ? `${actorName} hat 0 to Hero fuer das ganze Team ausgelost.`
@@ -1587,6 +1582,7 @@ function getActivityItemClass(eventType) {
     case "leader-changed":
       return "squad-feed-item--leader";
     case "wheel-spun":
+    case "result-published":
       return "squad-feed-item--wheel";
     case "wheel-config-updated":
     case "filters-updated":
@@ -1899,10 +1895,15 @@ function onSquadUpdate(data) {
     zth.triggeredAt !== squadState.lastZeroToHero
   ) {
     squadState.lastZeroToHero = zth.triggeredAt;
-    showSquadZeroToHeroOverlay(
-      zth.triggeredByName ?? "Jemand",
-      Boolean(zth.appliesToTeam),
-    );
+    const appliesToTeam = Boolean(zth.appliesToTeam);
+    const triggeredByMe = zth.triggeredBy === squadState.playerId;
+    const shouldRunZeroToHeroEffects = appliesToTeam || triggeredByMe;
+
+    if (shouldRunZeroToHeroEffects) {
+      playHeroSong();
+      setTimeout(() => enableAlarmMode(elements), 500);
+      showSquadZeroToHeroOverlay(zth.triggeredByName ?? "Jemand", appliesToTeam);
+    }
   }
 
   const remoteCategories = data.filters?.selectedCategories;

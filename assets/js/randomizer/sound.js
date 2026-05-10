@@ -2,8 +2,52 @@ let audioContext;
 let tickIntervalId = null;
 let stopTimeoutId = null;
 let heroAudio = null;
+let heroFadeIntervalId = null;
+let masterGainNode = null;
+let masterVolume = 0.6;
 
 const HERO_TRACK_PATH = "./assets/audio/i-need-a-hero.mp3";
+const HERO_FADE_IN_MS = 800;
+const HERO_TARGET_MULTIPLIER = 0.9;
+
+function clampVolume(value) {
+  const parsed = Number(value);
+  if (!Number.isFinite(parsed)) {
+    return 0.6;
+  }
+
+  return Math.min(1, Math.max(0, parsed));
+}
+
+function getMasterGainNode(ctx) {
+  if (!masterGainNode) {
+    masterGainNode = ctx.createGain();
+    masterGainNode.gain.setValueAtTime(masterVolume, ctx.currentTime);
+    masterGainNode.connect(ctx.destination);
+  }
+
+  return masterGainNode;
+}
+
+function connectGainToOutput(ctx, gainNode) {
+  gainNode.connect(getMasterGainNode(ctx));
+}
+
+function getHeroTrackTargetVolume() {
+  return Math.min(1, masterVolume * HERO_TARGET_MULTIPLIER);
+}
+
+function applyHeroAudioVolume() {
+  if (!heroAudio) {
+    return;
+  }
+
+  if (heroAudio.dataset.fadingIn === "1") {
+    return;
+  }
+
+  heroAudio.volume = getHeroTrackTargetVolume();
+}
 
 function ensureAudioContext() {
   if (!window.AudioContext && !window.webkitAudioContext) {
@@ -18,6 +62,8 @@ function ensureAudioContext() {
   if (audioContext.state === "suspended") {
     audioContext.resume();
   }
+
+  getMasterGainNode(audioContext);
 
   return audioContext;
 }
@@ -35,7 +81,7 @@ function playClick(ctx) {
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
 
   oscillator.connect(gain);
-  gain.connect(ctx.destination);
+  connectGainToOutput(ctx, gain);
 
   oscillator.start(now);
   oscillator.stop(now + 0.055);
@@ -55,7 +101,7 @@ function playFinishTone(ctx) {
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
 
   oscillator.connect(gain);
-  gain.connect(ctx.destination);
+  connectGainToOutput(ctx, gain);
 
   oscillator.start(now);
   oscillator.stop(now + 0.11);
@@ -75,7 +121,7 @@ function playWhooshTone(ctx) {
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
 
   oscillator.connect(gain);
-  gain.connect(ctx.destination);
+  connectGainToOutput(ctx, gain);
 
   oscillator.start(now);
   oscillator.stop(now + 0.32);
@@ -95,7 +141,7 @@ function playLowBloop(ctx) {
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
 
   oscillator.connect(gain);
-  gain.connect(ctx.destination);
+  connectGainToOutput(ctx, gain);
 
   oscillator.start(now);
   oscillator.stop(now + 0.26);
@@ -115,7 +161,7 @@ function playHighChime(ctx) {
   gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
 
   oscillator.connect(gain);
-  gain.connect(ctx.destination);
+  connectGainToOutput(ctx, gain);
 
   oscillator.start(now);
   oscillator.stop(now + 0.22);
@@ -134,6 +180,10 @@ export function stopSpinSound() {
 }
 
 export function playSpinSound(durationMs) {
+  if (isHeroSongPlaying()) {
+    return;
+  }
+
   stopSpinSound();
 
   const ctx = ensureAudioContext();
@@ -163,7 +213,7 @@ export function playCrateRevealSound() {
   window.setTimeout(() => playFinishTone(ctx), 220);
 }
 
-export function playMusselDecisionSound(allowed) {
+export function playmuschelDecisionSound(allowed) {
   const ctx = ensureAudioContext();
   if (!ctx) {
     return;
@@ -179,12 +229,22 @@ export function playMusselDecisionSound(allowed) {
 }
 
 export function stopHeroSong() {
+  if (heroFadeIntervalId !== null) {
+    window.clearInterval(heroFadeIntervalId);
+    heroFadeIntervalId = null;
+  }
+
   if (!heroAudio) {
     return;
   }
 
+  heroAudio.dataset.fadingIn = "0";
   heroAudio.pause();
   heroAudio.currentTime = 0;
+}
+
+export function isHeroSongPlaying() {
+  return Boolean(heroAudio && !heroAudio.paused && !heroAudio.ended);
 }
 
 export function playHeroSong() {
@@ -192,19 +252,68 @@ export function playHeroSong() {
 
   const audio = new Audio(HERO_TRACK_PATH);
   audio.preload = "auto";
-  audio.volume = 0.5;
+  audio.volume = 0;
+  audio.dataset.fadingIn = "1";
+  audio.addEventListener(
+    "ended",
+    () => {
+      audio.dataset.fadingIn = "0";
+    },
+    { once: true },
+  );
 
   heroAudio = audio;
 
-  audio.play().catch(() => {
-    const ctx = ensureAudioContext();
-    if (!ctx) {
-      return;
-    }
+  audio
+    .play()
+    .then(() => {
+      const targetVolume = getHeroTrackTargetVolume();
+      const stepMs = 50;
+      const steps = Math.max(1, Math.floor(HERO_FADE_IN_MS / stepMs));
+      const stepValue = targetVolume / steps;
+      let currentVolume = 0;
 
-    // Fallback fanfare if no local hero track is available.
-    playHighChime(ctx);
-    window.setTimeout(() => playHighChime(ctx), 160);
-    window.setTimeout(() => playFinishTone(ctx), 320);
-  });
+      heroFadeIntervalId = window.setInterval(() => {
+        if (!heroAudio || heroAudio !== audio || heroAudio.paused) {
+          window.clearInterval(heroFadeIntervalId);
+          heroFadeIntervalId = null;
+          return;
+        }
+
+        currentVolume = Math.min(targetVolume, currentVolume + stepValue);
+        heroAudio.volume = currentVolume;
+
+        if (currentVolume >= targetVolume) {
+          heroAudio.dataset.fadingIn = "0";
+          window.clearInterval(heroFadeIntervalId);
+          heroFadeIntervalId = null;
+        }
+      }, stepMs);
+    })
+    .catch(() => {
+      const ctx = ensureAudioContext();
+      if (!ctx) {
+        return;
+      }
+
+      // Fallback fanfare if no local hero track is available.
+      playHighChime(ctx);
+      window.setTimeout(() => playHighChime(ctx), 160);
+      window.setTimeout(() => playFinishTone(ctx), 320);
+    });
+}
+
+export function setMasterVolume(volume) {
+  masterVolume = clampVolume(volume);
+
+  const ctx = ensureAudioContext();
+  if (ctx && masterGainNode) {
+    masterGainNode.gain.setValueAtTime(masterVolume, ctx.currentTime);
+  }
+
+  applyHeroAudioVolume();
+}
+
+export function getMasterVolume() {
+  return masterVolume;
 }

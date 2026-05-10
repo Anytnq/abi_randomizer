@@ -32,7 +32,6 @@ export function getElements() {
     switchModeButton: document.getElementById("switchModeBtn"),
     streamerModeButton: document.getElementById("streamerModeBtn"),
     chanceInput: document.getElementById("chanceInput"),
-    musselModeButton: document.getElementById("musselModeBtn"),
     filterToggle: document.getElementById("filterToggle"),
     filterChevron: document.getElementById("filterChevron"),
     filterContent: document.getElementById("filterContent"),
@@ -255,9 +254,9 @@ function renderWeaponCategoryButtons(
       button.type = "button";
       button.className = "weapon-filter-item";
       button.dataset.weapon = weapon.name;
-      button.dataset.tier = weapon.type;
+      button.dataset.tier = String(weapon.value ?? 3);
       button.classList.toggle("excluded", excludedWeaponSet.has(weapon.name));
-      button.innerHTML = `<span class="weapon-filter-dot weapon-filter-dot--${weapon.type}" aria-hidden="true"></span><span class="weapon-filter-text weapon-filter-text--${weapon.type}">${weapon.name}</span>`;
+      button.innerHTML = `<span class="weapon-filter-dot" aria-hidden="true"></span><span class="weapon-filter-text">${weapon.name}</span>`;
       button.addEventListener("click", () => onToggle(weapon.name));
       groupGrid.appendChild(button);
     });
@@ -286,38 +285,34 @@ function formatWeaponCategory(category) {
     .join(" ");
 }
 
-function getWeaponValueLabel(item) {
-  if (!item?.category) {
-    return "";
-  }
-
-  const valueByTier = {
-    t1: "Low Roll",
-    t2: "Budget",
-    t3: "Solid",
-    t4: "Value",
-    t5: "High Value",
-    t6: "Jackpot",
+function getValueRarityLabel(value) {
+  const rarityLabels = {
+    1: "Common",
+    2: "Uncommon",
+    3: "Rare",
+    4: "Mythical",
+    5: "Legendary",
+    6: "Immortal",
   };
-
-  return valueByTier[item.type] ?? "Value";
+  return rarityLabels[value] || "Rare";
 }
 
 function buildCardContent(item) {
   const categoryLabel = formatWeaponCategory(item.category);
-  const categoryLine = categoryLabel
-    ? `<span class="card-category">(${categoryLabel})</span>`
-    : "";
   const isWeapon = Boolean(item?.category);
+  const weaponValue = item.value ?? 3;
+  const categoryLine = categoryLabel
+    ? `<span class="card-category card-category--v${weaponValue}">(${categoryLabel})</span>`
+    : "";
   const valueLine = isWeapon
-    ? `<span class="card-value card-value--${item.type}">${getWeaponValueLabel(item)}</span>`
+    ? `<span class="card-value card-value--v${weaponValue}">${getValueRarityLabel(weaponValue)}</span>`
     : "";
-  const imageLine = isWeapon
-    ? '<span class="card-weapon-icon" aria-hidden="true">🔧</span>'
-    : "";
+  const titleClass = isWeapon
+    ? `card-title card-title--v${weaponValue}`
+    : "card-title";
   const wrapperClass = isWeapon ? "card-text card-text--weapon" : "card-text";
 
-  return `<span class="${wrapperClass}">${imageLine}<span class="card-title">${item.name}</span>${categoryLine}${valueLine}</span>`;
+  return `<span class="${wrapperClass}"><span class="${titleClass}">${item.name}</span>${categoryLine}${valueLine}</span>`;
 }
 
 export function createStripContent(elementId, items, addHiddenZth) {

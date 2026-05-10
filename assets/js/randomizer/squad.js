@@ -176,11 +176,24 @@ export function rejoinSession(code, playerId, playerName, onNotFound) {
   return { playerId };
 }
 
-export function publishResult(code, playerId, result) {
+export function publishResult(code, playerId, result, actorName = null) {
   update(ref(db, `sessions/${code}/players/${playerId}`), {
     result,
     spinning: false,
     lastSeenAt: Date.now(),
+  }).then(() => {
+    const crateReward =
+      typeof result?.["?-Kiste"] === "string"
+        ? result["?-Kiste"]
+        : typeof result?.Vollmodded === "string"
+          ? result.Vollmodded
+          : null;
+
+    publishSquadEvent(code, "result-published", {
+      by: playerId,
+      byName: actorName,
+      crateReward,
+    });
   });
 }
 

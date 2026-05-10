@@ -23,6 +23,7 @@
         --muted: #b9c7d3;
         --accent-a: #ffb84d;
         --accent-b: #5ec2ff;
+        --accent-c: #7dffb2;
       }
 
       * {
@@ -96,7 +97,7 @@
 
       .mode-grid {
         display: grid;
-        grid-template-columns: 1fr 1fr;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
         gap: 14px;
       }
 
@@ -145,10 +146,28 @@
         );
       }
 
+      .mode-btn.middle::before {
+        background: radial-gradient(
+          circle,
+          var(--accent-c) 0%,
+          transparent 70%
+        );
+      }
+
       .mode-btn:hover {
         transform: translateY(-4px);
         border-color: #ffffff4a;
         box-shadow: 0 20px 30px #00000055;
+      }
+
+      .mode-btn.disabled,
+      .mode-btn.disabled:hover {
+        transform: none;
+        border-color: #ffffff2c;
+        box-shadow: none;
+        opacity: 0.65;
+        cursor: not-allowed;
+        pointer-events: none;
       }
 
       .mode-dir {
@@ -205,7 +224,7 @@
         <h1 class="title">Landingpage</h1>
         <p class="subtitle">
           Alle Modi an einem Ort. Wähle links den klassischen Loadout-Randomizer
-          oder rechts den progressiven GunGame-Modus.
+          oder nutze eigene Spezial-Modi wie GunGame und Magische Miesmuschel.
         </p>
 
         <div class="mode-grid">
@@ -216,6 +235,15 @@
           >
             <p class="mode-dir"></p>
             <p class="mode-name">Randomizer</p>
+          </a>
+
+          <a
+            class="mode-btn middle disabled"
+            aria-label="Magische Miesmuschel ist im Wartungsmodus"
+            aria-disabled="true"
+          >
+            <p class="mode-dir">Wartungsmodus</p>
+            <p class="mode-name">Miesmuschel</p>
           </a>
 
           <a

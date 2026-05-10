@@ -20,38 +20,34 @@ function formatWeaponCategory(category) {
     .join(" ");
 }
 
-function getWeaponValueLabel(item) {
-  if (!item?.category) {
-    return "";
-  }
-
-  const valueByTier = {
-    t1: "Low Roll",
-    t2: "Budget",
-    t3: "Solid",
-    t4: "Value",
-    t5: "High Value",
-    t6: "Jackpot",
+function getValueRarityLabel(value) {
+  const rarityLabels = {
+    1: "Common",
+    2: "Uncommon",
+    3: "Rare",
+    4: "Mythical",
+    5: "Legendary",
+    6: "Immortal",
   };
-
-  return valueByTier[item.type] ?? "Value";
+  return rarityLabels[value] || "Rare";
 }
 
 function buildCardContent(item) {
   const categoryLabel = formatWeaponCategory(item.category);
-  const categoryLine = categoryLabel
-    ? `<span class="card-category">(${categoryLabel})</span>`
-    : "";
   const isWeapon = Boolean(item?.category);
+  const weaponValue = item.value ?? 3;
+  const categoryLine = categoryLabel
+    ? `<span class="card-category card-category--v${weaponValue}">(${categoryLabel})</span>`
+    : "";
   const valueLine = isWeapon
-    ? `<span class="card-value card-value--${item.type}">${getWeaponValueLabel(item)}</span>`
+    ? `<span class="card-value card-value--v${weaponValue}">${getValueRarityLabel(weaponValue)}</span>`
     : "";
-  const imageLine = isWeapon
-    ? '<span class="card-weapon-icon" aria-hidden="true">🔧</span>'
-    : "";
+  const titleClass = isWeapon
+    ? `card-title card-title--v${weaponValue}`
+    : "card-title";
   const wrapperClass = isWeapon ? "card-text card-text--weapon" : "card-text";
 
-  return `<span class="${wrapperClass}">${imageLine}<span class="card-title">${item.name}</span>${categoryLine}${valueLine}</span>`;
+  return `<span class="${wrapperClass}"><span class="${titleClass}">${item.name}</span>${categoryLine}${valueLine}</span>`;
 }
 
 export function getWeightedRandom(items) {
@@ -106,22 +102,15 @@ export function pickEliteWeaponWinner(weapons) {
     return null;
   }
 
-  const tierRank = {
-    t1: 1,
-    t2: 2,
-    t3: 3,
-    t4: 4,
-    t5: 5,
-    t6: 6,
-  };
-
-  const sorted = [...weapons].sort(
-    (left, right) => (tierRank[right.type] ?? 0) - (tierRank[left.type] ?? 0),
+  const highValuePool = weapons.filter(
+    (weapon) => (weapon.value ?? 0) >= 5,
   );
 
-  const topPoolSize = Math.max(3, Math.ceil(sorted.length * 0.22));
-  const topPool = sorted.slice(0, topPoolSize);
-  return getWeightedRandom(topPool);
+  if (highValuePool.length > 0) {
+    return getWeightedRandom(highValuePool);
+  }
+
+  return getWeightedRandom(weapons);
 }
 
 export function updateWeaponHistory(weaponHistory, weaponName) {

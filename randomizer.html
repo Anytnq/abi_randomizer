@@ -24,13 +24,9 @@
           <option value="spin-default">Spin: Normal</option>
           <option value="spin-zth">Spin: 0 to Hero erzwingen</option>
           <option value="spin-elite">Spin: Elite-Kiste erzwingen</option>
-          <option value="spin-mussel-allow">Spin: Miesmuschel JA</option>
-          <option value="spin-mussel-deny">Spin: Miesmuschel NEIN</option>
           <option value="map-reload">Map neu rollen</option>
           <option value="overlay-zth">Overlay: Squad 0 to Hero</option>
           <option value="overlay-crate">Overlay: Elite-Kiste</option>
-          <option value="overlay-mussel-allow">Overlay: Miesmuschel JA</option>
-          <option value="overlay-mussel-deny">Overlay: Miesmuschel NEIN</option>
           <option value="audio-hero-play">Audio: Hero starten</option>
           <option value="audio-hero-stop">Audio: Hero stoppen</option>
           <option value="alarm-on">Alarmmodus an</option>
@@ -68,14 +64,6 @@
                 max="100"
               />
             </label>
-            <button
-              class="wheel-check-btn"
-              id="musselModeBtn"
-              type="button"
-              aria-pressed="false"
-            >
-              Magische Miesmuschel: AUS
-            </button>
             <button
               class="wheel-check-btn"
               id="wheelToggleBtn"
@@ -450,6 +438,18 @@
     >
       Streamer Modus: AUS
     </button>
+    <section class="master-volume" aria-label="Globale Lautstarke">
+      <label class="master-volume-label" for="masterVolumeSlider">Lautstarke</label>
+      <input
+        class="master-volume-slider"
+        id="masterVolumeSlider"
+        type="range"
+        min="0"
+        max="100"
+        value="60"
+      />
+      <span class="master-volume-value" id="masterVolumeValue">60%</span>
+    </section>
     <script
       type="module"
       src="./assets/js/randomizer/app.js?v=20260507-4"

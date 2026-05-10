@@ -1,3 +1,5 @@
+import { gungameWeapons } from "../gungame/data.js";
+
 export const CARD_HEIGHT = 64;
 export const TOTAL_CARDS = 60;
 export const VISUAL_OFFSET = -5;
@@ -103,7 +105,20 @@ export const armors = [
   { name: "T6R AL Tactical", type: "t6" },
 ];
 
-export const weapons = [
+const weaponValueByName = new Map(
+  gungameWeapons.map((weapon) => [weapon.name, weapon.value]),
+);
+
+const fallbackValueByTier = {
+  t1: 1,
+  t2: 2,
+  t3: 3,
+  t4: 4,
+  t5: 5,
+  t6: 6,
+};
+
+const baseWeapons = [
   { name: "AKM", type: "t4", chancePercent: 25, category: "assault-rifle" },
   { name: "M4A1", type: "t5", chancePercent: 25, category: "assault-rifle" },
   { name: "FAL", type: "t5", chancePercent: 25, category: "assault-rifle" },
@@ -182,6 +197,11 @@ export const weapons = [
   { name: "CZ 52", type: "t2", chancePercent: 12, category: "pistol" },
   { name: "F57", type: "t3", chancePercent: 15, category: "pistol" },
 ];
+
+export const weapons = baseWeapons.map((weapon) => ({
+  ...weapon,
+  value: weaponValueByName.get(weapon.name) ?? fallbackValueByTier[weapon.type] ?? 3,
+}));
 
 export const chestRigs = [
   { name: "BH Rig", type: "t3" },
