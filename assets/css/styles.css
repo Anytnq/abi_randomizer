@@ -180,6 +180,87 @@ body.alarm-mode .payline {
   background: #ff1f1f21;
 }
 
+.debug-panel {
+  position: fixed;
+  top: 18px;
+  left: 18px;
+  z-index: 170;
+  width: min(320px, calc(100vw - 36px));
+  padding: 12px;
+  border: 1px solid #72c8ff5a;
+  border-radius: 12px;
+  background: linear-gradient(180deg, #13202ba8 0%, #0f171fb8 100%);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 14px 30px #0009;
+}
+
+.debug-title {
+  margin-bottom: 6px;
+  color: #bfe9ff;
+  font-family: var(--font-display);
+  font-size: 24px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+}
+
+.debug-controls {
+  display: grid;
+  gap: 6px;
+}
+
+.debug-label {
+  color: #a8bbca;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+}
+
+.debug-select,
+.debug-run-btn {
+  min-height: 38px;
+  border-radius: 9px;
+  border: 1px solid #ffffff2c;
+  background: #0f151bcc;
+  color: #e7f5ff;
+  font-family: var(--font-ui);
+  font-size: 14px;
+}
+
+.debug-select {
+  width: 100%;
+  padding: 6px 9px;
+}
+
+.debug-run-btn {
+  cursor: pointer;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  background: linear-gradient(180deg, #2a4f66 0%, #173545 100%);
+}
+
+.debug-run-btn:hover {
+  border-color: #8fe4ff8a;
+  filter: brightness(1.05);
+}
+
+.debug-status {
+  margin-top: 8px;
+  color: #9fb5c4;
+  font-size: 12px;
+}
+
+.debug-status--error {
+  color: #ffc1c1;
+}
+
+@media (max-width: 780px) {
+  .debug-panel {
+    position: static;
+    width: 100%;
+    margin-bottom: 12px;
+  }
+}
+
 /* ===== Squad 0TH Overlay ===== */
 .squad-zth-overlay {
   position: fixed;

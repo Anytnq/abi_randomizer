@@ -16,6 +16,30 @@
     <link rel="stylesheet" href="./assets/css/styles.css" />
   </head>
   <body>
+    <section class="debug-panel" id="debugPanel" hidden aria-label="Debug Aktionen">
+      <h2 class="debug-title">Debug Modus</h2>
+      <div class="debug-controls">
+        <label class="debug-label" for="debugActionSelect">Test-Aktion</label>
+        <select class="debug-select" id="debugActionSelect">
+          <option value="spin-default">Spin: Normal</option>
+          <option value="spin-zth">Spin: 0 to Hero erzwingen</option>
+          <option value="spin-elite">Spin: Elite-Kiste erzwingen</option>
+          <option value="spin-mussel-allow">Spin: Miesmuschel JA</option>
+          <option value="spin-mussel-deny">Spin: Miesmuschel NEIN</option>
+          <option value="map-reload">Map neu rollen</option>
+          <option value="overlay-zth">Overlay: Squad 0 to Hero</option>
+          <option value="overlay-crate">Overlay: Elite-Kiste</option>
+          <option value="overlay-mussel-allow">Overlay: Miesmuschel JA</option>
+          <option value="overlay-mussel-deny">Overlay: Miesmuschel NEIN</option>
+          <option value="audio-hero-play">Audio: Hero starten</option>
+          <option value="audio-hero-stop">Audio: Hero stoppen</option>
+          <option value="alarm-on">Alarmmodus an</option>
+          <option value="alarm-off">Alarmmodus aus</option>
+        </select>
+        <button class="debug-run-btn" id="debugRunBtn" type="button">Ausfuhren</button>
+      </div>
+      <p class="debug-status" id="debugStatus">Debug Modus inaktiv</p>
+    </section>
     <main class="page-shell">
       <header class="header-container">
         <h1 id="mainTitle">OPERATION: RNG</h1>

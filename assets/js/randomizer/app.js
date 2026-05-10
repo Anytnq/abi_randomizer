@@ -93,6 +93,11 @@ const MUSSEL_ALLOW_CHANCE = 0.52;
 const CRATE_REVEAL_DELAY_MS = 440;
 const CRATE_REVEAL_DISPLAY_MS = 3800;
 
+const debugState = {
+  enabled: false,
+  statusElement: null,
+};
+
 const allCategoryKeys = categoryOptions.map((category) => category.key);
 const defaultSelectedCategories = ["map", "weapon", "secondary"];
 
@@ -209,6 +214,7 @@ async function initialize() {
   initCompactMode();
   initStreamerMode();
   initMusselMode();
+  initDebugMode();
   syncPaylinePosition();
   elements.spinButton.addEventListener("click", spinAll);
   elements.clearAllCategoriesButton?.addEventListener("click", () => {
@@ -312,6 +318,152 @@ function saveMusselModePreference(enabled) {
   try {
     localStorage.setItem(MUSSEL_MODE_STORAGE_KEY, enabled ? "1" : "0");
   } catch (_) {}
+}
+
+function isLocalDebugContext() {
+  return (
+    location.protocol === "file:" ||
+    location.hostname === "localhost" ||
+    location.hostname === "127.0.0.1" ||
+    location.hostname === "[::1]"
+  );
+}
+
+function initDebugMode() {
+  if (!isLocalDebugContext()) {
+    return;
+  }
+
+  const panel = document.getElementById("debugPanel");
+  const select = document.getElementById("debugActionSelect");
+  const runButton = document.getElementById("debugRunBtn");
+  const status = document.getElementById("debugStatus");
+
+  if (!panel || !select || !runButton || !status) {
+    return;
+  }
+
+  debugState.enabled = true;
+  debugState.statusElement = status;
+
+  panel.hidden = false;
+  elements.body.classList.add("debug-mode-enabled");
+
+  setDebugStatus("Debug Modus aktiv (lokale Umgebung erkannt).");
+
+  runButton.addEventListener("click", async () => {
+    const action = select.value;
+    if (!action) {
+      setDebugStatus("Bitte eine Debug-Aktion auswaehlen.", true);
+      return;
+    }
+
+    await runDebugAction(action);
+  });
+}
+
+function setDebugStatus(message, isError = false) {
+  if (!debugState.statusElement) {
+    return;
+  }
+
+  debugState.statusElement.textContent = message;
+  debugState.statusElement.classList.toggle("debug-status--error", isError);
+}
+
+function ensureMusselModeEnabledForDebug() {
+  if (state.musselModeEnabled) {
+    return;
+  }
+
+  state.musselModeEnabled = true;
+  applyMusselModeButtonState();
+  saveMusselModePreference(true);
+}
+
+async function runDebugAction(action) {
+  if (!debugState.enabled) {
+    return;
+  }
+
+  switch (action) {
+    case "spin-default":
+      setDebugStatus("Debug: normaler Spin gestartet.");
+      spinAll();
+      return;
+    case "spin-zth":
+      setDebugStatus("Debug: erzwungener 0-to-Hero Spin gestartet.");
+      spinAll({ forceZeroToHero: true });
+      return;
+    case "spin-elite":
+      setDebugStatus("Debug: erzwungener Elite-Kisten-Spin gestartet.");
+      spinAll({ forceZeroToHero: false, forceEliteCrate: true });
+      return;
+    case "spin-mussel-allow":
+      ensureMusselModeEnabledForDebug();
+      setDebugStatus("Debug: Miesmuschel-Spin mit JA gestartet.");
+      spinAll({
+        forceZeroToHero: false,
+        forceEliteCrate: true,
+        forceMusselDecision: true,
+      });
+      return;
+    case "spin-mussel-deny":
+      ensureMusselModeEnabledForDebug();
+      setDebugStatus("Debug: Miesmuschel-Spin mit NEIN gestartet.");
+      spinAll({
+        forceZeroToHero: false,
+        forceEliteCrate: true,
+        forceMusselDecision: false,
+      });
+      return;
+    case "map-reload":
+      setDebugStatus("Debug: Map-Reload gestartet.");
+      reloadMapOnly();
+      return;
+    case "overlay-zth":
+      setDebugStatus("Debug: Squad-0-to-Hero Overlay angezeigt.");
+      showSquadZeroToHeroOverlay("Debug", false);
+      return;
+    case "overlay-crate": {
+      const testWeapon =
+        pickEliteWeaponWinner(state.activeWeapons) ?? state.activeWeapons[0];
+      if (!testWeapon) {
+        setDebugStatus("Debug: Keine Waffe verfuegbar.", true);
+        return;
+      }
+      setDebugStatus("Debug: Elite-Kisten Overlay angezeigt.");
+      await showEliteCrateReveal(testWeapon);
+      return;
+    }
+    case "overlay-mussel-allow":
+      setDebugStatus("Debug: Miesmuschel Overlay (JA) angezeigt.");
+      await resolveMusselDecision(true);
+      return;
+    case "overlay-mussel-deny":
+      setDebugStatus("Debug: Miesmuschel Overlay (NEIN) angezeigt.");
+      await resolveMusselDecision(false);
+      return;
+    case "audio-hero-play":
+      setDebugStatus("Debug: Hero-Song gestartet.");
+      playHeroSong();
+      return;
+    case "audio-hero-stop":
+      setDebugStatus("Debug: Hero-Song gestoppt.");
+      stopHeroSong();
+      return;
+    case "alarm-on":
+      setDebugStatus("Debug: Alarmmodus aktiv.");
+      enableAlarmMode(elements);
+      return;
+    case "alarm-off":
+      setDebugStatus("Debug: Alarmmodus deaktiviert.");
+      resetHeader(elements);
+      stopHeroSong();
+      return;
+    default:
+      setDebugStatus("Debug: Unbekannte Aktion.", true);
+  }
 }
 
 function getNextStreamerMode(currentMode) {
@@ -670,7 +822,7 @@ function createInitialStrips() {
   }
 }
 
-function spinAll() {
+function spinAll(options = {}) {
   if (state.selectedCategories.length === 0) {
     return;
   }
@@ -724,7 +876,10 @@ function spinAll() {
   createInitialStrips();
 
   const chancePercent = normalizeChanceValue(elements.chanceInput.value);
-  const isZeroToHero = Math.random() < chancePercent / 100;
+  const isZeroToHero =
+    typeof options.forceZeroToHero === "boolean"
+      ? options.forceZeroToHero
+      : Math.random() < chancePercent / 100;
   const isSquadWideZeroToHeroBanner =
     isZeroToHero && Math.random() < SQUAD_ZTH_TEAM_BANNER_CHANCE;
   const mapWinner = isCategorySelected("map")
@@ -742,6 +897,12 @@ function spinAll() {
   const eliteWeaponWinner =
     !isZeroToHero && isCategorySelected("weapon")
       ? pickEliteWeaponWinner(state.activeWeapons)
+      : null;
+  const effectiveEliteWeaponWinner =
+    !isZeroToHero && isCategorySelected("weapon")
+      ? options.forceEliteCrate
+        ? pickEliteWeaponWinner(state.activeWeapons)
+        : eliteWeaponWinner
       : null;
   const chestRigWinner = isCategorySelected("chestRig")
     ? getWeightedRandom(state.activeChestRigs)
@@ -897,8 +1058,8 @@ function spinAll() {
     state.lastResult = buildResult(winners);
 
     let grantedByMussel = true;
-    if (!isZeroToHero && eliteWeaponWinner) {
-      await showEliteCrateReveal(eliteWeaponWinner);
+    if (!isZeroToHero && effectiveEliteWeaponWinner) {
+      await showEliteCrateReveal(effectiveEliteWeaponWinner);
     }
 
     if (
@@ -906,11 +1067,13 @@ function spinAll() {
       !isZeroToHero &&
       Object.keys(state.lastResult).length > 0
     ) {
-      grantedByMussel = await resolveMusselDecision();
+      grantedByMussel = await resolveMusselDecision(
+        options.forceMusselDecision,
+      );
     }
 
-    if (eliteWeaponWinner) {
-      state.lastResult["Vollmodded"] = eliteWeaponWinner.name;
+    if (effectiveEliteWeaponWinner) {
+      state.lastResult["Vollmodded"] = effectiveEliteWeaponWinner.name;
     }
 
     if (state.musselModeEnabled && !isZeroToHero) {
@@ -986,11 +1149,14 @@ function showEliteCrateReveal(weapon) {
   });
 }
 
-function resolveMusselDecision() {
+function resolveMusselDecision(forcedDecision) {
   return new Promise((resolve) => {
     clearOverlay();
 
-    const allowGear = Math.random() < MUSSEL_ALLOW_CHANCE;
+    const allowGear =
+      typeof forcedDecision === "boolean"
+        ? forcedDecision
+        : Math.random() < MUSSEL_ALLOW_CHANCE;
     const overlay = document.createElement("div");
     overlay.id = "eventOverlay";
     overlay.className = "event-overlay event-overlay--mussel";
