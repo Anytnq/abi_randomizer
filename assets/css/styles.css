@@ -1666,10 +1666,10 @@ input[type="number"]:focus {
 
 .master-volume {
   position: fixed;
-  left: 50%;
-  bottom: 16px;
+  left: 18px;
+  bottom: 18px;
   z-index: 130;
-  transform: translateX(-50%);
+  transform: none;
   display: inline-flex;
   align-items: center;
   gap: 10px;

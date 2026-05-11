@@ -24,9 +24,7 @@ export function loadWeaponHistory() {
 export function saveWeaponHistory(history) {
   try {
     localStorage.setItem(WEAPON_HISTORY_KEY, JSON.stringify(history));
-  } catch {
-    // Ignore storage write failures to keep the randomizer usable.
-  }
+  } catch {}
 }
 
 export function loadSelectedCategories(defaultCategories) {
@@ -50,9 +48,7 @@ export function loadSelectedCategories(defaultCategories) {
 export function saveSelectedCategories(categories) {
   try {
     localStorage.setItem(SELECTED_CATEGORIES_KEY, JSON.stringify(categories));
-  } catch {
-    // Ignore storage write failures to keep the randomizer usable.
-  }
+  } catch {}
 }
 
 export function loadExcludedArmorTiers() {
@@ -107,12 +103,10 @@ export function loadStreamerMode() {
 export function saveStreamerMode(mode) {
   try {
     localStorage.setItem(STREAMER_MODE_KEY, mode);
-  } catch {
-    // Ignore storage write failures to keep the randomizer usable.
-  }
+  } catch {}
 }
 
-function loadArray(key) {
+export function loadArray(key) {
   try {
     const saved = localStorage.getItem(key);
     if (!saved) {
@@ -126,10 +120,8 @@ function loadArray(key) {
   }
 }
 
-function saveArray(key, value) {
+export function saveArray(key, value) {
   try {
     localStorage.setItem(key, JSON.stringify(value));
-  } catch {
-    // Ignore storage write failures to keep the randomizer usable.
-  }
+  } catch {}
 }

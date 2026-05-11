@@ -9,7 +9,7 @@ export const SPIN_START_OFFSET_MS = 50;
 export const SPIN_STAGGER_MS = 400;
 export const SPIN_ANIMATION_MS = 3000;
 
-function formatWeaponCategory(category) {
+export function formatWeaponCategory(category) {
   if (!category) {
     return "";
   }
@@ -20,7 +20,7 @@ function formatWeaponCategory(category) {
     .join(" ");
 }
 
-function getValueRarityLabel(value) {
+export function getValueRarityLabel(value) {
   const rarityLabels = {
     1: "Common",
     2: "Uncommon",
@@ -32,7 +32,7 @@ function getValueRarityLabel(value) {
   return rarityLabels[value] || "Rare";
 }
 
-function buildCardContent(item) {
+export function buildCardContent(item) {
   const categoryLabel = formatWeaponCategory(item.category);
   const isWeapon = Boolean(item?.category);
   const weaponValue = item.value ?? 3;
@@ -114,8 +114,7 @@ export function pickEliteWeaponWinner(weapons) {
 }
 
 export function updateWeaponHistory(weaponHistory, weaponName) {
-  const nextHistory = [weaponName, ...weaponHistory].slice(0, 3);
-  return nextHistory;
+  return [weaponName, ...weaponHistory].slice(0, 3);
 }
 
 export function spinColumn(

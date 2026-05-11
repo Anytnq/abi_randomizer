@@ -9,6 +9,9 @@ import {
   weapons,
   weaponCategoryOptions,
 } from "./data.js";
+import {
+  buildCardContent,
+} from "./game.js";
 
 const mapOptions = maps.map((map) => map.name);
 
@@ -272,47 +275,6 @@ export function setupFilterToggle(elements) {
     elements.filterChevron.textContent = isOpen ? "▲" : "▼";
     elements.filterToggle.setAttribute("aria-expanded", String(isOpen));
   });
-}
-
-function formatWeaponCategory(category) {
-  if (!category) {
-    return "";
-  }
-
-  return category
-    .split("-")
-    .map((part) => part.charAt(0).toUpperCase() + part.slice(1))
-    .join(" ");
-}
-
-function getValueRarityLabel(value) {
-  const rarityLabels = {
-    1: "Common",
-    2: "Uncommon",
-    3: "Rare",
-    4: "Mythical",
-    5: "Legendary",
-    6: "Immortal",
-  };
-  return rarityLabels[value] || "Rare";
-}
-
-function buildCardContent(item) {
-  const categoryLabel = formatWeaponCategory(item.category);
-  const isWeapon = Boolean(item?.category);
-  const weaponValue = item.value ?? 3;
-  const categoryLine = categoryLabel
-    ? `<span class="card-category card-category--v${weaponValue}">(${categoryLabel})</span>`
-    : "";
-  const valueLine = isWeapon
-    ? `<span class="card-value card-value--v${weaponValue}">${getValueRarityLabel(weaponValue)}</span>`
-    : "";
-  const titleClass = isWeapon
-    ? `card-title card-title--v${weaponValue}`
-    : "card-title";
-  const wrapperClass = isWeapon ? "card-text card-text--weapon" : "card-text";
-
-  return `<span class="${wrapperClass}"><span class="${titleClass}">${item.name}</span>${categoryLine}${valueLine}</span>`;
 }
 
 export function createStripContent(elementId, items, addHiddenZth) {

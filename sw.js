@@ -18,10 +18,13 @@ const STATIC_ASSETS = [
   "./assets/js/gungame/gungame.js",
   "./assets/js/randomizer/sound.js",
   "./assets/js/randomizer/squad.js?v=20260507-4",
+  "./assets/js/randomizer/squad-ui.js",
   "./assets/js/randomizer/squad-utils.js?v=20260507-4",
   "./assets/js/randomizer/storage.js",
   "./assets/js/randomizer/ui.js",
   "./assets/js/randomizer/wheel.js",
+  "./assets/js/utils.js",
+  "./assets/js/volume-control.js",
 ];
 
 self.addEventListener("install", (event) => {

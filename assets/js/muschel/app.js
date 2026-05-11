@@ -1,10 +1,10 @@
 import {
-  getMasterVolume,
   playmuschelDecisionSound,
-  setMasterVolume,
 } from "../randomizer/sound.js";
+import { escapeHtml } from "../utils.js";
+import { initVolumeControl } from "../volume-control.js";
+import { loadArray, saveArray } from "../randomizer/storage.js";
 
-const MASTER_VOLUME_STORAGE_KEY = "masterVolumeLevel";
 const HISTORY_STORAGE_KEY = "muschelHistoryEntries";
 const MAX_HISTORY_ENTRIES = 12;
 
@@ -16,80 +16,10 @@ const elements = {
   resultTitle: document.getElementById("muschelResultTitle"),
   resultLine: document.getElementById("muschelResultLine"),
   historyList: document.getElementById("muschelHistoryList"),
-  volumeSlider: document.getElementById("masterVolumeSlider"),
-  volumeValue: document.getElementById("masterVolumeValue"),
 };
 
-function loadMasterVolumePreference() {
-  try {
-    const raw = localStorage.getItem(MASTER_VOLUME_STORAGE_KEY);
-    if (raw === null) {
-      return getMasterVolume();
-    }
-
-    const parsed = Number.parseFloat(raw);
-    if (!Number.isFinite(parsed)) {
-      return getMasterVolume();
-    }
-
-    return Math.min(1, Math.max(0, parsed));
-  } catch (_) {
-    return getMasterVolume();
-  }
-}
-
-function saveMasterVolumePreference(volume) {
-  try {
-    localStorage.setItem(MASTER_VOLUME_STORAGE_KEY, String(volume));
-  } catch (_) {}
-}
-
-function updateVolumeValueLabel(volume) {
-  if (!elements.volumeValue) {
-    return;
-  }
-
-  elements.volumeValue.textContent = `${Math.round(volume * 100)}%`;
-}
-
-function initVolumeControl() {
-  if (!elements.volumeSlider) {
-    return;
-  }
-
-  const initialVolume = loadMasterVolumePreference();
-  setMasterVolume(initialVolume);
-  elements.volumeSlider.value = String(Math.round(initialVolume * 100));
-  updateVolumeValueLabel(initialVolume);
-
-  elements.volumeSlider.addEventListener("input", () => {
-    const sliderValue = Number.parseInt(elements.volumeSlider.value, 10);
-    const normalizedVolume = Math.min(1, Math.max(0, sliderValue / 100));
-    setMasterVolume(normalizedVolume);
-    saveMasterVolumePreference(normalizedVolume);
-    updateVolumeValueLabel(normalizedVolume);
-  });
-}
-
-function loadHistory() {
-  try {
-    const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
-    if (!raw) {
-      return [];
-    }
-
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) ? parsed : [];
-  } catch (_) {
-    return [];
-  }
-}
-
-function saveHistory(entries) {
-  try {
-    localStorage.setItem(HISTORY_STORAGE_KEY, JSON.stringify(entries));
-  } catch (_) {}
-}
+const loadHistory = () => loadArray(HISTORY_STORAGE_KEY);
+const saveHistory = (entries) => saveArray(HISTORY_STORAGE_KEY, entries);
 
 function renderHistory(entries) {
   if (!elements.historyList) {
@@ -140,15 +70,6 @@ function showDecision(question, allowed) {
 
   saveHistory(nextEntries);
   renderHistory(nextEntries);
-}
-
-function escapeHtml(value) {
-  return String(value)
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/\"/g, "&quot;")
-    .replace(/'/g, "&#39;");
 }
 
 function askmuschel() {

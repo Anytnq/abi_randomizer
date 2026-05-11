@@ -1,3 +1,5 @@
+import { escapeHtml } from "../utils.js";
+
 const SEGMENT_COLORS = [
   "#295780",
   "#325f39",
@@ -321,18 +323,12 @@ function buildSpinPayload(values) {
 }
 
 function parseManualValues(rawInput) {
-  const uniqueValues = new Set();
-
-  rawInput
+  const values = rawInput
     .split(/[,;\n\r]+/)
     .map((entry) => entry.trim())
-    .forEach((entry) => {
-      if (entry.length > 0) {
-        uniqueValues.add(entry);
-      }
-    });
+    .filter((entry) => entry.length > 0);
 
-  return Array.from(uniqueValues).slice(0, 32);
+  return [...new Set(values)].slice(0, 32);
 }
 
 function sanitizeSpinValues(values) {
@@ -496,13 +492,4 @@ function pickColor(index, isWinner) {
 
 function normalizeDegrees(value) {
   return ((value % 360) + 360) % 360;
-}
-
-function escapeHtml(value) {
-  return value
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;")
-    .replaceAll("'", "&#039;");
 }

@@ -10,6 +10,8 @@ import { db } from "../firebase.js";
 import { getInactivePlayerIds } from "./squad-utils.js";
 
 const SESSION_TTL_MS = 4 * 60 * 60 * 1000;
+const MEMBER_KICK_TTL_MS = 6 * 60 * 60 * 1000;
+const SESSION_DELETE_TTL_MS = 8 * 60 * 60 * 1000;
 const MAX_EVENTS = 80;
 const EVENT_TRIM_INTERVAL_MS = 60_000;
 const lastTrimByCode = new Map();
@@ -390,11 +392,26 @@ export async function cleanupInactivePlayers(code, actorId) {
   }
 
   const players = data.players ?? {};
+  const now = Date.now();
+
+  const allIds = Object.keys(players);
+  const allInactive =
+    allIds.length > 0 &&
+    allIds.every((id) => {
+      const p = players[id];
+      return !p || typeof p.lastSeenAt !== "number" || now - p.lastSeenAt > SESSION_DELETE_TTL_MS;
+    });
+
+  if (allInactive) {
+    await remove(sessionRef);
+    return allIds;
+  }
+
   const inactiveIds = getInactivePlayerIds(
     players,
     data.leaderId,
-    Date.now(),
-    PRESENCE_TIMEOUT_MS,
+    now,
+    MEMBER_KICK_TTL_MS,
   );
 
   for (const playerId of inactiveIds) {
@@ -403,7 +420,7 @@ export async function cleanupInactivePlayers(code, actorId) {
     await publishSquadEvent(code, "member-timeout", {
       playerId,
       playerName,
-      timeoutMs: PRESENCE_TIMEOUT_MS,
+      timeoutMs: MEMBER_KICK_TTL_MS,
     });
   }
 

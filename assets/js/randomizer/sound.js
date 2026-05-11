@@ -68,103 +68,95 @@ function ensureAudioContext() {
   return audioContext;
 }
 
-function playClick(ctx) {
+function playTone(ctx, { type, freqStart, freqEnd, freqRamp = "exponential", freqRampTime, gainPeak, attackTime, decayTime, stopTime }) {
   const now = ctx.currentTime;
   const oscillator = ctx.createOscillator();
   const gain = ctx.createGain();
 
-  oscillator.type = "square";
-  oscillator.frequency.setValueAtTime(900 + Math.random() * 300, now);
+  oscillator.type = type;
+  oscillator.frequency.setValueAtTime(freqStart, now);
+  if (freqEnd !== undefined) {
+    if (freqRamp === "linear") {
+      oscillator.frequency.linearRampToValueAtTime(freqEnd, now + freqRampTime);
+    } else {
+      oscillator.frequency.exponentialRampToValueAtTime(freqEnd, now + freqRampTime);
+    }
+  }
 
   gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.06, now + 0.005);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.05);
+  gain.gain.exponentialRampToValueAtTime(gainPeak, now + attackTime);
+  gain.gain.exponentialRampToValueAtTime(0.0001, now + decayTime);
 
   oscillator.connect(gain);
   connectGainToOutput(ctx, gain);
 
   oscillator.start(now);
-  oscillator.stop(now + 0.055);
+  oscillator.stop(now + stopTime);
+}
+
+function playClick(ctx) {
+  playTone(ctx, {
+    type: "square",
+    freqStart: 900 + Math.random() * 300,
+    gainPeak: 0.06,
+    attackTime: 0.005,
+    decayTime: 0.05,
+    stopTime: 0.055,
+  });
 }
 
 function playFinishTone(ctx) {
-  const now = ctx.currentTime;
-  const oscillator = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  oscillator.type = "triangle";
-  oscillator.frequency.setValueAtTime(660, now);
-  oscillator.frequency.linearRampToValueAtTime(990, now + 0.12);
-
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.09, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.1);
-
-  oscillator.connect(gain);
-  connectGainToOutput(ctx, gain);
-
-  oscillator.start(now);
-  oscillator.stop(now + 0.11);
+  playTone(ctx, {
+    type: "triangle",
+    freqStart: 660,
+    freqEnd: 990,
+    freqRamp: "linear",
+    freqRampTime: 0.12,
+    gainPeak: 0.09,
+    attackTime: 0.02,
+    decayTime: 0.1,
+    stopTime: 0.11,
+  });
 }
 
 function playWhooshTone(ctx) {
-  const now = ctx.currentTime;
-  const oscillator = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  oscillator.type = "sawtooth";
-  oscillator.frequency.setValueAtTime(180, now);
-  oscillator.frequency.exponentialRampToValueAtTime(780, now + 0.28);
-
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.05, now + 0.03);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.3);
-
-  oscillator.connect(gain);
-  connectGainToOutput(ctx, gain);
-
-  oscillator.start(now);
-  oscillator.stop(now + 0.32);
+  playTone(ctx, {
+    type: "sawtooth",
+    freqStart: 180,
+    freqEnd: 780,
+    freqRampTime: 0.28,
+    gainPeak: 0.05,
+    attackTime: 0.03,
+    decayTime: 0.3,
+    stopTime: 0.32,
+  });
 }
 
 function playLowBloop(ctx) {
-  const now = ctx.currentTime;
-  const oscillator = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  oscillator.type = "triangle";
-  oscillator.frequency.setValueAtTime(240, now);
-  oscillator.frequency.exponentialRampToValueAtTime(130, now + 0.22);
-
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.08, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.24);
-
-  oscillator.connect(gain);
-  connectGainToOutput(ctx, gain);
-
-  oscillator.start(now);
-  oscillator.stop(now + 0.26);
+  playTone(ctx, {
+    type: "triangle",
+    freqStart: 240,
+    freqEnd: 130,
+    freqRampTime: 0.22,
+    gainPeak: 0.08,
+    attackTime: 0.02,
+    decayTime: 0.24,
+    stopTime: 0.26,
+  });
 }
 
 function playHighChime(ctx) {
-  const now = ctx.currentTime;
-  const oscillator = ctx.createOscillator();
-  const gain = ctx.createGain();
-
-  oscillator.type = "sine";
-  oscillator.frequency.setValueAtTime(520, now);
-  oscillator.frequency.linearRampToValueAtTime(860, now + 0.16);
-
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.06, now + 0.02);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + 0.2);
-
-  oscillator.connect(gain);
-  connectGainToOutput(ctx, gain);
-
-  oscillator.start(now);
-  oscillator.stop(now + 0.22);
+  playTone(ctx, {
+    type: "sine",
+    freqStart: 520,
+    freqEnd: 860,
+    freqRamp: "linear",
+    freqRampTime: 0.16,
+    gainPeak: 0.06,
+    attackTime: 0.02,
+    decayTime: 0.2,
+    stopTime: 0.22,
+  });
 }
 
 export function stopSpinSound() {
@@ -296,7 +288,6 @@ export function playHeroSong() {
         return;
       }
 
-      // Fallback fanfare if no local hero track is available.
       playHighChime(ctx);
       window.setTimeout(() => playHighChime(ctx), 160);
       window.setTimeout(() => playFinishTone(ctx), 320);
