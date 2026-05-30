@@ -105,6 +105,7 @@ const state = {
   weaponHistory: [],
   lastMap: null,
   lastResult: {},
+  zeroToHeroPending: false,
   activeOverlayTimeoutId: null,
 };
 
@@ -123,15 +124,55 @@ let renderSquadMembers;
 let buildMembersSignature;
 
 const CATEGORY_CONFIG = [
-  { key: "map",              stateKey: "activeMaps",              stripId: "strip-map",               hasZth: false },
-  { key: "helmet",           stateKey: "activeHelmets",           stripId: "strip-helmet",            hasZth: true  },
-  { key: "armor",            stateKey: "activeArmors",            stripId: "strip-armor",             hasZth: true  },
-  { key: "weapon",           stateKey: "activeWeapons",           stripId: "strip-weapon",            hasZth: true  },
-  { key: "chestRig",         stateKey: "activeChestRigs",         stripId: "strip-chest-rig",         hasZth: true  },
-  { key: "armoredChestRig",  stateKey: "activeArmoredChestRigs",  stripId: "strip-armored-chest-rig", hasZth: true  },
-  { key: "headset",          stateKey: "activeHeadsets",          stripId: "strip-headset",           hasZth: true  },
-  { key: "secondary",        stateKey: "activeSecondaries",       stripId: "strip-secondary",         hasZth: true  },
-  { key: "backpack",         stateKey: "activeBackpacks",         stripId: "strip-backpack",          hasZth: true  },
+  { key: "map", stateKey: "activeMaps", stripId: "strip-map", hasZth: false },
+  {
+    key: "helmet",
+    stateKey: "activeHelmets",
+    stripId: "strip-helmet",
+    hasZth: true,
+  },
+  {
+    key: "armor",
+    stateKey: "activeArmors",
+    stripId: "strip-armor",
+    hasZth: true,
+  },
+  {
+    key: "weapon",
+    stateKey: "activeWeapons",
+    stripId: "strip-weapon",
+    hasZth: true,
+  },
+  {
+    key: "chestRig",
+    stateKey: "activeChestRigs",
+    stripId: "strip-chest-rig",
+    hasZth: true,
+  },
+  {
+    key: "armoredChestRig",
+    stateKey: "activeArmoredChestRigs",
+    stripId: "strip-armored-chest-rig",
+    hasZth: true,
+  },
+  {
+    key: "headset",
+    stateKey: "activeHeadsets",
+    stripId: "strip-headset",
+    hasZth: true,
+  },
+  {
+    key: "secondary",
+    stateKey: "activeSecondaries",
+    stripId: "strip-secondary",
+    hasZth: true,
+  },
+  {
+    key: "backpack",
+    stateKey: "activeBackpacks",
+    stripId: "strip-backpack",
+    hasZth: true,
+  },
 ];
 
 const MYSTERY_WEAPON_CARD = {
@@ -150,9 +191,9 @@ const MYSTERY_CRATE_STATIC_REWARDS = [
   {
     title: "?-Kisten Bonus",
     subtitle: "Team-Bonus erhalten",
-    highlight: "Waffe fuer 1 Squad Member aussuchen",
+    highlight: "Waffe für 1 Squad Member aussuchen",
     resultKey: "?-Kiste",
-    resultValue: "Waffe fuer 1 Squad Member aussuchen",
+    resultValue: "Waffe für 1 Squad Member aussuchen",
   },
   {
     title: "?-Kisten Bonus",
@@ -171,9 +212,9 @@ const MYSTERY_CRATE_STATIC_REWARDS = [
   {
     title: "?-Kisten Bonus",
     subtitle: "Start-Bonus erhalten",
-    highlight: "1. Red fuer Dich",
+    highlight: "1. Red für Dich",
     resultKey: "?-Kiste",
-    resultValue: "1. Red fuer Dich",
+    resultValue: "1. Red für Dich",
   },
 ];
 
@@ -262,6 +303,8 @@ async function initialize() {
   initDebugMode();
   syncPaylinePosition();
   elements.spinButton.addEventListener("click", spinAll);
+  elements.diedButton?.addEventListener("click", handleDiedReroll);
+  elements.survivedButton?.addEventListener("click", handleSurvivedReroll);
   elements.clearAllCategoriesButton?.addEventListener("click", () => {
     toggleAllCategoriesSelection();
   });
@@ -271,7 +314,8 @@ async function initialize() {
 
   const squadUI = createSquadUI({
     storageKey: SQUAD_STORAGE_KEY,
-    memberHintText: "Du bist Squad Member. Kategorien und manuelle Wheel-Liste steuert der Leader.",
+    memberHintText:
+      "Du bist Squad Member. Kategorien und manuelle Wheel-Liste steuert der Leader.",
     getSelectedCategories: () => state.selectedCategories,
     onSessionStart: (sq, { isLeader }) => {
       wheelController.setSquadContext({ active: true, isLeader });
@@ -284,7 +328,8 @@ async function initialize() {
     onSquadDataUpdate: (data, sq, previousIsLeader) => {
       const me = (data.players ?? {})[sq.playerId];
       if (me) {
-        state.lastResult = me.result && typeof me.result === "object" ? me.result : {};
+        state.lastResult =
+          me.result && typeof me.result === "object" ? me.result : {};
       }
       const zth = data.zeroToHero;
       if (!sq.hasProcessedInitialUpdate) {
@@ -297,13 +342,18 @@ async function initialize() {
         if (appliesToTeam || triggeredByMe) {
           playHeroSong();
           setTimeout(() => enableAlarmMode(elements), 500);
-          showSquadZeroToHeroOverlay(zth.triggeredByName ?? "Jemand", appliesToTeam);
+          showSquadZeroToHeroOverlay(
+            zth.triggeredByName ?? "Jemand",
+            appliesToTeam,
+          );
         }
       }
       const remoteCategories = data.filters?.selectedCategories;
       let shouldRenderFilters = previousIsLeader !== sq.isLeader;
       if (Array.isArray(remoteCategories)) {
-        const sanitized = remoteCategories.filter((c) => allCategoryKeys.includes(c));
+        const sanitized = remoteCategories.filter((c) =>
+          allCategoryKeys.includes(c),
+        );
         if (!arraysEqual(sanitized, state.selectedCategories)) {
           state.selectedCategories = sanitized;
           saveSelectedCategories(state.selectedCategories);
@@ -470,7 +520,7 @@ async function runDebugAction(action) {
     case "overlay-crate": {
       const testReward = pickMysteryCrateReward(state.activeWeapons);
       if (!testReward) {
-        setDebugStatus("Debug: Kein Kisten-Reward verfuegbar.", true);
+        setDebugStatus("Debug: Kein Kisten-Reward verfügbar.", true);
         return;
       }
       setDebugStatus("Debug: Elite-Kisten Overlay angezeigt.");
@@ -712,16 +762,81 @@ function reloadMapOnly() {
     }
 
     if (isSquadReady()) {
-       publishResult(
-         squadState.code,
-         squadState.playerId,
-         state.lastResult,
-         squadState.playerName,
-       );
+      publishResult(
+        squadState.code,
+        squadState.playerId,
+        state.lastResult,
+        squadState.playerName,
+      );
     }
 
     isMapReloading = false;
   }, spinDurationMs);
+}
+
+function handleDiedReroll() {
+  state.zeroToHeroPending = false;
+  spinAll();
+}
+
+async function handleSurvivedReroll() {
+  if (!isCategorySelected("map") || state.activeMaps.length === 0) {
+    return;
+  }
+
+  if (state.zeroToHeroPending && state.lastResult?.Waffe === "ZERO TO HERO") {
+    const keepGear = await requestZeroToHeroSurvivalOutcome();
+    if (!keepGear) {
+      state.zeroToHeroPending = true;
+    } else {
+      state.zeroToHeroPending = false;
+    }
+  }
+
+  reloadMapOnly();
+}
+function requestZeroToHeroSurvivalOutcome() {
+  return new Promise((resolve) => {
+    const existingOverlay = document.getElementById("survivedZthOverlay");
+    if (existingOverlay) {
+      existingOverlay.remove();
+    }
+
+    const keepGear = Math.random() < 0.5;
+    const title = "Zero to Hero überlebt";
+    const message = keepGear
+      ? "Das Skript hat entschieden: Du darfst das Gear behalten."
+      : "Das Skript hat entschieden: Du darfst das Gear noch nicht behalten. Zero to Hero bleibt bestehen.";
+
+    const overlay = document.createElement("div");
+    overlay.id = "survivedZthOverlay";
+    overlay.className = "event-overlay";
+    overlay.innerHTML = `
+      <div class="event-modal">
+        <p class="event-modal-title">${title}</p>
+        <p class="event-modal-text">${message}</p>
+        <div class="event-modal-actions">
+          <button type="button" class="event-action-btn event-action-btn--confirm">OK</button>
+        </div>
+      </div>
+    `;
+
+    const confirmBtn = overlay.querySelector(".event-action-btn--confirm");
+    const cleanup = () => {
+      overlay.remove();
+      resolve(keepGear);
+    };
+
+    confirmBtn?.addEventListener("click", cleanup, { once: true });
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) {
+        cleanup();
+      }
+    });
+
+    document.body.appendChild(overlay);
+    confirmBtn?.focus();
+  });
 }
 
 function toggleCategory(category) {
@@ -841,6 +956,7 @@ function spinAll(options = {}) {
     typeof options.forceZeroToHero === "boolean"
       ? options.forceZeroToHero
       : Math.random() < chancePercent / 100;
+  state.zeroToHeroPending = isZeroToHero;
   const isSquadWideZeroToHeroBanner =
     isZeroToHero && Math.random() < SQUAD_ZTH_TEAM_BANNER_CHANCE;
   const mapWinner = isCategorySelected("map")
@@ -968,7 +1084,8 @@ function spinAll(options = {}) {
     }
 
     if (mysteryCrateReward) {
-      state.lastResult[mysteryCrateReward.resultKey] = mysteryCrateReward.resultValue;
+      state.lastResult[mysteryCrateReward.resultKey] =
+        mysteryCrateReward.resultValue;
     }
 
     if (mysteryCrateReward?.weaponName) {
@@ -1006,26 +1123,19 @@ function getSpinDuration(columnCount) {
   const lastColumnDelay = Math.max(0, columnCount - 1) * SPIN_STAGGER_MS;
   return SPIN_START_OFFSET_MS + SPIN_ANIMATION_MS + lastColumnDelay;
 }
-
 function clearOverlay() {
   const overlay = document.getElementById("eventOverlay");
   if (overlay) {
     overlay.remove();
-  }
-
-  if (state.activeOverlayTimeoutId) {
-    clearTimeout(state.activeOverlayTimeoutId);
-    state.activeOverlayTimeoutId = null;
   }
 }
 
 function pickMysteryCrateReward(activeWeapons) {
   const rewards = [...MYSTERY_CRATE_STATIC_REWARDS];
   const eliteWeapon = pickEliteWeaponWinner(activeWeapons);
-
   if (eliteWeapon) {
     rewards.push({
-      title: "?-Kiste geoeffnet",
+      title: "?-Kiste geöffnet",
       subtitle: "Vollmodded Waffe gezogen",
       highlight: eliteWeapon.name,
       resultKey: "Vollmodded",
@@ -1034,36 +1144,45 @@ function pickMysteryCrateReward(activeWeapons) {
     });
   }
 
-  return getWeightedRandom(rewards);
+  if (rewards.length === 0) {
+    return null;
+  }
+
+  return rewards[Math.floor(Math.random() * rewards.length)];
 }
 
 function showEliteCrateReveal(reward) {
   return new Promise((resolve) => {
-    clearOverlay();
+    const existing = document.getElementById("eventOverlay");
+    if (existing) {
+      existing.remove();
+    }
 
     const overlay = document.createElement("div");
     overlay.id = "eventOverlay";
-    overlay.className = "event-overlay event-overlay--crate";
+    overlay.className = "event-overlay";
     overlay.innerHTML = `
       <div class="event-modal crate-modal">
-        <div class="crate-box" aria-hidden="true">📦</div>
-        <h2 class="event-title">${escapeHtml(reward.title)}</h2>
+        <p class="event-modal-title">${escapeHtml(reward.title)}</p>
         <p class="event-subtitle">${escapeHtml(reward.subtitle)}</p>
-        <p class="event-highlight">${escapeHtml(reward.highlight)}</p>
+        <p class="event-highlight">${escapeHtml(reward.highlight ?? "")}</p>
       </div>
     `;
 
-    overlay.addEventListener("click", () => {
-      clearOverlay();
+    const cleanup = () => {
+      overlay.remove();
       resolve();
+    };
+
+    overlay.addEventListener("click", (event) => {
+      if (event.target === overlay) {
+        cleanup();
+      }
     });
 
     document.body.appendChild(overlay);
-    playCrateRevealSound();
-
-    state.activeOverlayTimeoutId = window.setTimeout(() => {
-      clearOverlay();
-      resolve();
+    setTimeout(() => {
+      cleanup();
     }, CRATE_REVEAL_DISPLAY_MS);
   });
 }

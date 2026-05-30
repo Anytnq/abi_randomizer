@@ -27,7 +27,10 @@ function saveMasterVolumePreference(volume) {
 }
 
 function updateVolumeValueLabel(volume) {
-  const volumeValue = document.getElementById("masterVolumeValue");
+  const volumeValue =
+    document.querySelector(".master-volume-value") ||
+    document.getElementById("masterVolumeValue") ||
+    document.getElementById("muschel-masterVolumeValue");
   if (!volumeValue) {
     return;
   }
@@ -36,7 +39,10 @@ function updateVolumeValueLabel(volume) {
 }
 
 export function initVolumeControl() {
-  const volumeSlider = document.getElementById("masterVolumeSlider");
+  const volumeSlider =
+    document.querySelector(".master-volume-slider") ||
+    document.getElementById("masterVolumeSlider") ||
+    document.getElementById("muschel-masterVolumeSlider");
   if (!volumeSlider) {
     return;
   }

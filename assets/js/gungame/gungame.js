@@ -46,11 +46,13 @@ function initialize() {
 
   const squadUI = createSquadUI({
     storageKey: SQUAD_STORAGE_KEY,
-    memberHintText: "Du bist Squad Member. Dein Gungame-Stand wird live geteilt.",
+    memberHintText:
+      "Du bist Squad Member. Dein Gungame-Stand wird live geteilt.",
     getSelectedCategories: () => GUNGAME_SQUAD_CATEGORIES,
     onSessionStart: (sq) => syncSquadResult(),
     onSessionReset: () => {},
     onSquadDataUpdate: () => {},
+    idPrefix: "gungame-",
   });
   squadState = squadUI.squadState;
   isSquadReady = squadUI.isSquadReady;
@@ -315,5 +317,3 @@ function syncSquadResult() {
 
   publishResult(squadState.code, squadState.playerId, getCurrentResult());
 }
-
-

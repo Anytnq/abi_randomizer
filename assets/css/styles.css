@@ -358,6 +358,65 @@ body.alarm-mode .payline {
   box-shadow: 0 26px 44px #0009;
 }
 
+.event-modal-title {
+  font-family: var(--font-display);
+  font-size: 1.85rem;
+  margin-bottom: 0.65rem;
+  color: #ffffff;
+}
+
+.event-modal-text {
+  font-family: var(--font-body);
+  font-size: 1rem;
+  color: #d4d4d4;
+  line-height: 1.6;
+  margin-bottom: 1.75rem;
+}
+
+.event-modal-actions {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.event-action-btn {
+  min-width: 120px;
+  padding: 14px 18px;
+  border: 1px solid #ffffff3f;
+  border-radius: 14px;
+  background: #1a1620;
+  color: #ffffff;
+  font-family: var(--font-display);
+  font-size: 0.95rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  cursor: pointer;
+  transition: filter 0.16s, transform 0.16s;
+}
+
+.event-action-btn:hover {
+  filter: brightness(1.08);
+  transform: translateY(-1px);
+}
+
+.event-action-btn:focus-visible {
+  outline: 3px solid #ffffff7f;
+  outline-offset: 2px;
+}
+
+.event-action-btn--confirm {
+  background: #28c95f;
+  border-color: #6cee9c;
+  color: #081707;
+}
+
+.event-action-btn--cancel {
+  background: #fb5f5f;
+  border-color: #ff8a8a;
+  color: #230606;
+}
+
 .crate-modal {
   border-color: #ffd67c7d;
   background: linear-gradient(170deg, #3b2b0f 0%, #1e160b 100%);
@@ -2084,7 +2143,7 @@ body.compact-mode .squad-members {
 }
 
 body.compact-mode .squad-feed-list {
-  max-height: 220px;
+  max-height: 170px;
   overflow-y: auto;
 }
 
@@ -2827,6 +2886,20 @@ body.compact-mode .squad-content {
   gap: 6px;
   list-style: none;
 }
+
+/* Chat-like feed: show last ~4 items and allow scrolling */
+.squad-feed-list {
+  max-height: 170px;
+  overflow-y: auto;
+  padding-right: 6px; /* for scrollbar breathing room */
+}
+
+.squad-feed-list::-webkit-scrollbar {
+  width: 10px;
+}
+.squad-feed-list::-webkit-scrollbar-track { background: var(--scrollbar-track); }
+.squad-feed-list::-webkit-scrollbar-thumb { background: var(--scrollbar-thumb); border-radius: 999px; }
+.squad-feed-list::-webkit-scrollbar-thumb:hover { background: var(--scrollbar-thumb-hover); }
 
 .squad-feed-item {
   display: grid;

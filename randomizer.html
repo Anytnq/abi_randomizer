@@ -16,7 +16,12 @@
     <link rel="stylesheet" href="./assets/css/styles.css" />
   </head>
   <body>
-    <section class="debug-panel" id="debugPanel" hidden aria-label="Debug Aktionen">
+    <section
+      class="debug-panel"
+      id="debugPanel"
+      hidden
+      aria-label="Debug Aktionen"
+    >
       <h2 class="debug-title">Debug Modus</h2>
       <div class="debug-controls">
         <label class="debug-label" for="debugActionSelect">Test-Aktion</label>
@@ -32,7 +37,9 @@
           <option value="alarm-on">Alarmmodus an</option>
           <option value="alarm-off">Alarmmodus aus</option>
         </select>
-        <button class="debug-run-btn" id="debugRunBtn" type="button">Ausfuhren</button>
+        <button class="debug-run-btn" id="debugRunBtn" type="button">
+          Ausführen
+        </button>
       </div>
       <p class="debug-status" id="debugStatus">Debug Modus inaktiv</p>
     </section>
@@ -243,6 +250,22 @@
       </section>
       <section class="controls" aria-label="Randomizer controls">
         <button class="spin-btn" id="spinBtn" type="button">Start</button>
+        <button
+          class="spin-btn"
+          id="diedBtn"
+          type="button"
+          title="Ich bin gestorben: Alles neu drehen"
+        >
+          Gestorben: Alles neu
+        </button>
+        <button
+          class="spin-btn"
+          id="survivedBtn"
+          type="button"
+          title="Ich habe überlebt: Nur Map neu"
+        >
+          Überlebt: Map neu
+        </button>
       </section>
       <div class="compact-left-stack" id="compactLeftStack">
         <section
@@ -350,7 +373,7 @@
               <div class="squad-feed">
                 <h3 class="squad-feed-title">Live Activity</h3>
                 <ul class="squad-feed-list" id="squadActivityFeed">
-                  <li class="squad-feed-empty">Noch keine Aktivitat</li>
+                  <li class="squad-feed-empty">Noch keine Aktivität</li>
                 </ul>
               </div>
             </div>
@@ -396,7 +419,7 @@
             >
           </div>
           <label class="wheel-input-label" for="wheelValuesInput"
-            >Werte fur das Wheel (Komma, Semikolon oder neue Zeile)</label
+            >Werte für das Wheel (Komma, Semikolon oder neue Zeile)</label
           >
           <textarea
             class="wheel-values-input"
@@ -438,8 +461,10 @@
     >
       Streamer Modus: AUS
     </button>
-    <section class="master-volume" aria-label="Globale Lautstarke">
-      <label class="master-volume-label" for="masterVolumeSlider">Lautstarke</label>
+    <section class="master-volume" aria-label="Globale Lautstärke">
+      <label class="master-volume-label" for="masterVolumeSlider"
+        >Lautstärke</label
+      >
       <input
         class="master-volume-slider"
         id="masterVolumeSlider"

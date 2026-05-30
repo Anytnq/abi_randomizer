@@ -3,7 +3,7 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="GunGame Modus fuer den ABI Randomizer." />
+    <meta name="description" content="GunGame Modus für den ABI Randomizer." />
     <meta name="theme-color" content="#0d0d0d" />
     <title>OPERATION: RNG | Gungame</title>
     <link
@@ -91,27 +91,33 @@
         </div>
       </section>
 
-      <section class="squad-panel" aria-label="Squad Modus" id="squadPanel">
+      <section
+        class="squad-panel"
+        aria-label="Squad Modus"
+        id="gungame-squadPanel"
+      >
         <div class="squad-header">
           <h2 class="squad-title">👥 Squad Modus</h2>
           <button
             class="squad-toggle-btn"
-            id="squadToggle"
+            id="gungame-squadToggle"
             type="button"
             aria-expanded="false"
           >
             <span>Beitreten / Erstellen</span>
-            <span id="squadChevron" aria-hidden="true">▼</span>
+            <span id="gungame-squadChevron" aria-hidden="true">▼</span>
           </button>
         </div>
-        <div class="squad-content" id="squadContent">
-          <div class="squad-setup" id="squadSetup">
+        <div class="squad-content" id="gungame-squadContent">
+          <div class="squad-setup" id="gungame-squadSetup">
             <div class="squad-name-row">
-              <label class="squad-field-label" for="squadName">Dein Name</label>
+              <label class="squad-field-label" for="gungame-squadName"
+                >Dein Name</label
+              >
               <input
                 class="squad-input"
                 type="text"
-                id="squadName"
+                id="gungame-squadName"
                 maxlength="20"
                 placeholder="z.B. ILoveThatSkinBro69"
               />
@@ -119,7 +125,7 @@
             <div class="squad-actions">
               <button
                 class="squad-btn squad-btn--create"
-                id="squadCreateBtn"
+                id="gungame-squadCreateBtn"
                 type="button"
               >
                 Neue Session
@@ -128,30 +134,33 @@
                 <input
                   class="squad-input squad-code-input"
                   type="text"
-                  id="squadJoinCode"
+                  id="gungame-squadJoinCode"
                   maxlength="2"
                   placeholder="Code eingeben"
                 />
                 <button
                   class="squad-btn squad-btn--join"
-                  id="squadJoinBtn"
+                  id="gungame-squadJoinBtn"
                   type="button"
                 >
                   Beitreten
                 </button>
               </div>
             </div>
-            <p class="squad-error" id="squadError" hidden></p>
+            <p class="squad-error" id="gungame-squadError" hidden></p>
           </div>
 
-          <div class="squad-session" id="squadSession" hidden>
+          <div class="squad-session" id="gungame-squadSession" hidden>
             <div class="squad-session-header">
               <div class="squad-code-display">
                 <span class="squad-code-label">Session Code:</span>
-                <strong class="squad-code-value" id="squadCodeDisplay"></strong>
+                <strong
+                  class="squad-code-value"
+                  id="gungame-squadCodeDisplay"
+                ></strong>
                 <button
                   class="squad-copy-btn"
-                  id="squadCopyBtn"
+                  id="gungame-squadCopyBtn"
                   type="button"
                   title="Code kopieren"
                 >
@@ -160,7 +169,7 @@
               </div>
               <button
                 class="squad-btn squad-btn--leave"
-                id="squadLeaveBtn"
+                id="gungame-squadLeaveBtn"
                 type="button"
               >
                 Verlassen
@@ -168,19 +177,22 @@
             </div>
             <p
               class="squad-connection-banner"
-              id="squadConnectionBanner"
+              id="gungame-squadConnectionBanner"
               hidden
             >
               Verbindung wird wiederhergestellt...
             </p>
-            <p class="squad-role-hint" id="squadRoleHint"></p>
-            <p class="squad-connection-state offline" id="squadConnectionState">
+            <p class="squad-role-hint" id="gungame-squadRoleHint"></p>
+            <p
+              class="squad-connection-state offline"
+              id="gungame-squadConnectionState"
+            >
               Nicht verbunden
             </p>
-            <div class="squad-members" id="squadMembers"></div>
+            <div class="squad-members" id="gungame-squadMembers"></div>
             <div class="squad-feed">
               <h3 class="squad-feed-title">Live Activity</h3>
-              <ul class="squad-feed-list" id="squadActivityFeed">
+              <ul class="squad-feed-list" id="gungame-squadActivityFeed">
                 <li class="squad-feed-empty">Noch keine Aktivitat</li>
               </ul>
             </div>

@@ -22,6 +22,7 @@ export function createSquadUI({
   onSessionStart,
   onSessionReset,
   onSquadDataUpdate,
+  idPrefix = "",
 }) {
   const squadState = {
     code: null,
@@ -70,6 +71,9 @@ export function createSquadUI({
       cleanupTimerId: null,
     };
   }
+
+  const $ = (id) =>
+    document.getElementById(idPrefix + id) || document.getElementById(id);
 
   function isSquadReady() {
     return Boolean(squadState.active && squadState.code && squadState.playerId);
@@ -124,7 +128,7 @@ export function createSquadUI({
   }
 
   function showReconnectBanner(show, text = "") {
-    const el = document.getElementById("squadConnectionBanner");
+    const el = $("squadConnectionBanner");
     if (!el) {
       return;
     }
@@ -135,7 +139,7 @@ export function createSquadUI({
   }
 
   function showSquadError(msg) {
-    const el = document.getElementById("squadError");
+    const el = $("squadError");
     if (!el) {
       return;
     }
@@ -144,7 +148,7 @@ export function createSquadUI({
   }
 
   function hideSquadError() {
-    const el = document.getElementById("squadError");
+    const el = $("squadError");
     if (!el) {
       return;
     }
@@ -152,8 +156,8 @@ export function createSquadUI({
   }
 
   function updateSquadRoleHint() {
-    const hintEl = document.getElementById("squadRoleHint");
-    const connectionEl = document.getElementById("squadConnectionState");
+    const hintEl = $("squadRoleHint");
+    const connectionEl = $("squadConnectionState");
     if (!hintEl || !connectionEl) {
       return;
     }
@@ -194,7 +198,7 @@ export function createSquadUI({
   }
 
   function getSquadName() {
-    const input = document.getElementById("squadName");
+    const input = $("squadName");
     const name = String(input?.value ?? "").trim();
     if (!name) {
       showSquadError("Bitte einen Namen eingeben.");
@@ -206,9 +210,9 @@ export function createSquadUI({
   }
 
   function showSquadSession(code) {
-    const setup = document.getElementById("squadSetup");
-    const session = document.getElementById("squadSession");
-    const codeDisplay = document.getElementById("squadCodeDisplay");
+    const setup = $("squadSetup");
+    const session = $("squadSession");
+    const codeDisplay = $("squadCodeDisplay");
 
     if (setup) {
       setup.hidden = true;
@@ -299,7 +303,8 @@ export function createSquadUI({
     const labels = selectedCategories
       .map(
         (key) =>
-          categoryOptions.find((category) => category.key === key)?.label ?? key,
+          categoryOptions.find((category) => category.key === key)?.label ??
+          key,
       )
       .filter((label) => typeof label === "string" && label.length > 0);
 
@@ -330,10 +335,6 @@ export function createSquadUI({
         return `${actorName} hat ${targetName} auf ${payload.role === "readonly" ? "Read-only" : "Member"} gesetzt.`;
       case "filters-updated":
         return `${actorName} hat die Kategorien geändert: ${formatSelectedCategoryNames(payload.selectedCategories)}.`;
-      case "wheel-config-updated":
-        return payload.manualMode
-          ? `${actorName} hat den Wheel-Modus auf Manuell gesetzt.`
-          : `${actorName} hat den Wheel-Modus auf Auto gesetzt.`;
       case "wheel-spun":
         return `${actorName} hat das Wheel gedreht.`;
       case "result-published":
@@ -342,7 +343,7 @@ export function createSquadUI({
           : `${actorName} hat ein Ergebnis veroeffentlicht.`;
       case "zero-to-hero":
         return payload.appliesToTeam
-          ? `${actorName} hat 0 to Hero fuer das ganze Team ausgelost.`
+          ? `${actorName} hat 0 to Hero für das ganze Team ausgelost.`
           : `${actorName} hat 0 to Hero ausgelost.`;
       default:
         return "Squad-Event";
@@ -376,28 +377,54 @@ export function createSquadUI({
   }
 
   function renderActivityFeed(eventMap, players) {
-    const list = document.getElementById("squadActivityFeed");
+    const list = $("squadActivityFeed");
     if (!list) {
       return;
     }
-
-    const events = getRecentEvents(eventMap, 10);
+    // Chat-like feed (newest first): prepend new events, keep existing DOM items, allow scrolling.
+    const events = getRecentEvents(eventMap, 200);
     if (events.length === 0) {
       list.innerHTML = '<li class="squad-feed-empty">Noch keine Aktivitat</li>';
       return;
     }
 
-    list.innerHTML = "";
-    events.forEach((event) => {
+    // Determine existing event ids in DOM
+    const existingIds = new Set(
+      Array.from(list.querySelectorAll("li[data-event-id]")).map((el) =>
+        el.getAttribute("data-event-id"),
+      ),
+    );
+
+    // Add new events at the top (prepend) – reverse the array so newest stays on top after prepend
+    const newEvents = events.filter((event) => {
+      if (!event || !event.id) {
+        return false;
+      }
+      return !existingIds.has(String(event.id));
+    });
+
+    newEvents.reverse().forEach((event) => {
       const item = document.createElement("li");
+      item.setAttribute("data-event-id", String(event.id));
       item.className = `squad-feed-item ${getActivityItemClass(event.type)}`;
       const time = new Date(event.createdAt).toLocaleTimeString("de-DE", {
         hour: "2-digit",
         minute: "2-digit",
       });
       item.innerHTML = `<span class="squad-feed-time">${time}</span><span class="squad-feed-text">${formatActivityMessage(event, players)}</span>`;
-      list.appendChild(item);
+      list.insertAdjacentElement("afterbegin", item);
     });
+
+    // Limit stored items to avoid unlimited growth
+    const MAX_STORED = 200;
+    const items = list.querySelectorAll("li[data-event-id]");
+    if (items.length > MAX_STORED) {
+      const removeCount = items.length - MAX_STORED;
+      for (let i = items.length - removeCount; i < items.length; i += 1) {
+        const el = items[i];
+        el.remove();
+      }
+    }
   }
 
   function buildMembersSignature(players, leaderId) {
@@ -428,7 +455,7 @@ export function createSquadUI({
   }
 
   function renderSquadMembers(players, leaderId) {
-    const membersEl = document.getElementById("squadMembers");
+    const membersEl = $("squadMembers");
     if (!membersEl) {
       return;
     }
@@ -491,8 +518,8 @@ export function createSquadUI({
       clearSquadFromStorage();
     }
 
-    const session = document.getElementById("squadSession");
-    const setup = document.getElementById("squadSetup");
+    const session = $("squadSession");
+    const setup = $("squadSetup");
     if (session) {
       session.hidden = true;
     }
@@ -636,13 +663,13 @@ export function createSquadUI({
   }
 
   function initSquad() {
-    const toggleBtn = document.getElementById("squadToggle");
-    const content = document.getElementById("squadContent");
-    const chevron = document.getElementById("squadChevron");
-    const createBtn = document.getElementById("squadCreateBtn");
-    const joinBtn = document.getElementById("squadJoinBtn");
-    const leaveBtn = document.getElementById("squadLeaveBtn");
-    const copyBtn = document.getElementById("squadCopyBtn");
+    const toggleBtn = $("squadToggle");
+    const content = $("squadContent");
+    const chevron = $("squadChevron");
+    const createBtn = $("squadCreateBtn");
+    const joinBtn = $("squadJoinBtn");
+    const leaveBtn = $("squadLeaveBtn");
+    const copyBtn = $("squadCopyBtn");
 
     if (!toggleBtn || !content || !chevron) {
       return;
@@ -683,7 +710,7 @@ export function createSquadUI({
         return;
       }
 
-      const joinCodeInput = document.getElementById("squadJoinCode");
+      const joinCodeInput = $("squadJoinCode");
       const code = String(joinCodeInput?.value ?? "")
         .trim()
         .toUpperCase();

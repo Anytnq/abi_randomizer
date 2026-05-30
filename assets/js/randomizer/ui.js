@@ -9,9 +9,7 @@ import {
   weapons,
   weaponCategoryOptions,
 } from "./data.js";
-import {
-  buildCardContent,
-} from "./game.js";
+import { buildCardContent } from "./game.js";
 
 const mapOptions = maps.map((map) => map.name);
 
@@ -32,6 +30,8 @@ export function getElements() {
     mainTitle: document.getElementById("mainTitle"),
     subTitle: document.getElementById("subTitle"),
     spinButton: document.getElementById("spinBtn"),
+    diedButton: document.getElementById("diedBtn"),
+    survivedButton: document.getElementById("survivedBtn"),
     switchModeButton: document.getElementById("switchModeBtn"),
     streamerModeButton: document.getElementById("streamerModeBtn"),
     chanceInput: document.getElementById("chanceInput"),

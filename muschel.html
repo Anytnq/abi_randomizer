@@ -23,7 +23,9 @@
       </header>
 
       <section class="muschel-panel" aria-label="Miesmuschel Entscheidung">
-        <label class="muschel-input-label" for="muschelQuestionInput">Frage</label>
+        <label class="muschel-input-label" for="muschelQuestionInput"
+          >Frage</label
+        >
         <textarea
           class="muschel-question-input"
           id="muschelQuestionInput"
@@ -70,16 +72,20 @@
     >
 
     <section class="master-volume" aria-label="Globale Lautstarke">
-      <label class="master-volume-label" for="masterVolumeSlider">Lautstarke</label>
+      <label class="master-volume-label" for="masterVolumeSlider"
+        >Lautstarke</label
+      >
       <input
         class="master-volume-slider"
-        id="masterVolumeSlider"
+        id="muschel-masterVolumeSlider"
         type="range"
         min="0"
         max="100"
         value="60"
       />
-      <span class="master-volume-value" id="masterVolumeValue">60%</span>
+      <span class="master-volume-value" id="muschel-masterVolumeValue"
+        >60%</span
+      >
     </section>
 
     <script type="module" src="./assets/js/muschel/app.js"></script>
