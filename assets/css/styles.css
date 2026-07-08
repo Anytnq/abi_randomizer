@@ -1545,7 +1545,7 @@ input[type="number"]:focus {
   outline-offset: 2px;
 }
 
-.muschel-mode-link-secondary {
+.mode-link-btn--secondary {
   top: 68px;
 }
 
@@ -3235,6 +3235,10 @@ body.compact-mode .squad-content {
     min-height: 40px;
     padding: 7px 10px;
     font-size: 16px;
+  }
+
+  .mode-link-btn--secondary {
+    top: 60px;
   }
 }
 
