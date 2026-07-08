@@ -1510,7 +1510,7 @@ input[type="number"]:focus {
 .mode-link-btn {
   position: fixed;
   top: 18px;
-  right: 18px;
+  left: 18px;
   z-index: 121;
   display: inline-flex;
   align-items: center;
@@ -3231,7 +3231,7 @@ body.compact-mode .squad-content {
 
   .mode-link-btn {
     top: 12px;
-    right: 12px;
+    left: 12px;
     min-height: 40px;
     padding: 7px 10px;
     font-size: 16px;
