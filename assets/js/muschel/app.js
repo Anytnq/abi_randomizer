@@ -4,9 +4,16 @@ import {
 import { escapeHtml } from "../utils.js";
 import { initVolumeControl } from "../volume-control.js";
 import { loadArray, saveArray } from "../randomizer/storage.js";
+import { publishResult } from "../randomizer/squad.js?v=20260507-4";
+import { createSquadUI } from "../randomizer/squad-ui.js";
 
 const HISTORY_STORAGE_KEY = "muschelHistoryEntries";
 const MAX_HISTORY_ENTRIES = 12;
+const SQUAD_STORAGE_KEY = "muschelSquadSession";
+
+let squadState;
+let isSquadReady;
+let lastDecision = null;
 
 const elements = {
   questionInput: document.getElementById("muschelQuestionInput"),
@@ -58,6 +65,9 @@ function showDecision(question, allowed) {
 
   playmuschelDecisionSound(allowed);
 
+  lastDecision = { question, allowed };
+  syncSquadResult();
+
   const historyEntries = loadHistory();
   const nextEntries = [
     {
@@ -83,6 +93,25 @@ function clearHistory() {
   renderHistory([]);
 }
 
+function getCurrentResult() {
+  if (!lastDecision) {
+    return { Frage: "-", Antwort: "-" };
+  }
+
+  return {
+    Frage: lastDecision.question,
+    Antwort: lastDecision.allowed ? "JA" : "NEIN",
+  };
+}
+
+function syncSquadResult() {
+  if (!isSquadReady()) {
+    return;
+  }
+
+  publishResult(squadState.code, squadState.playerId, getCurrentResult());
+}
+
 function initialize() {
   initVolumeControl();
   renderHistory(loadHistory());
@@ -94,6 +123,23 @@ function initialize() {
     }
   });
   elements.clearButton?.addEventListener("click", clearHistory);
+
+  const squadUI = createSquadUI({
+    storageKey: SQUAD_STORAGE_KEY,
+    memberHintText:
+      "Du bist Squad Member. Deine Muschel-Antworten werden live geteilt.",
+    getSelectedCategories: () => [],
+    onSessionStart: () => syncSquadResult(),
+    onSessionReset: () => {},
+    onSquadDataUpdate: () => {},
+    idPrefix: "muschel-",
+  });
+  squadState = squadUI.squadState;
+  isSquadReady = squadUI.isSquadReady;
+
+  squadUI.initSquad();
+  squadUI.tryAutoRejoinSquad();
+  squadUI.updateSquadRoleHint();
 }
 
 window.addEventListener("load", initialize);

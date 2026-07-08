@@ -25,6 +25,33 @@
   --max-width: 900px;
 }
 
+/* Per-mode accent themes, layered on top of the base tokens above. */
+body.theme-gungame {
+  --color-accent: #ff6a3d;
+  --color-accent-strong: #ff9457;
+  --color-accent-muted: #7a3820;
+  --color-border-strong: #ff6a3d44;
+  --scrollbar-thumb-hover: #ff6a3d;
+  --scrollbar-thumb-active: #ff9457;
+}
+
+body.theme-gungame::after {
+  background: radial-gradient(circle, #ff6a3d33 0%, #ff6a3d00 72%);
+}
+
+body.theme-muschel {
+  --color-accent: #57c9e8;
+  --color-accent-strong: #8fe1f7;
+  --color-accent-muted: #235865;
+  --color-border-strong: #57c9e844;
+  --scrollbar-thumb-hover: #57c9e8;
+  --scrollbar-thumb-active: #8fe1f7;
+}
+
+body.theme-muschel::after {
+  background: radial-gradient(circle, #57c9e833 0%, #57c9e800 72%);
+}
+
 * {
   box-sizing: border-box;
   margin: 0;
@@ -2459,6 +2486,106 @@ body.compact-mode .squad-content {
   letter-spacing: 1px;
   text-align: center;
   text-transform: uppercase;
+}
+
+/* ── Landing Page ────────────────────────────────── */
+.landing {
+  display: grid;
+  gap: 22px;
+  width: 100%;
+  max-width: 1000px;
+  text-align: center;
+}
+
+.landing .subtitle {
+  max-width: 60ch;
+  margin: 0 auto;
+  text-transform: none;
+  letter-spacing: 0.4px;
+}
+
+.mode-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+}
+
+.mode-btn {
+  position: relative;
+  display: grid;
+  align-content: space-between;
+  min-height: 190px;
+  padding: 18px;
+  border: 1px solid var(--color-border);
+  border-radius: 16px;
+  background: linear-gradient(180deg, #171b20f7 0%, #111418f7 100%);
+  color: var(--color-text);
+  text-decoration: none;
+  overflow: hidden;
+  box-shadow: 0 18px 34px #0008;
+  transition: transform 0.16s, border-color 0.16s, box-shadow 0.16s;
+}
+
+.mode-btn::before {
+  content: "";
+  position: absolute;
+  inset: -40% auto auto -30%;
+  width: 220px;
+  height: 220px;
+  border-radius: 50%;
+  filter: blur(18px);
+  opacity: 0.3;
+  background: radial-gradient(circle, var(--color-accent) 0%, transparent 70%);
+}
+
+.mode-btn:hover {
+  transform: translateY(-4px);
+  border-color: var(--color-accent);
+  box-shadow: 0 20px 30px #00000055;
+}
+
+.mode-btn.disabled,
+.mode-btn.disabled:hover {
+  transform: none;
+  box-shadow: none;
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.mode-btn--gungame {
+  --color-accent: #ff6a3d;
+}
+
+.mode-btn--muschel {
+  --color-accent: #57c9e8;
+}
+
+.mode-dir {
+  margin: 0;
+  color: var(--color-text-soft);
+  font-size: 12px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+}
+
+.mode-name {
+  margin: 0;
+  color: var(--color-accent-strong, var(--color-accent));
+  font-family: var(--font-display);
+  font-size: clamp(30px, 5vw, 44px);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+@media (max-width: 760px) {
+  .mode-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .mode-btn {
+    min-height: 150px;
+  }
 }
 
 /* ── Squad Panel ─────────────────────────────────── */

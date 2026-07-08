@@ -15,7 +15,7 @@
     />
     <link rel="stylesheet" href="./assets/css/styles.css" />
   </head>
-  <body>
+  <body class="theme-muschel">
     <main class="page-shell muschel-shell">
       <header class="header-container">
         <h1>Magische Miesmuschel</h1>
@@ -53,6 +53,115 @@
             <li class="muschel-history-empty">Noch keine Entscheidung</li>
           </ul>
         </section>
+      </section>
+
+      <section
+        class="squad-panel"
+        aria-label="Squad Modus"
+        id="muschel-squadPanel"
+      >
+        <div class="squad-header">
+          <h2 class="squad-title">👥 Squad Modus</h2>
+          <button
+            class="squad-toggle-btn"
+            id="muschel-squadToggle"
+            type="button"
+            aria-expanded="false"
+          >
+            <span>Beitreten / Erstellen</span>
+            <span id="muschel-squadChevron" aria-hidden="true">▼</span>
+          </button>
+        </div>
+        <div class="squad-content" id="muschel-squadContent">
+          <div class="squad-setup" id="muschel-squadSetup">
+            <div class="squad-name-row">
+              <label class="squad-field-label" for="muschel-squadName"
+                >Dein Name</label
+              >
+              <input
+                class="squad-input"
+                type="text"
+                id="muschel-squadName"
+                maxlength="20"
+                placeholder="z.B. ILoveThatSkinBro69"
+              />
+            </div>
+            <div class="squad-actions">
+              <button
+                class="squad-btn squad-btn--create"
+                id="muschel-squadCreateBtn"
+                type="button"
+              >
+                Neue Session
+              </button>
+              <div class="squad-join-row">
+                <input
+                  class="squad-input squad-code-input"
+                  type="text"
+                  id="muschel-squadJoinCode"
+                  maxlength="2"
+                  placeholder="Code eingeben"
+                />
+                <button
+                  class="squad-btn squad-btn--join"
+                  id="muschel-squadJoinBtn"
+                  type="button"
+                >
+                  Beitreten
+                </button>
+              </div>
+            </div>
+            <p class="squad-error" id="muschel-squadError" hidden></p>
+          </div>
+
+          <div class="squad-session" id="muschel-squadSession" hidden>
+            <div class="squad-session-header">
+              <div class="squad-code-display">
+                <span class="squad-code-label">Session Code:</span>
+                <strong
+                  class="squad-code-value"
+                  id="muschel-squadCodeDisplay"
+                ></strong>
+                <button
+                  class="squad-copy-btn"
+                  id="muschel-squadCopyBtn"
+                  type="button"
+                  title="Code kopieren"
+                >
+                  📋
+                </button>
+              </div>
+              <button
+                class="squad-btn squad-btn--leave"
+                id="muschel-squadLeaveBtn"
+                type="button"
+              >
+                Verlassen
+              </button>
+            </div>
+            <p
+              class="squad-connection-banner"
+              id="muschel-squadConnectionBanner"
+              hidden
+            >
+              Verbindung wird wiederhergestellt...
+            </p>
+            <p class="squad-role-hint" id="muschel-squadRoleHint"></p>
+            <p
+              class="squad-connection-state offline"
+              id="muschel-squadConnectionState"
+            >
+              Nicht verbunden
+            </p>
+            <div class="squad-members" id="muschel-squadMembers"></div>
+            <div class="squad-feed">
+              <h3 class="squad-feed-title">Live Activity</h3>
+              <ul class="squad-feed-list" id="muschel-squadActivityFeed">
+                <li class="squad-feed-empty">Noch keine Aktivitat</li>
+              </ul>
+            </div>
+          </div>
+        </div>
       </section>
     </main>
 
