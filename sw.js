@@ -1,4 +1,4 @@
-const BUILD_VERSION = "2026-05-08-05";
+const BUILD_VERSION = "2026-07-08-01";
 const CACHE_NAME = `op-rng-${BUILD_VERSION}`;
 const OFFLINE_URL = "./offline.html";
 
@@ -7,19 +7,24 @@ const STATIC_ASSETS = [
   "./index.html",
   "./randomizer.html",
   "./gungame.html",
+  "./muschel.html",
   "./offline.html",
+  "./manifest.webmanifest",
+  "./assets/icon.svg",
   "./assets/css/styles.css",
-  "./assets/js/randomizer/app.js?v=20260507-4",
+  "./assets/audio/i-need-a-hero.mp3",
+  "./assets/js/randomizer/app.js?v=20260708-1",
   "./assets/js/randomizer/data.js",
   "./assets/js/firebase.js",
   "./assets/js/randomizer/game.js",
   "./assets/js/randomizer/responsive-layout.js",
   "./assets/js/gungame/data.js",
   "./assets/js/gungame/gungame.js",
+  "./assets/js/muschel/app.js",
   "./assets/js/randomizer/sound.js",
-  "./assets/js/randomizer/squad.js?v=20260507-4",
+  "./assets/js/randomizer/squad.js?v=20260708-1",
   "./assets/js/randomizer/squad-ui.js",
-  "./assets/js/randomizer/squad-utils.js?v=20260507-4",
+  "./assets/js/randomizer/squad-utils.js?v=20260708-1",
   "./assets/js/randomizer/storage.js",
   "./assets/js/randomizer/ui.js",
   "./assets/js/randomizer/wheel.js",
@@ -93,11 +98,11 @@ self.addEventListener("fetch", (event) => {
   }
 
   const url = new URL(request.url);
-  if (url.origin !== self.location.origin) {
+  if (isExternalRealtimeRequest(url)) {
     return;
   }
 
-  if (isExternalRealtimeRequest(url)) {
+  if (url.origin !== self.location.origin) {
     return;
   }
 

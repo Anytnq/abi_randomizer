@@ -7,13 +7,15 @@ import {
   publishPresence,
   rejoinSession,
   subscribeToSession,
-} from "./squad.js?v=20260507-4";
+} from "./squad.js?v=20260708-1";
 import {
   buildSquadStoragePayload,
   getRecentEvents,
   isSquadStoragePayloadValid,
-} from "./squad-utils.js?v=20260507-4";
+} from "./squad-utils.js?v=20260708-1";
 import { categoryOptions } from "./data.js";
+
+const SQUAD_CODE_LENGTH = 4;
 
 export function createSquadUI({
   storageKey,
@@ -74,6 +76,8 @@ export function createSquadUI({
 
   const $ = (id) =>
     document.getElementById(idPrefix + id) || document.getElementById(id);
+
+  ensureSquadMarkup(idPrefix);
 
   function isSquadReady() {
     return Boolean(squadState.active && squadState.code && squadState.playerId);
@@ -384,7 +388,7 @@ export function createSquadUI({
     // Chat-like feed (newest first): prepend new events, keep existing DOM items, allow scrolling.
     const events = getRecentEvents(eventMap, 200);
     if (events.length === 0) {
-      list.innerHTML = '<li class="squad-feed-empty">Noch keine Aktivitat</li>';
+      list.replaceChildren(createTextElement("li", "squad-feed-empty", "Noch keine Aktivitat"));
       return;
     }
 
@@ -411,7 +415,14 @@ export function createSquadUI({
         hour: "2-digit",
         minute: "2-digit",
       });
-      item.innerHTML = `<span class="squad-feed-time">${time}</span><span class="squad-feed-text">${formatActivityMessage(event, players)}</span>`;
+      item.append(
+        createTextElement("span", "squad-feed-time", time),
+        createTextElement(
+          "span",
+          "squad-feed-text",
+          formatActivityMessage(event, players),
+        ),
+      );
       list.insertAdjacentElement("afterbegin", item);
     });
 
@@ -460,7 +471,7 @@ export function createSquadUI({
       return;
     }
 
-    membersEl.innerHTML = "";
+    membersEl.replaceChildren();
     const now = Date.now();
 
     Object.entries(players).forEach(([id, player]) => {
@@ -489,18 +500,22 @@ export function createSquadUI({
       const resultEl = document.createElement("div");
       resultEl.className = "squad-member-result";
       if (player.spinning) {
-        resultEl.innerHTML = '<span class="squad-spinning">🎰 dreht...</span>';
+        resultEl.append(createTextElement("span", "squad-spinning", "dreht..."));
       } else if (player.result && typeof player.result === "object") {
-        const entries = Object.entries(player.result)
-          .map(
-            ([key, val]) =>
-              `<span class="squad-result-item"><b>${key}:</b> ${String(val ?? "-")}</span>`,
-          )
-          .join("");
-        resultEl.innerHTML = entries;
+        Object.entries(player.result).forEach(([key, val]) => {
+          const row = document.createElement("span");
+          row.className = "squad-result-item";
+
+          const label = document.createElement("b");
+          label.textContent = `${key}:`;
+
+          row.append(label, document.createTextNode(` ${String(val ?? "-")}`));
+          resultEl.appendChild(row);
+        });
       } else {
-        resultEl.innerHTML =
-          '<span class="squad-waiting">Noch nicht gedreht</span>';
+        resultEl.append(
+          createTextElement("span", "squad-waiting", "Noch nicht gedreht"),
+        );
       }
 
       card.append(nameEl, statusEl, resultEl);
@@ -681,13 +696,23 @@ export function createSquadUI({
       toggleBtn.setAttribute("aria-expanded", String(isOpen));
     });
 
-    createBtn?.addEventListener("click", () => {
+    createBtn?.addEventListener("click", async () => {
       const name = getSquadName();
       if (!name) {
         return;
       }
 
-      const { code, playerId } = createSession(name, getSelectedCategories());
+      createBtn.disabled = true;
+      let session;
+      try {
+        session = await createSession(name, getSelectedCategories());
+      } catch (_) {
+        showSquadError("Session konnte nicht erstellt werden. Bitte erneut versuchen.");
+        createBtn.disabled = false;
+        return;
+      }
+
+      const { code, playerId } = session;
 
       squadState.code = code;
       squadState.playerId = playerId;
@@ -702,6 +727,7 @@ export function createSquadUI({
       startHeartbeat();
       startCleanupLoop();
       onSessionStart(squadState, { isLeader: true });
+      createBtn.disabled = false;
     });
 
     joinBtn?.addEventListener("click", () => {
@@ -715,7 +741,7 @@ export function createSquadUI({
         .trim()
         .toUpperCase();
 
-      if (code.length < 2) {
+      if (code.length < SQUAD_CODE_LENGTH) {
         showSquadError("Bitte einen gueltigen Code eingeben.");
         return;
       }
@@ -755,7 +781,7 @@ export function createSquadUI({
         .then(() => {
           copyBtn.textContent = "OK";
           setTimeout(() => {
-            copyBtn.textContent = "📋";
+            copyBtn.textContent = "Kopieren";
           }, 1500);
         })
         .catch(() => {});
@@ -786,4 +812,186 @@ export function createSquadUI({
     startCleanupLoop,
     stopCleanupLoop,
   };
+}
+
+function createTextElement(tagName, className, text) {
+  const element = document.createElement(tagName);
+  if (className) {
+    element.className = className;
+  }
+  element.textContent = text;
+  return element;
+}
+
+function createSquadElement(tagName, className, idPrefix, idBase) {
+  const element = document.createElement(tagName);
+  if (className) {
+    element.className = className;
+  }
+  if (idBase) {
+    element.id = `${idPrefix}${idBase}`;
+  }
+  return element;
+}
+
+function ensureSquadMarkup(idPrefix) {
+  const panel =
+    document.getElementById(`${idPrefix}squadPanel`) ||
+    document.getElementById("squadPanel");
+
+  if (!panel || document.getElementById(`${idPrefix}squadToggle`)) {
+    return;
+  }
+
+  panel.classList.add("squad-panel");
+  panel.setAttribute("aria-label", "Squad Modus");
+
+  const header = createSquadElement("div", "squad-header");
+  const title = createTextElement("h2", "squad-title", "Squad Modus");
+  const toggle = createSquadElement(
+    "button",
+    "squad-toggle-btn",
+    idPrefix,
+    "squadToggle",
+  );
+  toggle.type = "button";
+  toggle.setAttribute("aria-expanded", "false");
+
+  const toggleText = createTextElement("span", "", "Beitreten / Erstellen");
+  const chevron = createTextElement("span", "", "▼");
+  chevron.id = `${idPrefix}squadChevron`;
+  chevron.setAttribute("aria-hidden", "true");
+  toggle.append(toggleText, chevron);
+  header.append(title, toggle);
+
+  const content = createSquadElement(
+    "div",
+    "squad-content",
+    idPrefix,
+    "squadContent",
+  );
+  const setup = createSquadElement(
+    "div",
+    "squad-setup",
+    idPrefix,
+    "squadSetup",
+  );
+
+  const nameRow = createSquadElement("div", "squad-name-row");
+  const nameLabel = createTextElement("label", "squad-field-label", "Dein Name");
+  nameLabel.setAttribute("for", `${idPrefix}squadName`);
+  const nameInput = createSquadElement(
+    "input",
+    "squad-input",
+    idPrefix,
+    "squadName",
+  );
+  nameInput.type = "text";
+  nameInput.maxLength = 20;
+  nameInput.placeholder = "z.B. ILoveThatSkinBro69";
+  nameRow.append(nameLabel, nameInput);
+
+  const actions = createSquadElement("div", "squad-actions");
+  const createButton = createSquadElement(
+    "button",
+    "squad-btn squad-btn--create",
+    idPrefix,
+    "squadCreateBtn",
+  );
+  createButton.type = "button";
+  createButton.textContent = "Neue Session";
+
+  const joinRow = createSquadElement("div", "squad-join-row");
+  const joinInput = createSquadElement(
+    "input",
+    "squad-input squad-code-input",
+    idPrefix,
+    "squadJoinCode",
+  );
+  joinInput.type = "text";
+  joinInput.maxLength = SQUAD_CODE_LENGTH;
+  joinInput.placeholder = "Code eingeben";
+  const joinButton = createSquadElement(
+    "button",
+    "squad-btn squad-btn--join",
+    idPrefix,
+    "squadJoinBtn",
+  );
+  joinButton.type = "button";
+  joinButton.textContent = "Beitreten";
+  joinRow.append(joinInput, joinButton);
+  actions.append(createButton, joinRow);
+
+  const error = createSquadElement("p", "squad-error", idPrefix, "squadError");
+  error.hidden = true;
+  setup.append(nameRow, actions, error);
+
+  const session = createSquadElement(
+    "div",
+    "squad-session",
+    idPrefix,
+    "squadSession",
+  );
+  session.hidden = true;
+
+  const sessionHeader = createSquadElement("div", "squad-session-header");
+  const codeDisplay = createSquadElement("div", "squad-code-display");
+  codeDisplay.append(
+    createTextElement("span", "squad-code-label", "Session Code:"),
+    createSquadElement("strong", "squad-code-value", idPrefix, "squadCodeDisplay"),
+  );
+  const copyButton = createSquadElement(
+    "button",
+    "squad-copy-btn",
+    idPrefix,
+    "squadCopyBtn",
+  );
+  copyButton.type = "button";
+  copyButton.title = "Code kopieren";
+  copyButton.textContent = "Kopieren";
+  codeDisplay.appendChild(copyButton);
+
+  const leaveButton = createSquadElement(
+    "button",
+    "squad-btn squad-btn--leave",
+    idPrefix,
+    "squadLeaveBtn",
+  );
+  leaveButton.type = "button";
+  leaveButton.textContent = "Verlassen";
+  sessionHeader.append(codeDisplay, leaveButton);
+
+  const banner = createSquadElement(
+    "p",
+    "squad-connection-banner",
+    idPrefix,
+    "squadConnectionBanner",
+  );
+  banner.hidden = true;
+  banner.textContent = "Verbindung wird wiederhergestellt...";
+
+  const roleHint = createSquadElement("p", "squad-role-hint", idPrefix, "squadRoleHint");
+  const connection = createSquadElement(
+    "p",
+    "squad-connection-state offline",
+    idPrefix,
+    "squadConnectionState",
+  );
+  connection.textContent = "Nicht verbunden";
+  const members = createSquadElement("div", "squad-members", idPrefix, "squadMembers");
+
+  const feed = createSquadElement("div", "squad-feed");
+  feed.appendChild(createTextElement("h3", "squad-feed-title", "Live Activity"));
+  const feedList = createSquadElement(
+    "ul",
+    "squad-feed-list",
+    idPrefix,
+    "squadActivityFeed",
+  );
+  feedList.appendChild(createTextElement("li", "squad-feed-empty", "Noch keine Aktivitat"));
+  feed.appendChild(feedList);
+
+  session.append(sessionHeader, banner, roleHint, connection, members, feed);
+  content.append(setup, session);
+  panel.replaceChildren(header, content);
 }

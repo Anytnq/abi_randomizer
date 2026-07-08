@@ -21,6 +21,7 @@
   --scrollbar-thumb-active: #f1c35a;
   --font-display: "Teko", sans-serif;
   --font-ui: "Rajdhani", sans-serif;
+  --font-body: var(--font-ui);
   --card-height: 64px;
   --max-width: 900px;
 }
@@ -1591,6 +1592,33 @@ input[type="number"]:focus {
   flex-wrap: wrap;
   gap: 10px;
   margin-top: 12px;
+}
+
+.muschel-custom {
+  margin-top: 14px;
+  padding: 12px;
+  border: 1px solid #ffffff1f;
+  border-radius: 12px;
+  background: #ffffff08;
+}
+
+.muschel-custom-title {
+  color: var(--color-accent-strong);
+  font-family: var(--font-display);
+  font-size: 20px;
+  letter-spacing: 0.8px;
+  text-transform: uppercase;
+  cursor: pointer;
+}
+
+.muschel-answer-grid {
+  display: grid;
+  gap: 8px;
+  margin-top: 10px;
+}
+
+.muschel-answer-input {
+  min-height: 72px;
 }
 
 .muschel-ask-btn,
@@ -3735,7 +3763,7 @@ body.compact-mode .squad-content {
     font-size: 14px;
     left: -32px;
     right: -32px;
-    content: "```";
+    content: "";
     font-size: 12px;
   }
 
