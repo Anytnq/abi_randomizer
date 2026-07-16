@@ -1,0 +1,88 @@
+/* View: GunGame (Planungs.md 5.7) */
+
+.gungame-setup-card {
+  max-width: 360px;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.gungame-focus-card {
+  padding: var(--space-6) var(--space-5);
+  border: 1px solid var(--route-accent, var(--color-gungame));
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, var(--color-surface-2) 0%, var(--color-surface-1) 100%);
+  text-align: center;
+}
+
+.gungame-focus-weapon {
+  margin-top: var(--space-2);
+  font-family: var(--font-display);
+  font-size: clamp(36px, 8vw, 64px);
+  color: var(--route-accent, var(--color-gungame));
+  text-transform: uppercase;
+}
+
+.gungame-focus-meta {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.gungame-context-row {
+  display: flex;
+  justify-content: space-between;
+  margin-top: var(--space-3);
+  color: var(--color-text-faint);
+  font-size: var(--text-sm);
+}
+
+.gungame-message {
+  margin-top: var(--space-3);
+  color: var(--color-text-muted);
+}
+
+.gungame-actions-row {
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+
+.gungame-timeline {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-6);
+}
+
+.gungame-timeline-item {
+  display: grid;
+  grid-template-columns: 32px 1fr auto auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+}
+
+.gungame-timeline-item.is-current {
+  border-color: var(--route-accent, var(--color-gungame));
+}
+
+.gungame-timeline-item.is-done {
+  opacity: 0.6;
+}
+
+.gungame-timeline-step {
+  color: var(--color-text-muted);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+}
+
+.gungame-timeline-weapon {
+  font-weight: 700;
+}
+
+@media (max-width: 599px) {
+  .gungame-timeline-item {
+    grid-template-columns: 28px 1fr;
+    row-gap: var(--space-1);
+  }
+}

@@ -2,116 +2,38 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=./v2/index.html#/gungame" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="GunGame Modus für den ABI Randomizer." />
-    <meta name="theme-color" content="#0d0d0d" />
-    <title>OPERATION: RNG | Gungame</title>
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Teko:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./assets/css/styles.css" />
+    <meta name="theme-color" content="#06080d" />
+    <title>OPERATION: RNG</title>
+    <style>
+      body {
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background: #06080d;
+        color: #f2f5f9;
+        font-family: system-ui, sans-serif;
+      }
+      a {
+        color: #33d6ff;
+      }
+    </style>
   </head>
-  <body class="theme-gungame">
-    <main class="page-shell">
-      <header class="header-container">
-        <h1 id="mainTitle">OPERATION: RNG</h1>
-        <p class="subtitle">Gungame Modus</p>
-      </header>
-
-      <section class="gungame-shell" aria-label="Gungame Modus">
-        <div class="gungame-panel">
-          <div class="gungame-controls">
-            <label class="gungame-stage-field" for="gungameStageCount">
-              <span>Anzahl Waffenstufen</span>
-              <input
-                id="gungameStageCount"
-                type="number"
-                min="3"
-                max="30"
-                value="12"
-              />
-            </label>
-            <label class="gungame-stage-field" for="gungameUpgradeChance">
-              <span>Upgrade-Chance (%)</span>
-              <input
-                id="gungameUpgradeChance"
-                type="number"
-                min="0"
-                max="100"
-                value="25"
-              />
-            </label>
-            <div class="gungame-actions">
-              <button
-                class="gungame-generate-btn"
-                id="gungameGenerateBtn"
-                type="button"
-              >
-                Neue Route
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="gungame-panel gungame-status">
-          <p class="gungame-status-text" id="gungameStatusText">
-            Aktuelle Stufe: <strong>1 / 12</strong>
-          </p>
-          <div class="gungame-status-actions">
-            <button
-              class="gungame-step-btn gungame-raid-btn"
-              id="gungameRaidDoneBtn"
-              type="button"
-            >
-              Raid abgeschlossen
-            </button>
-            <button class="gungame-step-btn" id="gungamePrevBtn" type="button">
-              Zurück
-            </button>
-            <button class="gungame-step-btn" id="gungameNextBtn" type="button">
-              Weiter
-            </button>
-            <button
-              class="gungame-reset-btn"
-              id="gungameResetBtn"
-              type="button"
-            >
-              Reset
-            </button>
-          </div>
-          <p class="gungame-raid-result" id="gungameRaidResult">
-            Schließe einen Raid ab, um auf der nächsten Stufe eine
-            Upgrade-Chance zu erhalten.
-          </p>
-        </div>
-
-        <div class="gungame-panel">
-          <ol class="gungame-list" id="gungameList"></ol>
-        </div>
-      </section>
-
-      <section
-        class="squad-panel"
-        aria-label="Squad Modus"
-        id="gungame-squadPanel"
-      ></section>
-    </main>
-
-    <a
-      class="mode-link-btn"
-      href="./muschel.html"
-      aria-label="Zur Miesmuschel"
-      >Zur Miesmuschel</a
-    >
-    <a
-      class="mode-link-btn mode-link-btn--secondary"
-      href="./randomizer.html"
-      aria-label="Zurück zum Randomizer"
-      >Zum Randomizer</a
-    >
-    <script type="module" src="./assets/js/gungame/gungame.js"></script>
+  <body>
+    <p>
+      GunGame ist jetzt v2.
+      <a href="./v2/index.html#/gungame">Weiter zu GunGame</a>
+    </p>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => regs.forEach((reg) => reg.unregister()))
+          .catch(() => {});
+      }
+      location.replace("./v2/index.html#/gungame");
+    </script>
   </body>
 </html>

@@ -2,63 +2,38 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=./v2/index.html#/hub" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Landingpage für ABI Randomizer, GunGame und Magische Miesmuschel."
-    />
-    <meta name="theme-color" content="#0f1114" />
-    <title>OPERATION: RNG | Landing</title>
-    <link rel="manifest" href="./manifest.webmanifest" />
-    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Teko:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./assets/css/styles.css" />
+    <meta name="theme-color" content="#06080d" />
+    <title>OPERATION: RNG</title>
+    <style>
+      body {
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background: #06080d;
+        color: #f2f5f9;
+        font-family: system-ui, sans-serif;
+      }
+      a {
+        color: #ffb02e;
+      }
+    </style>
   </head>
   <body>
-    <main class="page-shell">
-      <header class="header-container">
-        <h1>OPERATION: RNG</h1>
-        <p class="subtitle">
-          Alle Modi an einem Ort. Wähl den klassischen Loadout-Randomizer
-          oder einen der Spezial-Modi.
-        </p>
-      </header>
-
-      <section class="landing" aria-label="Modus Auswahl">
-        <div class="mode-grid">
-          <a
-            class="mode-btn mode-btn--randomizer"
-            href="./randomizer.html"
-            aria-label="Zum Randomizer"
-          >
-            <p class="mode-dir">Loadout</p>
-            <p class="mode-name">Randomizer</p>
-          </a>
-
-          <a
-            class="mode-btn mode-btn--muschel"
-            href="./muschel.html"
-            aria-label="Zur Magischen Miesmuschel"
-          >
-            <p class="mode-dir">Orakel</p>
-            <p class="mode-name">Miesmuschel</p>
-          </a>
-
-          <a
-            class="mode-btn mode-btn--gungame"
-            href="./gungame.html"
-            aria-label="Zu GunGame"
-          >
-            <p class="mode-dir">Raid Route</p>
-            <p class="mode-name">GunGame</p>
-          </a>
-        </div>
-      </section>
-
-      <p class="page-footer">HL ABI Hub</p>
-    </main>
+    <p>
+      OPERATION: RNG ist jetzt v2.
+      <a href="./v2/index.html#/hub">Weiter zum Hub</a>
+    </p>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => regs.forEach((reg) => reg.unregister()))
+          .catch(() => {});
+      }
+      location.replace("./v2/index.html#/hub");
+    </script>
   </body>
 </html>

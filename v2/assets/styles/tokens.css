@@ -1,0 +1,77 @@
+/* v2 Design Tokens - Dark Tactical / Electric Signal (Planungs.md 6) */
+
+:root {
+  /* Grundfläche: fast schwarz, leicht bläulich */
+  --color-bg: #06080d;
+  --color-bg-raised: #0b0f16;
+  --color-surface-1: #10151d;
+  --color-surface-2: #161d27;
+  --color-surface-3: #1e2732;
+  --color-border: #ffffff14;
+  --color-border-strong: #ffffff24;
+
+  --color-text: #f2f5f9;
+  --color-text-muted: #9aa7b5;
+  --color-text-faint: #626d7a;
+
+  /* Modusfarben (Planungs.md 6) */
+  --color-randomizer: #ffb02e;
+  --color-randomizer-strong: #ffc866;
+  --color-gungame: #33d6ff;
+  --color-muschel: #b06bff;
+  --color-success: #22e0a0;
+  --color-danger: #ff3d5a;
+
+  --color-focus: #66d9ff;
+
+  --font-display: "Segoe UI", "Inter", system-ui, sans-serif;
+  --font-ui: "Segoe UI", "Inter", system-ui, sans-serif;
+  --font-mono: "Consolas", "SFMono-Regular", monospace;
+
+  --text-2xs: 11px;
+  --text-xs: 12px;
+  --text-sm: 14px;
+  --text-md: 16px;
+  --text-lg: 20px;
+  --text-xl: 28px;
+  --text-2xl: 40px;
+  --text-3xl: 60px;
+
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 32px;
+  --space-7: 48px;
+  --space-8: 64px;
+
+  --radius-sm: 8px;
+  --radius-md: 14px;
+  --radius-lg: 22px;
+  --radius-pill: 999px;
+
+  --shadow-sm: 0 4px 12px #00000055;
+  --shadow-md: 0 16px 34px #00000066;
+  --shadow-overlay: 0 24px 60px #000000aa;
+
+  --motion-fast: 140ms;
+  --motion-medium: 220ms;
+  --motion-slow: 360ms;
+  --motion-ease: cubic-bezier(0.2, 0.7, 0.3, 1);
+
+  --nav-width: 216px;
+  --nav-width-rail: 72px;
+  --topbar-height: 60px;
+  --bottom-nav-height: 64px;
+  --context-sidebar-width: 340px;
+  --touch-target: 44px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --motion-fast: 0ms;
+    --motion-medium: 0ms;
+    --motion-slow: 0ms;
+  }
+}

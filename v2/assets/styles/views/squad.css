@@ -1,0 +1,120 @@
+/* View: Squad Command Center (Planungs.md 5.6) */
+
+.squad-start-card {
+  max-width: 420px;
+  display: grid;
+  gap: var(--space-3);
+}
+
+.squad-field-label {
+  display: grid;
+  gap: var(--space-1);
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.squad-text-input {
+  min-height: var(--touch-target);
+  padding: 0 var(--space-3);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  color: var(--color-text);
+}
+
+.squad-join-row {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.squad-code-input {
+  width: 90px;
+  text-transform: uppercase;
+}
+
+.squad-error-text {
+  color: var(--color-danger);
+  font-size: var(--text-sm);
+}
+
+.squad-dashboard {
+  display: grid;
+  gap: var(--space-4);
+}
+
+@media (min-width: 900px) {
+  .squad-dashboard {
+    grid-template-columns: 260px minmax(0, 1fr) 280px;
+    align-items: start;
+  }
+}
+
+.squad-code-card {
+  display: grid;
+  gap: var(--space-2);
+  justify-items: start;
+}
+
+.squad-code-value {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  letter-spacing: 0.1em;
+}
+
+.squad-member-grid {
+  display: grid;
+  gap: var(--space-2);
+  margin-top: var(--space-3);
+}
+
+.squad-member-card {
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+  display: grid;
+  gap: var(--space-2);
+}
+
+.squad-member-result {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.squad-result-item {
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-1);
+}
+
+.squad-result-item b {
+  color: var(--color-text);
+}
+
+.squad-member-name-row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  font-weight: 700;
+}
+
+.squad-member-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+.squad-feed-list {
+  display: grid;
+  gap: var(--space-1);
+  margin-top: var(--space-3);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+}
+
+.squad-feed-empty {
+  color: var(--color-text-faint);
+}

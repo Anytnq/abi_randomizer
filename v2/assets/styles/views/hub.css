@@ -1,0 +1,24 @@
+/* View: Game Hub (Planungs.md 5.2) */
+
+.hub-hero {
+  margin-bottom: var(--space-6);
+}
+
+.hub-hero-eyebrow {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+}
+
+.hub-hero-title {
+  margin: var(--space-1) 0 var(--space-2);
+  font-size: clamp(40px, 7vw, 76px);
+  text-transform: uppercase;
+  line-height: 0.95;
+}
+
+.hub-hero-subtitle {
+  max-width: 56ch;
+  color: var(--color-text-muted);
+}

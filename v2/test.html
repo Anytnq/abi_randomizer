@@ -1,0 +1,75 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <title>v2 Self-Checks</title>
+    <link rel="stylesheet" href="./assets/styles/tokens.css" />
+    <link rel="stylesheet" href="./assets/styles/reset.css" />
+    <link rel="stylesheet" href="./assets/styles/base.css" />
+    <style>
+      body {
+        background: var(--color-bg);
+        color: var(--color-text);
+        font-family: var(--font-ui);
+        padding: var(--space-6);
+      }
+
+      #results {
+        display: grid;
+        gap: var(--space-2);
+        margin-top: var(--space-4);
+      }
+
+      .pass {
+        color: var(--color-success);
+      }
+
+      .fail {
+        color: var(--color-danger);
+      }
+    </style>
+  </head>
+  <body>
+    <h1>v2 Self-Checks</h1>
+    <p>Assert-based checks for the core engines - no framework, mirrors randomizer/squad-utils.test.js's pattern.</p>
+    <div id="results"></div>
+    <script type="module">
+      import { runRandomizerEngineTests } from "./assets/js/core/randomizer-engine.test.js";
+      import { runFiltersTests } from "./assets/js/core/filters.test.js";
+      import { runGunGameEngineTests } from "./assets/js/core/gungame-engine.test.js";
+      import { runStorageTests } from "./assets/js/core/storage.test.js";
+      import { runMuschelEngineTests } from "./assets/js/core/muschel-engine.test.js";
+
+      const suites = [
+        ["randomizer-engine", runRandomizerEngineTests],
+        ["filters", runFiltersTests],
+        ["gungame-engine", runGunGameEngineTests],
+        ["storage", runStorageTests],
+        ["muschel-engine", runMuschelEngineTests],
+      ];
+
+      const results = document.getElementById("results");
+      let allPassed = true;
+
+      for (const [name, run] of suites) {
+        const line = document.createElement("p");
+        try {
+          const message = run();
+          line.className = "pass";
+          line.textContent = `PASS - ${name}: ${message}`;
+        } catch (error) {
+          allPassed = false;
+          line.className = "fail";
+          line.textContent = `FAIL - ${name}: ${error.message}`;
+        }
+        results.appendChild(line);
+      }
+
+      const summary = document.createElement("p");
+      summary.style.marginTop = "16px";
+      summary.style.fontWeight = "700";
+      summary.textContent = allPassed ? "Alle Suiten bestanden." : "Mindestens eine Suite fehlgeschlagen.";
+      results.appendChild(summary);
+    </script>
+  </body>
+</html>

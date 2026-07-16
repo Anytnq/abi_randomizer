@@ -482,19 +482,40 @@ export function createSquadUI({
       const nameEl = document.createElement("div");
       nameEl.className = "squad-member-name";
       const isLeader = id === leaderId;
-      const roleTag = player.role === "readonly" ? " [RO]" : "";
-      nameEl.textContent =
-        `${player.name ?? "Unbekannt"}${roleTag}` +
-        (isLeader ? " 👑" : "") +
-        (isMe ? " (Du)" : "");
+
+      const nameText = document.createElement("span");
+      nameText.textContent = player.name ?? "Unbekannt";
+      nameEl.appendChild(nameText);
+
+      if (isLeader) {
+        const leaderBadge = document.createElement("span");
+        leaderBadge.className = "badge badge--warning";
+        leaderBadge.textContent = "👑 Leader";
+        nameEl.appendChild(leaderBadge);
+      }
+
+      if (player.role === "readonly") {
+        const roBadge = document.createElement("span");
+        roBadge.className = "badge";
+        roBadge.textContent = "Read-only";
+        nameEl.appendChild(roBadge);
+      }
+
+      if (isMe) {
+        const meBadge = document.createElement("span");
+        meBadge.className = "badge";
+        meBadge.textContent = "Du";
+        nameEl.appendChild(meBadge);
+      }
 
       const statusEl = document.createElement("div");
-      statusEl.className = "squad-member-status";
+      statusEl.className = "squad-member-status badge";
       const stale =
         typeof player.lastSeenAt === "number"
           ? now - player.lastSeenAt > PRESENCE_HEARTBEAT_MS * 3
           : true;
       statusEl.textContent = stale ? "inaktiv" : "aktiv";
+      statusEl.classList.add(stale ? "badge--danger" : "badge--success");
       statusEl.classList.toggle("offline", stale);
 
       const resultEl = document.createElement("div");

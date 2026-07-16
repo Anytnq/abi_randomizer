@@ -42,10 +42,12 @@ export function getElements() {
     categoryContainer2: document.getElementById("categoryContainer2"),
     categoryContainer3: document.getElementById("categoryContainer3"),
     clearAllCategoriesButton: document.getElementById("clearAllCategoriesBtn"),
+    resetCategoriesButton: document.getElementById("resetCategoriesBtn"),
     armorTierContainer: document.getElementById("armorTierContainer"),
     helmetTierContainer: document.getElementById("helmetTierContainer"),
     mapContainer: document.getElementById("mapContainer"),
     weaponCategoryContainer: document.getElementById("weaponCategoryContainer"),
+    weaponFilterSearchInput: document.getElementById("weaponFilterSearch"),
     reloadMapButton: document.getElementById("reloadMapBtn"),
     columns: Array.from(
       document.querySelectorAll(".col-container[data-category]"),
@@ -70,6 +72,14 @@ export function renderFilterButtons(elements, filters, handlers, options = {}) {
     canEditCategories,
     areAllCategoriesSelected,
   );
+
+  if (elements.resetCategoriesButton) {
+    elements.resetCategoriesButton.disabled = !canEditCategories;
+    elements.resetCategoriesButton.setAttribute(
+      "aria-disabled",
+      String(!canEditCategories),
+    );
+  }
 
   renderCategoryButtonsRow(
     elements.categoryContainer1,
@@ -118,6 +128,7 @@ export function renderFilterButtons(elements, filters, handlers, options = {}) {
     filters.excludedWeapons,
     handlers.onWeaponToggle,
     handlers.onWeaponGroupToggle,
+    filters.weaponSearchQuery ?? "",
   );
 }
 
@@ -145,16 +156,19 @@ function renderCategoryButtonsRow(
   container.replaceChildren();
 
   const groupKeys = categoryOptions.map((category) => category.key);
-  const areAllGroupCategoriesSelected = groupKeys.every((category) =>
+  const selectedCount = groupKeys.filter((category) =>
     selectedCategorySet.has(category),
-  );
+  ).length;
+  const areAllGroupCategoriesSelected = selectedCount === groupKeys.length;
 
   const groupToggleButton = document.createElement("button");
   groupToggleButton.type = "button";
   groupToggleButton.className = "filter-item filter-item--group-toggle";
-  groupToggleButton.textContent = areAllGroupCategoriesSelected
-    ? `${groupLabel}: alles de-selecten`
-    : `${groupLabel}: alles selecten`;
+  groupToggleButton.textContent = `${
+    areAllGroupCategoriesSelected
+      ? `${groupLabel}: alles de-selecten`
+      : `${groupLabel}: alles selecten`
+  } (${selectedCount}/${groupKeys.length})`;
   groupToggleButton.classList.toggle("active", areAllGroupCategoriesSelected);
   groupToggleButton.disabled = !canEditCategories;
   groupToggleButton.classList.toggle("locked", !canEditCategories);
@@ -219,9 +233,11 @@ function renderWeaponCategoryButtons(
   excludedWeapons,
   onToggle,
   onGroupToggle,
+  searchQuery = "",
 ) {
   container.replaceChildren();
   const excludedWeaponSet = new Set(excludedWeapons);
+  const normalizedQuery = searchQuery.trim().toLowerCase();
 
   weaponCategoryOptions.forEach((weaponCategory) => {
     const groupElement = document.createElement("section");
@@ -255,6 +271,8 @@ function renderWeaponCategoryButtons(
     const groupGrid = document.createElement("div");
     groupGrid.className = "weapon-filter-grid";
 
+    let visibleWeaponCount = 0;
+
     groupWeapons.forEach((weapon) => {
       const button = document.createElement("button");
       button.type = "button";
@@ -266,9 +284,18 @@ function renderWeaponCategoryButtons(
       button.setAttribute("aria-pressed", String(isExcluded));
       button.innerHTML = `<span class="weapon-filter-dot" aria-hidden="true"></span><span class="weapon-filter-text">${weapon.name}</span>`;
       button.addEventListener("click", () => onToggle(weapon.name));
+
+      const matchesSearch =
+        !normalizedQuery || weapon.name.toLowerCase().includes(normalizedQuery);
+      button.hidden = !matchesSearch;
+      if (matchesSearch) {
+        visibleWeaponCount += 1;
+      }
+
       groupGrid.appendChild(button);
     });
 
+    groupElement.hidden = visibleWeaponCount === 0;
     groupElement.append(groupHeader, groupGrid);
     container.appendChild(groupElement);
   });

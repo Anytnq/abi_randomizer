@@ -3,48 +3,34 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="theme-color" content="#06080d" />
     <title>Offline - OPERATION: RNG</title>
     <style>
       body {
-        margin: 0;
-        min-height: 100vh;
         display: grid;
         place-items: center;
-        background: linear-gradient(180deg, #0c1016 0%, #121924 100%);
-        color: #f3f6fa;
-        font-family: "Rajdhani", sans-serif;
-      }
-
-      .offline-card {
-        width: min(520px, 92vw);
-        padding: 24px;
-        border: 1px solid #ffffff2d;
-        border-radius: 14px;
-        background: #ffffff10;
-        text-align: center;
-      }
-
-      h1 {
-        margin: 0 0 10px;
-        font-family: "Teko", sans-serif;
-        letter-spacing: 1px;
-        font-size: 42px;
-        color: #f1c35a;
-      }
-
-      p {
+        min-height: 100vh;
         margin: 0;
-        color: #d2dae3;
+        background: #06080d;
+        color: #f2f5f9;
+        font-family: system-ui, sans-serif;
+        text-align: center;
+        padding: 16px;
+      }
+      a {
+        color: #ffb02e;
       }
     </style>
   </head>
   <body>
-    <div class="offline-card">
-      <h1>Offline</h1>
-      <p>
-        Keine Verbindung. Die Seite wird automatisch aktualisiert, sobald du
-        wieder online bist.
-      </p>
+    <div>
+      <p>Offline. OPERATION: RNG ist jetzt v2.</p>
+      <p><a href="./v2/index.html#/hub">Zum Hub (sobald online)</a></p>
     </div>
+    <script>
+      if (navigator.onLine) {
+        location.replace("./v2/index.html#/hub");
+      }
+    </script>
   </body>
 </html>
