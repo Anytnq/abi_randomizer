@@ -9,13 +9,15 @@
     />
     <meta name="theme-color" content="#0d0d0d" />
     <title>Magische Miesmuschel</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
     <link
       href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Teko:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./assets/css/styles.css" />
   </head>
-  <body>
+  <body class="theme-muschel">
     <main class="page-shell muschel-shell">
       <header class="header-container">
         <h1>Magische Miesmuschel</h1>
@@ -42,6 +44,38 @@
           </button>
         </div>
 
+        <details class="muschel-custom">
+          <summary class="muschel-custom-title">Eigene Antworten</summary>
+          <div class="muschel-answer-grid">
+            <label class="muschel-input-label" for="muschelAllowAnswersInput">
+              JA-Antworten
+            </label>
+            <textarea
+              class="muschel-question-input muschel-answer-input"
+              id="muschelAllowAnswersInput"
+              rows="3"
+              placeholder="Du darfst das Gear spielen."
+            ></textarea>
+            <label class="muschel-input-label" for="muschelDenyAnswersInput">
+              NEIN-Antworten
+            </label>
+            <textarea
+              class="muschel-question-input muschel-answer-input"
+              id="muschelDenyAnswersInput"
+              rows="3"
+              placeholder="Du spielst nur Pistole. Kein Diskussion."
+            ></textarea>
+          </div>
+          <div class="muschel-actions">
+            <button class="muschel-ask-btn" id="muschelSaveAnswersBtn" type="button">
+              Antworten speichern
+            </button>
+            <button class="muschel-clear-btn" id="muschelResetAnswersBtn" type="button">
+              Standard wiederherstellen
+            </button>
+          </div>
+        </details>
+
         <div class="muschel-result-card" id="muschelResultCard" hidden>
           <p class="muschel-result-title" id="muschelResultTitle"></p>
           <p class="muschel-result-line" id="muschelResultLine"></p>
@@ -54,21 +88,27 @@
           </ul>
         </section>
       </section>
+
+      <section
+        class="squad-panel"
+        aria-label="Squad Modus"
+        id="muschel-squadPanel"
+      ></section>
     </main>
 
     <a
       class="mode-link-btn"
-      href="./index.html"
-      title="Zur Landingpage wechseln"
-      aria-label="Zur Landingpage"
-      >Zur Landing</a
-    >
-    <a
-      class="mode-link-btn muschel-mode-link-secondary"
       href="./randomizer.html"
       title="Zum Randomizer wechseln"
       aria-label="Zum Randomizer"
       >Zum Randomizer</a
+    >
+    <a
+      class="mode-link-btn mode-link-btn--secondary"
+      href="./gungame.html"
+      title="Zum Gungame Modus wechseln"
+      aria-label="Zu Gungame"
+      >Zu Gungame</a
     >
 
     <section class="master-volume" aria-label="Globale Lautstarke">

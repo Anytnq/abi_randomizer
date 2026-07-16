@@ -1,0 +1,245 @@
+
+
+  
+    
+    
+    
+    
+    OPERATION: RNG | Landing
+    
+    
+      :root {
+        --bg-1: #081018;
+        --bg-2: #0f1b25;
+        --card: #14222dcc;
+        --border: #ffffff1f;
+        --text: #f4f7fb;
+        --muted: #b9c7d3;
+        --accent-a: #ffb84d;
+        --accent-b: #5ec2ff;
+        --accent-c: #7dffb2;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        min-height: 100vh;
+        color: var(--text);
+        font-family: "Manrope", sans-serif;
+        background:
+          radial-gradient(circle at 20% 20%, #ffb84d2f 0%, transparent 34%),
+          radial-gradient(circle at 80% 82%, #5ec2ff2f 0%, transparent 36%),
+          linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 100%);
+        overflow: hidden;
+      }
+
+      .noise {
+        position: fixed;
+        inset: 0;
+        pointer-events: none;
+        opacity: 0.18;
+        background-image: repeating-radial-gradient(
+          #ffffff0d 0 1px,
+          transparent 1px 4px
+        );
+      }
+
+      .landing {
+        position: relative;
+        z-index: 1;
+        min-height: 100vh;
+        padding: clamp(18px, 4vw, 44px);
+        display: grid;
+        grid-template-rows: auto 1fr auto;
+        gap: 18px;
+      }
+
+      .topline {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: 0.2em;
+        text-transform: uppercase;
+      }
+
+      .hero {
+        display: grid;
+        align-content: center;
+        gap: 18px;
+      }
+
+      .title {
+        margin: 0;
+        font-family: "Anton", sans-serif;
+        font-size: clamp(52px, 11vw, 124px);
+        line-height: 0.92;
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .subtitle {
+        margin: 0;
+        max-width: 54ch;
+        color: var(--muted);
+        font-size: clamp(14px, 2.6vw, 18px);
+      }
+
+      .mode-grid {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        gap: 14px;
+      }
+
+      .mode-btn {
+        position: relative;
+        display: grid;
+        align-content: space-between;
+        min-height: 210px;
+        padding: 18px;
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        background: var(--card);
+        color: var(--text);
+        text-decoration: none;
+        overflow: hidden;
+        transition:
+          transform 0.2s ease,
+          border-color 0.2s ease,
+          box-shadow 0.2s ease;
+      }
+
+      .mode-btn::before {
+        content: "";
+        position: absolute;
+        inset: -40% auto auto -30%;
+        width: 220px;
+        height: 220px;
+        border-radius: 50%;
+        filter: blur(8px);
+        opacity: 0.35;
+      }
+
+      .mode-btn.left::before {
+        background: radial-gradient(
+          circle,
+          var(--accent-a) 0%,
+          transparent 70%
+        );
+      }
+
+      .mode-btn.right::before {
+        background: radial-gradient(
+          circle,
+          var(--accent-b) 0%,
+          transparent 70%
+        );
+      }
+
+      .mode-btn.middle::before {
+        background: radial-gradient(
+          circle,
+          var(--accent-c) 0%,
+          transparent 70%
+        );
+      }
+
+      .mode-btn:hover {
+        transform: translateY(-4px);
+        border-color: #ffffff4a;
+        box-shadow: 0 20px 30px #00000055;
+      }
+
+      .mode-btn.disabled,
+      .mode-btn.disabled:hover {
+        transform: none;
+        border-color: #ffffff2c;
+        box-shadow: none;
+        opacity: 0.65;
+        cursor: not-allowed;
+        pointer-events: none;
+      }
+
+      .mode-dir {
+        margin: 0;
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: 0.18em;
+        text-transform: uppercase;
+      }
+
+      .mode-name {
+        margin: 0;
+        font-family: "Anton", sans-serif;
+        font-size: clamp(36px, 6vw, 58px);
+        letter-spacing: 0.03em;
+        text-transform: uppercase;
+      }
+
+      .footer {
+        color: var(--muted);
+        font-size: 12px;
+        letter-spacing: 0.14em;
+        text-transform: uppercase;
+      }
+
+      @media (max-width: 760px) {
+        body {
+          overflow: auto;
+        }
+
+        .mode-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .mode-btn {
+          min-height: 160px;
+        }
+
+        .mode-name {
+          font-size: clamp(32px, 12vw, 48px);
+        }
+      }
+    
+  
+  
+    
+    
+      
+        Operation RNG
+        Wähl deinen Modus
+      
+
+      
+        Landingpage
+        
+          Alle Modi an einem Ort. Wähle links den klassischen Loadout-Randomizer
+          oder nutze eigene Spezial-Modi wie GunGame und Magische Miesmuschel.
+        
+
+        
+          
+            
+            Randomizer
+          
+
+          
+            Wartungsmodus
+            Miesmuschel
+          
+
+          
+            
+            GunGame
+          
+        
+      
+
+      HL ABI Hub
+    
+  
+
