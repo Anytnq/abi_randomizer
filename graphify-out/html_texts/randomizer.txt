@@ -1,0 +1,294 @@
+
+
+  
+    
+    
+    
+    
+    OPERATION: RNG
+    
+    
+  
+  
+    
+      Debug Modus
+      
+        Test-Aktion
+        
+          Spin: Normal
+          Spin: 0 to Hero erzwingen
+          Spin: Elite-Kiste erzwingen
+          Map neu rollen
+          Overlay: Squad 0 to Hero
+          Overlay: Elite-Kiste
+          Audio: Hero starten
+          Audio: Hero stoppen
+          Alarmmodus an
+          Alarmmodus aus
+        
+        
+          Ausführen
+        
+      
+      Debug Modus inaktiv
+    
+    
+      
+        OPERATION: RNG
+        HL Idioten
+      
+      
+        
+          
+            Advanced Filters
+            ▼
+          
+          
+            
+              0 to Hero Chance %
+              
+            
+            
+              ☐
+              Wheel Spin
+            
+          
+        
+        
+          
+            
+              Alle Kategorien de-selecten
+            
+          
+          
+            
+              Map
+              
+            
+            
+              Equipment
+              
+            
+            
+              Weapons
+              
+            
+          
+          
+            
+              
+                Weapons
+                
+              
+            
+            
+              
+                Armor Tier
+                
+              
+              
+                
+                  Helmet Tier
+                
+                
+              
+              
+                Maps
+                
+              
+            
+          
+        
+      
+      
+        
+          
+          
+            
+              
+                Map
+                
+                  
+                    
+                    
+                  
+                
+              
+            
+            
+              
+            
+          
+        
+        
+          
+          
+            Helmet
+            
+              
+            
+          
+          
+            Headset
+            
+              
+            
+          
+          
+            Chest Rig
+            
+              
+            
+          
+          
+            Armored Chest Rig
+            
+              
+            
+          
+          
+            Armor
+            
+              
+            
+          
+          
+            Backpack
+            
+              
+            
+          
+        
+        
+          
+          
+            Weapon
+            
+              
+            
+          
+          
+            Secondary
+            
+              
+            
+          
+        
+      
+      
+        Start
+        
+          Gestorben: Alles neu
+        
+        
+          Überlebt: Map neu
+        
+      
+      
+        
+        
+          
+            👥 Squad Modus
+            
+              Beitreten / Erstellen
+              ▼
+            
+          
+          
+            
+            
+              
+                Dein Name
+                
+              
+              
+                
+                  Neue Session
+                
+                
+                  
+                  
+                    Beitreten
+                  
+                
+              
+              
+            
+            
+            
+              
+                
+                  Session Code:
+                  
+                  
+                    📋
+                  
+                
+                
+                  Verlassen
+                
+              
+              
+                Verbindung wird wiederhergestellt...
+              
+              
+              
+                Nicht verbunden
+              
+              
+              
+                Live Activity
+                
+                  Noch keine Aktivität
+                
+              
+            
+          
+        
+      
+      
+        
+          
+            
+            
+            
+              Spin
+            
+          
+          
+            Klicke auf die Mitte vom Wheel.
+          
+        
+        
+          
+            
+              Manuelle Eingabe
+            
+            Lokale Werte aktiv
+          
+          Werte für das Wheel (Komma, Semikolon oder neue Zeile)
+          
+          
+            
+              Werte ubernehmen
+            
+            0 Werte
+          
+        
+      
+    
+    Zu Gungame
+    
+      Switch Mode
+    
+    
+      Streamer Modus: AUS
+    
+    
+      Lautstärke
+      
+      60%
+    
+    
+  
+
