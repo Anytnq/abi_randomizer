@@ -4,7 +4,11 @@
     <meta charset="UTF-8" />
     <meta http-equiv="refresh" content="0; url=./v2/index.html#/randomizer" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#06080d" />
+    <meta
+      name="description"
+      content="Static ABI Randomizer ready for GitHub Pages deployment."
+    />
+    <meta name="theme-color" content="#0d0d0d" />
     <title>OPERATION: RNG</title>
     <style>
       body {
@@ -22,18 +26,468 @@
     </style>
   </head>
   <body>
-    <p>
-      Der Randomizer ist jetzt v2.
-      <a href="./v2/index.html#/randomizer">Weiter zum Randomizer</a>
-    </p>
-    <script>
-      if ("serviceWorker" in navigator) {
-        navigator.serviceWorker
-          .getRegistrations()
-          .then((regs) => regs.forEach((reg) => reg.unregister()))
-          .catch(() => {});
-      }
-      location.replace("./v2/index.html#/randomizer");
-    </script>
+    <section
+      class="debug-panel"
+      id="debugPanel"
+      hidden
+      aria-label="Debug Aktionen"
+    >
+      <h2 class="debug-title">Debug Modus</h2>
+      <div class="debug-controls">
+        <label class="debug-label" for="debugActionSelect">Test-Aktion</label>
+        <select class="debug-select" id="debugActionSelect">
+          <option value="spin-default">Spin: Normal</option>
+          <option value="spin-zth">Spin: 0 to Hero erzwingen</option>
+          <option value="spin-elite">Spin: Elite-Kiste erzwingen</option>
+          <option value="map-reload">Map neu rollen</option>
+          <option value="overlay-zth">Overlay: Squad 0 to Hero</option>
+          <option value="overlay-crate">Overlay: Elite-Kiste</option>
+          <option value="audio-hero-play">Audio: Hero starten</option>
+          <option value="audio-hero-stop">Audio: Hero stoppen</option>
+          <option value="alarm-on">Alarmmodus an</option>
+          <option value="alarm-off">Alarmmodus aus</option>
+        </select>
+        <button class="debug-run-btn" id="debugRunBtn" type="button">
+          Ausführen
+        </button>
+      </div>
+      <p class="debug-status" id="debugStatus">Debug Modus inaktiv</p>
+    </section>
+    <main class="page-shell">
+      <header class="header-container">
+        <h1 id="mainTitle">OPERATION: RNG</h1>
+        <p class="subtitle" id="subTitle">HL Idioten</p>
+      </header>
+      <section class="filters-container" aria-label="Advanced filters">
+        <div class="filters-header">
+          <button
+            class="filter-toggle-btn"
+            id="filterToggle"
+            type="button"
+            aria-expanded="false"
+            aria-controls="filterContent"
+          >
+            <span>Advanced Filters</span>
+            <span id="filterChevron" aria-hidden="true">▼</span>
+          </button>
+          <div class="filters-header-actions">
+            <label class="setting-box" for="chanceInput">
+              <span class="setting-label">0 to Hero Chance %</span>
+              <input
+                type="number"
+                id="chanceInput"
+                value="5"
+                min="0"
+                max="100"
+              />
+            </label>
+            <button
+              class="wheel-check-btn"
+              id="wheelToggleBtn"
+              type="button"
+              aria-pressed="false"
+              aria-controls="wheelSection"
+            >
+              <span class="wheel-check-icon" aria-hidden="true">☐</span>
+              <span>Wheel Spin</span>
+            </button>
+          </div>
+        </div>
+        <div class="filter-content" id="filterContent">
+          <div class="filter-toolbar-actions">
+            <button
+              class="filter-clear-btn"
+              id="clearAllCategoriesBtn"
+              type="button"
+            >
+              Alle Kategorien de-selecten
+            </button>
+          </div>
+          <div class="filter-toolbar">
+            <div class="filter-section filter-section--compact">
+              <h2>Map</h2>
+              <div class="filter-grid" id="categoryContainer1"></div>
+            </div>
+            <div class="filter-section filter-section--compact">
+              <h2>Equipment</h2>
+              <div class="filter-grid" id="categoryContainer2"></div>
+            </div>
+            <div class="filter-section filter-section--compact">
+              <h2>Weapons</h2>
+              <div class="filter-grid" id="categoryContainer3"></div>
+            </div>
+          </div>
+          <div class="filter-dashboard">
+            <div class="filter-column filter-column--wide">
+              <details
+                class="filter-section filter-section--panel filter-collapsible"
+                open
+              >
+                <summary class="filter-collapsible-summary">Weapons</summary>
+                <div
+                  class="weapon-filter-groups"
+                  id="weaponCategoryContainer"
+                ></div>
+              </details>
+            </div>
+            <div class="filter-column">
+              <details
+                class="filter-section filter-section--panel filter-collapsible"
+                open
+              >
+                <summary class="filter-collapsible-summary">Armor Tier</summary>
+                <div class="filter-tier-grid" id="armorTierContainer"></div>
+              </details>
+              <details
+                class="filter-section filter-section--panel filter-collapsible"
+                open
+              >
+                <summary class="filter-collapsible-summary">
+                  Helmet Tier
+                </summary>
+                <div class="filter-tier-grid" id="helmetTierContainer"></div>
+              </details>
+              <details
+                class="filter-section filter-section--panel filter-collapsible"
+                open
+              >
+                <summary class="filter-collapsible-summary">Maps</summary>
+                <div class="filter-grid" id="mapContainer"></div>
+              </details>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="slot-machine" aria-label="Randomizer slots">
+        <div class="slot-row">
+          <div class="payline"></div>
+          <div class="col-container" data-category="map">
+            <div class="slot-label-row">
+              <div class="label label--with-action">
+                <span class="label-text">Map</span>
+                <button
+                  class="slot-reload-btn"
+                  id="reloadMapBtn"
+                  type="button"
+                  title="Map neu rollen"
+                  aria-label="Map neu rollen"
+                >
+                  <svg
+                    class="slot-reload-icon"
+                    viewBox="0 0 24 24"
+                    aria-hidden="true"
+                    focusable="false"
+                  >
+                    <path
+                      d="M20 11a8 8 0 1 1-2.35-5.65"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    ></path>
+                    <path
+                      d="M20 4v5h-5"
+                      fill="none"
+                      stroke="currentColor"
+                      stroke-width="2"
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                    ></path>
+                  </svg>
+                </button>
+              </div>
+            </div>
+            <div class="window">
+              <div class="strip" id="strip-map"></div>
+            </div>
+          </div>
+        </div>
+        <div class="slot-row">
+          <div class="payline"></div>
+          <div class="col-container" data-category="helmet">
+            <span class="label">Helmet</span>
+            <div class="window">
+              <div class="strip" id="strip-helmet"></div>
+            </div>
+          </div>
+          <div class="col-container" data-category="headset">
+            <span class="label">Headset</span>
+            <div class="window">
+              <div class="strip" id="strip-headset"></div>
+            </div>
+          </div>
+          <div class="col-container" data-category="chestRig">
+            <span class="label">Chest Rig</span>
+            <div class="window">
+              <div class="strip" id="strip-chest-rig"></div>
+            </div>
+          </div>
+          <div class="col-container" data-category="armoredChestRig">
+            <span class="label">Armored Chest Rig</span>
+            <div class="window">
+              <div class="strip" id="strip-armored-chest-rig"></div>
+            </div>
+          </div>
+          <div class="col-container" data-category="armor">
+            <span class="label">Armor</span>
+            <div class="window">
+              <div class="strip" id="strip-armor"></div>
+            </div>
+          </div>
+          <div class="col-container" data-category="backpack">
+            <span class="label">Backpack</span>
+            <div class="window">
+              <div class="strip" id="strip-backpack"></div>
+            </div>
+          </div>
+        </div>
+        <div class="slot-row">
+          <div class="payline"></div>
+          <div class="col-container" data-category="weapon">
+            <span class="label">Weapon</span>
+            <div class="window">
+              <div class="strip" id="strip-weapon"></div>
+            </div>
+          </div>
+          <div class="col-container" data-category="secondary">
+            <span class="label">Secondary</span>
+            <div class="window">
+              <div class="strip" id="strip-secondary"></div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <section class="controls" aria-label="Randomizer controls">
+        <button class="spin-btn" id="spinBtn" type="button">Start</button>
+        <button
+          class="spin-btn"
+          id="diedBtn"
+          type="button"
+          title="Ich bin gestorben: Alles neu drehen"
+        >
+          Gestorben: Alles neu
+        </button>
+        <button
+          class="spin-btn"
+          id="survivedBtn"
+          type="button"
+          title="Ich habe überlebt: Nur Map neu"
+        >
+          Überlebt: Map neu
+        </button>
+      </section>
+      <div class="compact-left-stack" id="compactLeftStack">
+        <section
+          class="compact-side-controls"
+          id="compactSideControls"
+          aria-label="Compact quick controls"
+          hidden
+        ></section>
+        <section class="squad-panel" aria-label="Squad Modus" id="squadPanel">
+          <div class="squad-header">
+            <h2 class="squad-title">👥 Squad Modus</h2>
+            <button
+              class="squad-toggle-btn"
+              id="squadToggle"
+              type="button"
+              aria-expanded="false"
+            >
+              <span>Beitreten / Erstellen</span>
+              <span id="squadChevron" aria-hidden="true">▼</span>
+            </button>
+          </div>
+          <div class="squad-content" id="squadContent">
+            <!-- Setup (vor Session) -->
+            <div class="squad-setup" id="squadSetup">
+              <div class="squad-name-row">
+                <label class="squad-field-label" for="squadName"
+                  >Dein Name</label
+                >
+                <input
+                  class="squad-input"
+                  type="text"
+                  id="squadName"
+                  maxlength="20"
+                  placeholder="z.B. ILoveThatSkinBro69"
+                />
+              </div>
+              <div class="squad-actions">
+                <button
+                  class="squad-btn squad-btn--create"
+                  id="squadCreateBtn"
+                  type="button"
+                >
+                  Neue Session
+                </button>
+                <div class="squad-join-row">
+                  <input
+                    class="squad-input squad-code-input"
+                    type="text"
+                    id="squadJoinCode"
+                    maxlength="2"
+                    placeholder="Code eingeben"
+                  />
+                  <button
+                    class="squad-btn squad-btn--join"
+                    id="squadJoinBtn"
+                    type="button"
+                  >
+                    Beitreten
+                  </button>
+                </div>
+              </div>
+              <p class="squad-error" id="squadError" hidden></p>
+            </div>
+            <!-- Aktive Session -->
+            <div class="squad-session" id="squadSession" hidden>
+              <div class="squad-session-header">
+                <div class="squad-code-display">
+                  <span class="squad-code-label">Session Code:</span>
+                  <strong
+                    class="squad-code-value"
+                    id="squadCodeDisplay"
+                  ></strong>
+                  <button
+                    class="squad-copy-btn"
+                    id="squadCopyBtn"
+                    type="button"
+                    title="Code kopieren"
+                  >
+                    📋
+                  </button>
+                </div>
+                <button
+                  class="squad-btn squad-btn--leave"
+                  id="squadLeaveBtn"
+                  type="button"
+                >
+                  Verlassen
+                </button>
+              </div>
+              <p
+                class="squad-connection-banner"
+                id="squadConnectionBanner"
+                hidden
+              >
+                Verbindung wird wiederhergestellt...
+              </p>
+              <p class="squad-role-hint" id="squadRoleHint"></p>
+              <p
+                class="squad-connection-state offline"
+                id="squadConnectionState"
+              >
+                Nicht verbunden
+              </p>
+              <div class="squad-members" id="squadMembers"></div>
+              <div class="squad-feed">
+                <h3 class="squad-feed-title">Live Activity</h3>
+                <ul class="squad-feed-list" id="squadActivityFeed">
+                  <li class="squad-feed-empty">Noch keine Aktivität</li>
+                </ul>
+              </div>
+            </div>
+          </div>
+        </section>
+      </div>
+      <section
+        class="wheel-section"
+        id="wheelSection"
+        hidden
+        aria-label="Wheel Spin"
+      >
+        <div class="wheel-shell">
+          <div class="wheel-board">
+            <div class="wheel-pointer" aria-hidden="true"></div>
+            <canvas
+              class="wheel-canvas"
+              id="wheelCanvas"
+              width="520"
+              height="520"
+              aria-label="Wheel Spin Auswahl"
+            ></canvas>
+            <button class="wheel-center-btn" id="wheelCenterBtn" type="button">
+              Spin
+            </button>
+          </div>
+          <p class="wheel-result" id="wheelResult">
+            Klicke auf die Mitte vom Wheel.
+          </p>
+        </div>
+        <div class="wheel-input-panel">
+          <div class="wheel-mode-row">
+            <button
+              class="wheel-mode-btn"
+              id="wheelManualToggleBtn"
+              type="button"
+              aria-pressed="false"
+            >
+              Manuelle Eingabe
+            </button>
+            <span class="wheel-source-note" id="wheelSourceNote"
+              >Lokale Werte aktiv</span
+            >
+          </div>
+          <label class="wheel-input-label" for="wheelValuesInput"
+            >Werte für das Wheel (Komma, Semikolon oder neue Zeile)</label
+          >
+          <textarea
+            class="wheel-values-input"
+            id="wheelValuesInput"
+            rows="5"
+            placeholder="Mosin&#10;MP5&#10;AKM&#10;Knife"
+          ></textarea>
+          <div class="wheel-input-actions">
+            <button class="wheel-apply-btn" id="wheelApplyBtn" type="button">
+              Werte ubernehmen
+            </button>
+            <span class="wheel-count" id="wheelCount">0 Werte</span>
+          </div>
+        </div>
+      </section>
+    </main>
+    <a
+      class="mode-link-btn"
+      href="./gungame.html"
+      title="Zum Gungame Modus wechseln"
+      aria-label="Zu Gungame"
+      >Zu Gungame</a
+    >
+    <button
+      class="switch-mode-btn"
+      id="switchModeBtn"
+      type="button"
+      aria-pressed="false"
+      title="Kompakten Modus umschalten"
+    >
+      Switch Mode
+    </button>
+    <button
+      class="switch-mode-btn streamer-mode-btn"
+      id="streamerModeBtn"
+      type="button"
+      data-mode="off"
+      title="Streamer Modus umschalten"
+    >
+      Streamer Modus: AUS
+    </button>
+    <section class="master-volume" aria-label="Globale Lautstärke">
+      <label class="master-volume-label" for="masterVolumeSlider"
+        >Lautstärke</label
+      >
+      <input
+        class="master-volume-slider"
+        id="masterVolumeSlider"
+        type="range"
+        min="0"
+        max="100"
+        value="60"
+      />
+      <span class="master-volume-value" id="masterVolumeValue">60%</span>
+    </section>
+    <script
+      type="module"
+      src="./assets/js/randomizer/app.js?v=20260507-4"
+    ></script>
   </body>
 </html>

@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="OPERATION RNG icon">
+  <rect width="512" height="512" rx="96" fill="#0f1114"/>
+  <rect x="56" y="72" width="400" height="368" rx="56" fill="#171b20" stroke="#d4a83f" stroke-width="18"/>
+  <path d="M126 185h260M126 256h260M126 327h260" stroke="#edf1f5" stroke-width="28" stroke-linecap="round"/>
+  <circle cx="170" cy="185" r="24" fill="#d4a83f"/>
+  <circle cx="256" cy="256" r="24" fill="#d4a83f"/>
+  <circle cx="342" cy="327" r="24" fill="#d4a83f"/>
+  <path d="M102 106l62 62M410 106l-62 62M102 406l62-62M410 406l-62-62" stroke="#f1c35a" stroke-width="14" stroke-linecap="round"/>
+</svg>

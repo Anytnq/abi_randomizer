@@ -69,11 +69,11 @@ import {
   publishResult,
   publishSpinning,
   publishZeroToHero,
-} from "./squad.js?v=20260507-4";
+} from "./squad.js?v=20260708-1";
 import { createSquadUI } from "./squad-ui.js";
 
-const CACHE_HOTFIX_VERSION = "20260507-4";
-const SW_SCRIPT_URL = "./sw.js?v=20260507-4";
+const CACHE_HOTFIX_VERSION = "20260708-1";
+const SW_SCRIPT_URL = "./sw.js?v=20260708-1";
 const SQUAD_ZTH_TEAM_BANNER_CHANCE = 0.2;
 const COMPACT_MODE_STORAGE_KEY = "compactModeEnabled";
 const CRATE_REVEAL_DISPLAY_MS = 3800;
@@ -1356,7 +1356,7 @@ function showSquadZeroToHeroOverlay(triggerName, appliesToTeam) {
     <div class="squad-zth-content">
       <div class="squad-zth-skull">💀</div>
       <div class="squad-zth-title">SQUAD 0 TO HERO</div>
-      <div class="squad-zth-sub">${triggerName} hat 0 to Hero bekommen!</div>
+      <div class="squad-zth-sub">${escapeHtml(triggerName)} hat 0 to Hero bekommen!</div>
       <div class="squad-zth-msg">${
         appliesToTeam
           ? "Team-Banner aktiv: Ihr bekommt alle 0 to Hero!"

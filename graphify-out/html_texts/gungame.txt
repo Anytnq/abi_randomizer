@@ -1,0 +1,130 @@
+
+
+  
+    
+    
+    
+    
+    OPERATION: RNG | Gungame
+    
+    
+  
+  
+    
+      
+        OPERATION: RNG
+        Gungame Modus
+      
+
+      
+        
+          
+            
+              Anzahl Waffenstufen
+              
+            
+            
+              Upgrade-Chance (%)
+              
+            
+            
+              
+                Neue Route
+              
+            
+          
+        
+
+        
+          
+            Aktuelle Stufe: 1 / 12
+          
+          
+            
+              Raid abgeschlossen
+            
+            
+              Zurück
+            
+            
+              Weiter
+            
+            
+              Reset
+            
+          
+          
+            Schließe einen Raid ab, um auf der nächsten Stufe eine
+            Upgrade-Chance zu erhalten.
+          
+        
+
+        
+          
+        
+      
+
+      
+        
+          👥 Squad Modus
+          
+            Beitreten / Erstellen
+            ▼
+          
+        
+        
+          
+            
+              Dein Name
+              
+            
+            
+              
+                Neue Session
+              
+              
+                
+                
+                  Beitreten
+                
+              
+            
+            
+          
+
+          
+            
+              
+                Session Code:
+                
+                
+                  📋
+                
+              
+              
+                Verlassen
+              
+            
+            
+              Verbindung wird wiederhergestellt...
+            
+            
+            
+              Nicht verbunden
+            
+            
+            
+              Live Activity
+              
+                Noch keine Aktivitat
+              
+            
+          
+        
+      
+    
+
+    Zum Randomizer
+    
+  
+
