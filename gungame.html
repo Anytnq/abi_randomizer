@@ -6,13 +6,15 @@
     <meta name="description" content="GunGame Modus für den ABI Randomizer." />
     <meta name="theme-color" content="#0d0d0d" />
     <title>OPERATION: RNG | Gungame</title>
+    <link rel="manifest" href="./manifest.webmanifest" />
+    <link rel="icon" href="./assets/icon.svg" type="image/svg+xml" />
     <link
       href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Teko:wght@500;600;700&display=swap"
       rel="stylesheet"
     />
     <link rel="stylesheet" href="./assets/css/styles.css" />
   </head>
-  <body>
+  <body class="theme-gungame">
     <main class="page-shell">
       <header class="header-container">
         <h1 id="mainTitle">OPERATION: RNG</h1>
@@ -95,114 +97,17 @@
         class="squad-panel"
         aria-label="Squad Modus"
         id="gungame-squadPanel"
-      >
-        <div class="squad-header">
-          <h2 class="squad-title">👥 Squad Modus</h2>
-          <button
-            class="squad-toggle-btn"
-            id="gungame-squadToggle"
-            type="button"
-            aria-expanded="false"
-          >
-            <span>Beitreten / Erstellen</span>
-            <span id="gungame-squadChevron" aria-hidden="true">▼</span>
-          </button>
-        </div>
-        <div class="squad-content" id="gungame-squadContent">
-          <div class="squad-setup" id="gungame-squadSetup">
-            <div class="squad-name-row">
-              <label class="squad-field-label" for="gungame-squadName"
-                >Dein Name</label
-              >
-              <input
-                class="squad-input"
-                type="text"
-                id="gungame-squadName"
-                maxlength="20"
-                placeholder="z.B. ILoveThatSkinBro69"
-              />
-            </div>
-            <div class="squad-actions">
-              <button
-                class="squad-btn squad-btn--create"
-                id="gungame-squadCreateBtn"
-                type="button"
-              >
-                Neue Session
-              </button>
-              <div class="squad-join-row">
-                <input
-                  class="squad-input squad-code-input"
-                  type="text"
-                  id="gungame-squadJoinCode"
-                  maxlength="2"
-                  placeholder="Code eingeben"
-                />
-                <button
-                  class="squad-btn squad-btn--join"
-                  id="gungame-squadJoinBtn"
-                  type="button"
-                >
-                  Beitreten
-                </button>
-              </div>
-            </div>
-            <p class="squad-error" id="gungame-squadError" hidden></p>
-          </div>
-
-          <div class="squad-session" id="gungame-squadSession" hidden>
-            <div class="squad-session-header">
-              <div class="squad-code-display">
-                <span class="squad-code-label">Session Code:</span>
-                <strong
-                  class="squad-code-value"
-                  id="gungame-squadCodeDisplay"
-                ></strong>
-                <button
-                  class="squad-copy-btn"
-                  id="gungame-squadCopyBtn"
-                  type="button"
-                  title="Code kopieren"
-                >
-                  📋
-                </button>
-              </div>
-              <button
-                class="squad-btn squad-btn--leave"
-                id="gungame-squadLeaveBtn"
-                type="button"
-              >
-                Verlassen
-              </button>
-            </div>
-            <p
-              class="squad-connection-banner"
-              id="gungame-squadConnectionBanner"
-              hidden
-            >
-              Verbindung wird wiederhergestellt...
-            </p>
-            <p class="squad-role-hint" id="gungame-squadRoleHint"></p>
-            <p
-              class="squad-connection-state offline"
-              id="gungame-squadConnectionState"
-            >
-              Nicht verbunden
-            </p>
-            <div class="squad-members" id="gungame-squadMembers"></div>
-            <div class="squad-feed">
-              <h3 class="squad-feed-title">Live Activity</h3>
-              <ul class="squad-feed-list" id="gungame-squadActivityFeed">
-                <li class="squad-feed-empty">Noch keine Aktivitat</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
+      ></section>
     </main>
 
     <a
       class="mode-link-btn"
+      href="./muschel.html"
+      aria-label="Zur Miesmuschel"
+      >Zur Miesmuschel</a
+    >
+    <a
+      class="mode-link-btn mode-link-btn--secondary"
       href="./randomizer.html"
       aria-label="Zurück zum Randomizer"
       >Zum Randomizer</a

@@ -3,7 +3,7 @@ import { formatWeaponCategory } from "../randomizer/game.js";
 import {
   publishResult,
   publishSpinning,
-} from "../randomizer/squad.js?v=20260507-4";
+} from "../randomizer/squad.js?v=20260708-1";
 import { createSquadUI } from "../randomizer/squad-ui.js";
 
 const MIN_STAGES = 3;
@@ -11,6 +11,7 @@ const MAX_STAGES = 30;
 const DEFAULT_STAGES = 12;
 const GUNGAME_SQUAD_CATEGORIES = ["weapon"];
 const SQUAD_STORAGE_KEY = "gungameSquadSession";
+const GUNGAME_PROGRESS_STORAGE_KEY = "gungameProgress";
 
 const elements = {
   stageCountInput: document.getElementById("gungameStageCount"),
@@ -43,6 +44,8 @@ function initialize() {
   elements.previousButton?.addEventListener("click", moveToPreviousStage);
   elements.nextButton?.addEventListener("click", moveToNextStage);
   elements.resetButton?.addEventListener("click", resetProgress);
+  elements.stageCountInput?.addEventListener("change", saveProgress);
+  elements.upgradeChanceInput?.addEventListener("change", saveProgress);
 
   const squadUI = createSquadUI({
     storageKey: SQUAD_STORAGE_KEY,
@@ -60,7 +63,12 @@ function initialize() {
   squadUI.initSquad();
   squadUI.tryAutoRejoinSquad();
 
-  regenerateRoute();
+  if (!restoreProgress()) {
+    regenerateRoute();
+  } else {
+    render();
+    syncSquadResult();
+  }
   squadUI.updateSquadRoleHint();
 }
 
@@ -74,6 +82,7 @@ function regenerateRoute() {
     "Neue Route generiert. Schließe einen Raid ab, um auf die nächsten Stufe zu gelangen.";
 
   render();
+  saveProgress();
   syncSquadResult();
 }
 
@@ -95,6 +104,7 @@ function completeRaid() {
   if (nextIndex >= state.route.length) {
     state.lastRaidResult = `Finale geschafft mit ${currentEntry.name}. GunGame Route abgeschlossen.`;
     render();
+    saveProgress();
     syncSquadResult();
 
     if (isSquadReady()) {
@@ -126,6 +136,7 @@ function completeRaid() {
   state.lastRaidResult = raidResultText;
   state.currentIndex = nextIndex;
   render();
+  saveProgress();
   syncSquadResult();
 
   if (isSquadReady()) {
@@ -140,6 +151,7 @@ function moveToPreviousStage() {
 
   state.currentIndex = Math.max(0, state.currentIndex - 1);
   render();
+  saveProgress();
   syncSquadResult();
 }
 
@@ -150,6 +162,7 @@ function moveToNextStage() {
 
   state.currentIndex = Math.min(state.route.length - 1, state.currentIndex + 1);
   render();
+  saveProgress();
   syncSquadResult();
 }
 
@@ -158,6 +171,7 @@ function resetProgress() {
   state.lastRaidResult =
     "Progress zurueckgesetzt. Schließe einen Raid ab, um Upgrade-Chancen zu nutzen.";
   render();
+  saveProgress();
   syncSquadResult();
 }
 
@@ -316,4 +330,80 @@ function syncSquadResult() {
   }
 
   publishResult(squadState.code, squadState.playerId, getCurrentResult());
+}
+
+function restoreProgress() {
+  try {
+    const raw = localStorage.getItem(GUNGAME_PROGRESS_STORAGE_KEY);
+    if (!raw) {
+      return false;
+    }
+
+    const saved = JSON.parse(raw);
+    if (!saved || typeof saved !== "object") {
+      return false;
+    }
+
+    const route = Array.isArray(saved.route)
+      ? saved.route.filter(isValidRouteEntry)
+      : [];
+    if (route.length === 0) {
+      return false;
+    }
+
+    state.route = route;
+    state.currentIndex = Math.min(
+      route.length - 1,
+      Math.max(0, Number.parseInt(String(saved.currentIndex ?? 0), 10) || 0),
+    );
+    state.lastRaidResult =
+      typeof saved.lastRaidResult === "string" && saved.lastRaidResult
+        ? saved.lastRaidResult
+        : "Gespeicherte GunGame Route geladen.";
+
+    if (elements.stageCountInput) {
+      elements.stageCountInput.value = String(route.length);
+    }
+    if (elements.upgradeChanceInput) {
+      const chance = Number.parseInt(String(saved.upgradeChance ?? "25"), 10);
+      elements.upgradeChanceInput.value = String(
+        Number.isFinite(chance) ? Math.max(0, Math.min(100, chance)) : 25,
+      );
+    }
+
+    return true;
+  } catch (_) {
+    return false;
+  }
+}
+
+function saveProgress() {
+  try {
+    if (state.route.length === 0) {
+      localStorage.removeItem(GUNGAME_PROGRESS_STORAGE_KEY);
+      return;
+    }
+
+    localStorage.setItem(
+      GUNGAME_PROGRESS_STORAGE_KEY,
+      JSON.stringify({
+        route: state.route,
+        currentIndex: state.currentIndex,
+        lastRaidResult: state.lastRaidResult,
+        upgradeChance: elements.upgradeChanceInput?.value ?? "25",
+        savedAt: Date.now(),
+      }),
+    );
+  } catch (_) {}
+}
+
+function isValidRouteEntry(entry) {
+  return (
+    entry &&
+    typeof entry === "object" &&
+    Number.isFinite(Number(entry.step)) &&
+    typeof entry.name === "string" &&
+    typeof entry.category === "string" &&
+    Number.isFinite(Number(entry.value))
+  );
 }

@@ -14,6 +14,8 @@ const MEMBER_KICK_TTL_MS = 6 * 60 * 60 * 1000;
 const SESSION_DELETE_TTL_MS = 8 * 60 * 60 * 1000;
 const MAX_EVENTS = 80;
 const EVENT_TRIM_INTERVAL_MS = 60_000;
+const SESSION_CODE_LENGTH = 4;
+const SESSION_CREATE_ATTEMPTS = 12;
 const lastTrimByCode = new Map();
 
 export const PRESENCE_HEARTBEAT_MS = 15_000;
@@ -21,7 +23,7 @@ export const PRESENCE_TIMEOUT_MS = 60_000;
 
 function generateCode() {
   const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789";
-  return Array.from({ length: 2 }, () =>
+  return Array.from({ length: SESSION_CODE_LENGTH }, () =>
     chars.charAt(Math.floor(Math.random() * chars.length)),
   ).join("");
 }
@@ -85,12 +87,28 @@ export async function publishSquadEvent(code, eventType, payload = {}) {
   }
 }
 
-export function createSession(playerName, selectedCategories) {
-  const code = generateCode();
-  const sessionRef = ref(db, `sessions/${code}`);
+export async function createSession(playerName, selectedCategories) {
   const playerId = crypto.randomUUID();
+  let code = null;
+  let sessionRef = null;
 
-  set(sessionRef, {
+  for (let attempt = 0; attempt < SESSION_CREATE_ATTEMPTS; attempt += 1) {
+    const candidateCode = generateCode();
+    const candidateRef = ref(db, `sessions/${candidateCode}`);
+    const snapshot = await get(candidateRef);
+
+    if (!snapshot.exists() || isSessionExpired(snapshot.val())) {
+      code = candidateCode;
+      sessionRef = candidateRef;
+      break;
+    }
+  }
+
+  if (!code || !sessionRef) {
+    throw new Error("Keine freie Session-ID verfügbar.");
+  }
+
+  await set(sessionRef, {
     createdAt: Date.now(),
     leaderId: playerId,
     filters: {
@@ -105,9 +123,9 @@ export function createSession(playerName, selectedCategories) {
       [playerId]: createPlayerRecord(playerName, "leader"),
     },
     events: {},
-  }).then(() => {
-    publishSquadEvent(code, "session-created", { by: playerName });
   });
+
+  publishSquadEvent(code, "session-created", { by: playerName });
   return { code, playerId };
 }
 
