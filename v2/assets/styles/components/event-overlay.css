@@ -1,0 +1,58 @@
+/* Component: EventOverlay (Planungs.md 5.3, 6) - one dialog style for all
+   special events (0 to Hero today, elite crate etc. later). */
+
+.event-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 200;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: var(--space-4);
+  background: #000000cc;
+  animation: eventOverlayIn var(--motion-medium) var(--motion-ease);
+}
+
+@keyframes eventOverlayIn {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.event-modal {
+  width: min(420px, 100%);
+  padding: var(--space-6) var(--space-5);
+  border: 1px solid var(--event-accent, var(--color-danger));
+  border-radius: var(--radius-lg);
+  background: var(--color-surface-1);
+  box-shadow: var(--shadow-overlay);
+  text-align: center;
+}
+
+.event-modal-title {
+  font-family: var(--font-display);
+  font-size: var(--text-xl);
+  color: var(--event-accent, var(--color-danger));
+  text-transform: uppercase;
+}
+
+.event-modal-text {
+  margin-top: var(--space-2);
+  color: var(--color-text-muted);
+}
+
+.event-modal-actions {
+  margin-top: var(--space-5);
+  display: flex;
+  justify-content: center;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .event-overlay {
+    animation: none;
+  }
+}

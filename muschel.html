@@ -2,92 +2,38 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=./v2/index.html#/muschel" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta
-      name="description"
-      content="Magische Miesmuschel Modus fur ABI Randomizer."
-    />
-    <meta name="theme-color" content="#0d0d0d" />
-    <title>Magische Miesmuschel</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Teko:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./assets/css/styles.css" />
+    <meta name="theme-color" content="#06080d" />
+    <title>OPERATION: RNG</title>
+    <style>
+      body {
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background: #06080d;
+        color: #f2f5f9;
+        font-family: system-ui, sans-serif;
+      }
+      a {
+        color: #b06bff;
+      }
+    </style>
   </head>
   <body>
-    <main class="page-shell muschel-shell">
-      <header class="header-container">
-        <h1>Magische Miesmuschel</h1>
-        <p class="subtitle">Stelle deine Frage und akzeptiere das Urteil.</p>
-      </header>
-
-      <section class="muschel-panel" aria-label="Miesmuschel Entscheidung">
-        <label class="muschel-input-label" for="muschelQuestionInput"
-          >Frage</label
-        >
-        <textarea
-          class="muschel-question-input"
-          id="muschelQuestionInput"
-          rows="3"
-          placeholder="Darf ich dieses Gear spielen?"
-        ></textarea>
-
-        <div class="muschel-actions">
-          <button class="muschel-ask-btn" id="muschelAskBtn" type="button">
-            Miesmuschel befragen
-          </button>
-          <button class="muschel-clear-btn" id="muschelClearBtn" type="button">
-            Verlauf loschen
-          </button>
-        </div>
-
-        <div class="muschel-result-card" id="muschelResultCard" hidden>
-          <p class="muschel-result-title" id="muschelResultTitle"></p>
-          <p class="muschel-result-line" id="muschelResultLine"></p>
-        </div>
-
-        <section class="muschel-history" aria-label="Verlauf">
-          <h2 class="muschel-history-title">Letzte Entscheidungen</h2>
-          <ul class="muschel-history-list" id="muschelHistoryList">
-            <li class="muschel-history-empty">Noch keine Entscheidung</li>
-          </ul>
-        </section>
-      </section>
-    </main>
-
-    <a
-      class="mode-link-btn"
-      href="./index.html"
-      title="Zur Landingpage wechseln"
-      aria-label="Zur Landingpage"
-      >Zur Landing</a
-    >
-    <a
-      class="mode-link-btn muschel-mode-link-secondary"
-      href="./randomizer.html"
-      title="Zum Randomizer wechseln"
-      aria-label="Zum Randomizer"
-      >Zum Randomizer</a
-    >
-
-    <section class="master-volume" aria-label="Globale Lautstarke">
-      <label class="master-volume-label" for="masterVolumeSlider"
-        >Lautstarke</label
-      >
-      <input
-        class="master-volume-slider"
-        id="muschel-masterVolumeSlider"
-        type="range"
-        min="0"
-        max="100"
-        value="60"
-      />
-      <span class="master-volume-value" id="muschel-masterVolumeValue"
-        >60%</span
-      >
-    </section>
-
-    <script type="module" src="./assets/js/muschel/app.js"></script>
+    <p>
+      Die Miesmuschel ist jetzt v2.
+      <a href="./v2/index.html#/muschel">Weiter zur Miesmuschel</a>
+    </p>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => regs.forEach((reg) => reg.unregister()))
+          .catch(() => {});
+      }
+      location.replace("./v2/index.html#/muschel");
+    </script>
   </body>
 </html>

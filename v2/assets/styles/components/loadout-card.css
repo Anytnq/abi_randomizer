@@ -1,0 +1,132 @@
+/* Component: LoadoutCard / WeaponCard (Randomizer Play View, Planungs.md 5.3) */
+
+.loadout-board {
+  display: grid;
+  gap: var(--space-3);
+  max-width: 880px;
+}
+
+.loadout-stage {
+  position: relative;
+  padding: var(--space-5);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: linear-gradient(160deg, var(--color-surface-2) 0%, var(--color-surface-1) 100%);
+}
+
+.loadout-stage-label {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.loadout-stage-value {
+  margin-top: var(--space-1);
+  font-family: var(--font-display);
+  font-size: var(--text-2xl);
+  text-transform: uppercase;
+}
+
+.loadout-stage-reroll {
+  position: absolute;
+  top: var(--space-4);
+  right: var(--space-4);
+}
+
+.loadout-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: var(--space-3);
+}
+
+.loadout-weapon-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+
+@media (max-width: 599px) {
+  .loadout-weapon-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.loadout-card {
+  position: relative;
+  display: grid;
+  gap: var(--space-1);
+  padding: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  transition: border-color var(--motion-fast) var(--motion-ease);
+}
+
+.loadout-card--weapon {
+  padding: var(--space-5);
+  border-color: var(--rarity-color, var(--color-border-strong));
+}
+
+.loadout-card--locked {
+  border-color: var(--route-accent, var(--color-randomizer));
+}
+
+.loadout-card-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.loadout-card-value {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  text-transform: uppercase;
+}
+
+.loadout-card--weapon .loadout-card-value {
+  font-size: var(--text-xl);
+  color: var(--rarity-color, var(--color-text));
+}
+
+.loadout-card-lock-btn {
+  color: var(--color-text-faint);
+}
+
+.loadout-card-lock-btn[aria-pressed="true"] {
+  color: var(--route-accent, var(--color-randomizer));
+}
+
+.loadout-actions {
+  display: flex;
+  justify-content: center;
+  padding-top: var(--space-2);
+}
+
+.loadout-board.is-rolling .loadout-card:not(.loadout-card--locked),
+.loadout-board.is-rolling .loadout-stage {
+  animation: loadoutRolling var(--motion-slow) var(--motion-ease) infinite alternate;
+}
+
+@keyframes loadoutRolling {
+  from {
+    opacity: 1;
+    transform: scale(1);
+  }
+
+  to {
+    opacity: 0.55;
+    transform: scale(0.98);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadout-board.is-rolling .loadout-card:not(.loadout-card--locked),
+  .loadout-board.is-rolling .loadout-stage {
+    animation: none;
+  }
+}

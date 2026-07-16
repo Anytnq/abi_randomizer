@@ -1,0 +1,32 @@
+/* View: Settings (Planungs.md 4) */
+
+.settings-content {
+  max-width: 480px;
+  display: grid;
+  gap: var(--space-4);
+}
+
+.settings-section {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.settings-volume-label {
+  display: block;
+}
+
+.settings-volume-label input[type="range"] {
+  width: 100%;
+  margin-top: var(--space-2);
+}
+
+.settings-volume-value {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.settings-streamer-row {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}

@@ -93,6 +93,7 @@ const state = {
   excludedHelmetTiers: [],
   excludedMaps: [],
   excludedWeapons: [],
+  weaponSearchQuery: "",
   activeMaps: [...maps],
   activeHelmets: [...helmets],
   activeArmors: [...armors],
@@ -307,6 +308,13 @@ async function initialize() {
   elements.survivedButton?.addEventListener("click", handleSurvivedReroll);
   elements.clearAllCategoriesButton?.addEventListener("click", () => {
     toggleAllCategoriesSelection();
+  });
+  elements.resetCategoriesButton?.addEventListener("click", () => {
+    setSelectedCategories([...defaultSelectedCategories]);
+  });
+  elements.weaponFilterSearchInput?.addEventListener("input", (event) => {
+    state.weaponSearchQuery = event.target.value;
+    renderFilters();
   });
   elements.reloadMapButton?.addEventListener("click", reloadMapOnly);
   window.addEventListener("resize", () => syncPaylinePosition());

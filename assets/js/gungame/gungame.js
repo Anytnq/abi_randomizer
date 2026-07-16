@@ -154,6 +154,13 @@ function moveToNextStage() {
 }
 
 function resetProgress() {
+  if (
+    state.currentIndex > 0 &&
+    !window.confirm("Fortschritt wirklich zurücksetzen?")
+  ) {
+    return;
+  }
+
   state.currentIndex = 0;
   state.lastRaidResult =
     "Progress zurueckgesetzt. Schließe einen Raid ab, um Upgrade-Chancen zu nutzen.";
@@ -257,10 +264,6 @@ function renderList() {
       item.classList.add("is-done");
     }
 
-    if (index === state.currentIndex) {
-      item.classList.add("is-current");
-    }
-
     const step = document.createElement("span");
     step.className = "gungame-step";
     step.textContent = String(entry.step);
@@ -278,6 +281,15 @@ function renderList() {
     value.textContent = `Wert ${entry.value}`;
 
     item.append(step, weapon, category, value);
+
+    if (index === state.currentIndex) {
+      item.classList.add("is-current");
+      const badge = document.createElement("span");
+      badge.className = "badge badge--success gungame-current-badge";
+      badge.textContent = "Aktuell";
+      item.appendChild(badge);
+    }
+
     elements.list.appendChild(item);
   });
 }

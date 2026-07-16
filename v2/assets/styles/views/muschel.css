@@ -1,0 +1,104 @@
+/* View: Miesmuschel (Planungs.md 5.8) - minimal, immersive single screen. */
+
+.muschel-wrap {
+  max-width: 560px;
+  margin-inline: auto;
+  display: grid;
+  gap: var(--space-5);
+  justify-items: center;
+  text-align: center;
+}
+
+.muschel-question-label {
+  width: 100%;
+  text-align: left;
+}
+
+.muschel-question-input {
+  width: 100%;
+  min-height: 90px;
+  padding: var(--space-3);
+  resize: vertical;
+}
+
+.muschel-shell-visual {
+  font-size: 96px;
+  line-height: 1;
+}
+
+.muschel-shell-visual.is-deciding {
+  animation: muschelPulse var(--motion-slow) var(--motion-ease);
+}
+
+@keyframes muschelPulse {
+  0% {
+    transform: scale(1) rotate(0deg);
+  }
+
+  50% {
+    transform: scale(1.15) rotate(-6deg);
+  }
+
+  100% {
+    transform: scale(1) rotate(0deg);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .muschel-shell-visual.is-deciding {
+    animation: none;
+  }
+}
+
+.muschel-result-card {
+  width: 100%;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  background: var(--color-surface-1);
+}
+
+.muschel-result-card.allow {
+  border-color: var(--color-success);
+}
+
+.muschel-result-card.deny {
+  border-color: var(--color-danger);
+}
+
+.muschel-result-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  text-transform: uppercase;
+}
+
+.muschel-result-line {
+  margin-top: var(--space-1);
+  color: var(--color-text-muted);
+}
+
+.muschel-actions-row {
+  gap: var(--space-2);
+}
+
+.muschel-history-list {
+  display: grid;
+  gap: var(--space-2);
+}
+
+.muschel-history-item {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-2);
+}
+
+.muschel-history-item.allow strong {
+  color: var(--color-success);
+}
+
+.muschel-history-item.deny strong {
+  color: var(--color-danger);
+}

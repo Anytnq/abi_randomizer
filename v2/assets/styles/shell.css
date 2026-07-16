@@ -1,0 +1,157 @@
+/* v2 App Shell (Planungs.md 5.1). Context sidebar column is deferred until
+   a view (Filter Studio, Squad) actually needs it - not built for this slice. */
+
+.app-shell {
+  display: grid;
+  grid-template-columns: 1fr;
+  grid-template-rows: var(--topbar-height) 1fr;
+  grid-template-areas:
+    "topbar"
+    "main";
+  min-height: 100vh;
+}
+
+.app-topbar {
+  grid-area: topbar;
+  position: sticky;
+  top: 0;
+  z-index: 50;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: 0 var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-raised);
+}
+
+.app-topbar-brand {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-2);
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  text-decoration: none;
+  color: var(--color-text);
+}
+
+.app-topbar-brand-accent {
+  color: var(--route-accent, var(--color-randomizer));
+}
+
+.app-main {
+  grid-area: main;
+  min-width: 0;
+  padding: var(--space-5) var(--space-4) calc(var(--bottom-nav-height) + var(--space-5));
+}
+
+.app-nav {
+  display: none;
+}
+
+.app-bottom-nav {
+  position: fixed;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 50;
+  display: flex;
+  height: var(--bottom-nav-height);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-raised);
+}
+
+.app-bottom-nav-link {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  min-height: var(--touch-target);
+  color: var(--color-text-muted);
+  font-size: var(--text-2xs);
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  text-decoration: none;
+}
+
+.app-bottom-nav-link[aria-current="page"] {
+  color: var(--route-accent, var(--color-randomizer));
+}
+
+.app-bottom-nav-link[aria-disabled="true"] {
+  color: var(--color-text-faint);
+  pointer-events: none;
+}
+
+.app-bottom-nav-icon {
+  font-size: var(--text-md);
+}
+
+@media (min-width: 900px) {
+  .app-shell {
+    grid-template-columns: var(--nav-width) 1fr;
+    grid-template-areas:
+      "nav topbar"
+      "nav main";
+  }
+
+  .app-nav {
+    grid-area: nav;
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-1);
+    padding: var(--space-4) var(--space-3);
+    border-right: 1px solid var(--color-border);
+    background: var(--color-bg-raised);
+  }
+
+  .app-nav-brand {
+    padding: 0 var(--space-2) var(--space-4);
+    font-family: var(--font-display);
+    font-size: var(--text-md);
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+
+  .app-nav-link {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: var(--touch-target);
+    padding: 0 var(--space-3);
+    border-radius: var(--radius-md);
+    color: var(--color-text-muted);
+    font-weight: 700;
+    text-decoration: none;
+    transition: background var(--motion-fast) var(--motion-ease),
+      color var(--motion-fast) var(--motion-ease);
+  }
+
+  .app-nav-link:hover {
+    background: var(--color-surface-1);
+    color: var(--color-text);
+  }
+
+  .app-nav-link[aria-current="page"] {
+    background: color-mix(in srgb, var(--route-accent, var(--color-randomizer)) 18%, transparent);
+    color: var(--color-text);
+  }
+
+  .app-nav-link[aria-disabled="true"] {
+    color: var(--color-text-faint);
+    pointer-events: none;
+  }
+
+  .app-main {
+    padding: var(--space-6) var(--space-7);
+  }
+
+  .app-bottom-nav {
+    display: none;
+  }
+}

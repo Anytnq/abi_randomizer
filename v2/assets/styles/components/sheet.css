@@ -1,0 +1,87 @@
+/* Component: Sheet / Drawer (Planungs.md 6, 5.4) - fullscreen on mobile,
+   right-docked panel on desktop. Shared by Filter Studio and later panels. */
+
+.sheet-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 300;
+  display: flex;
+  justify-content: flex-end;
+  background: #000000aa;
+}
+
+.sheet-panel {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  background: var(--color-bg-raised);
+  box-shadow: var(--shadow-overlay);
+  animation: sheetSlideIn var(--motion-medium) var(--motion-ease);
+}
+
+@keyframes sheetSlideIn {
+  from {
+    transform: translateX(100%);
+  }
+
+  to {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .sheet-panel {
+    animation: none;
+  }
+}
+
+.sheet-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.sheet-title {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  text-transform: uppercase;
+}
+
+.sheet-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--space-5);
+}
+
+.sheet-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--color-border);
+}
+
+.sheet-errors {
+  padding: var(--space-3) var(--space-4);
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-danger) 14%, transparent);
+  color: #ffd7dd;
+  font-size: var(--text-sm);
+}
+
+.sheet-errors ul {
+  padding-left: var(--space-4);
+  list-style: disc;
+}
+
+@media (min-width: 900px) {
+  .sheet-panel {
+    width: min(560px, 92vw);
+  }
+}

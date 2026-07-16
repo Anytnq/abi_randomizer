@@ -2,211 +2,38 @@
 <html lang="de">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="refresh" content="0; url=./v2/index.html#/gungame" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="GunGame Modus für den ABI Randomizer." />
-    <meta name="theme-color" content="#0d0d0d" />
-    <title>OPERATION: RNG | Gungame</title>
-    <link
-      href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@500;600;700&family=Teko:wght@500;600;700&display=swap"
-      rel="stylesheet"
-    />
-    <link rel="stylesheet" href="./assets/css/styles.css" />
+    <meta name="theme-color" content="#06080d" />
+    <title>OPERATION: RNG</title>
+    <style>
+      body {
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        margin: 0;
+        background: #06080d;
+        color: #f2f5f9;
+        font-family: system-ui, sans-serif;
+      }
+      a {
+        color: #33d6ff;
+      }
+    </style>
   </head>
   <body>
-    <main class="page-shell">
-      <header class="header-container">
-        <h1 id="mainTitle">OPERATION: RNG</h1>
-        <p class="subtitle">Gungame Modus</p>
-      </header>
-
-      <section class="gungame-shell" aria-label="Gungame Modus">
-        <div class="gungame-panel">
-          <div class="gungame-controls">
-            <label class="gungame-stage-field" for="gungameStageCount">
-              <span>Anzahl Waffenstufen</span>
-              <input
-                id="gungameStageCount"
-                type="number"
-                min="3"
-                max="30"
-                value="12"
-              />
-            </label>
-            <label class="gungame-stage-field" for="gungameUpgradeChance">
-              <span>Upgrade-Chance (%)</span>
-              <input
-                id="gungameUpgradeChance"
-                type="number"
-                min="0"
-                max="100"
-                value="25"
-              />
-            </label>
-            <div class="gungame-actions">
-              <button
-                class="gungame-generate-btn"
-                id="gungameGenerateBtn"
-                type="button"
-              >
-                Neue Route
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <div class="gungame-panel gungame-status">
-          <p class="gungame-status-text" id="gungameStatusText">
-            Aktuelle Stufe: <strong>1 / 12</strong>
-          </p>
-          <div class="gungame-status-actions">
-            <button
-              class="gungame-step-btn gungame-raid-btn"
-              id="gungameRaidDoneBtn"
-              type="button"
-            >
-              Raid abgeschlossen
-            </button>
-            <button class="gungame-step-btn" id="gungamePrevBtn" type="button">
-              Zurück
-            </button>
-            <button class="gungame-step-btn" id="gungameNextBtn" type="button">
-              Weiter
-            </button>
-            <button
-              class="gungame-reset-btn"
-              id="gungameResetBtn"
-              type="button"
-            >
-              Reset
-            </button>
-          </div>
-          <p class="gungame-raid-result" id="gungameRaidResult">
-            Schließe einen Raid ab, um auf der nächsten Stufe eine
-            Upgrade-Chance zu erhalten.
-          </p>
-        </div>
-
-        <div class="gungame-panel">
-          <ol class="gungame-list" id="gungameList"></ol>
-        </div>
-      </section>
-
-      <section
-        class="squad-panel"
-        aria-label="Squad Modus"
-        id="gungame-squadPanel"
-      >
-        <div class="squad-header">
-          <h2 class="squad-title">👥 Squad Modus</h2>
-          <button
-            class="squad-toggle-btn"
-            id="gungame-squadToggle"
-            type="button"
-            aria-expanded="false"
-          >
-            <span>Beitreten / Erstellen</span>
-            <span id="gungame-squadChevron" aria-hidden="true">▼</span>
-          </button>
-        </div>
-        <div class="squad-content" id="gungame-squadContent">
-          <div class="squad-setup" id="gungame-squadSetup">
-            <div class="squad-name-row">
-              <label class="squad-field-label" for="gungame-squadName"
-                >Dein Name</label
-              >
-              <input
-                class="squad-input"
-                type="text"
-                id="gungame-squadName"
-                maxlength="20"
-                placeholder="z.B. ILoveThatSkinBro69"
-              />
-            </div>
-            <div class="squad-actions">
-              <button
-                class="squad-btn squad-btn--create"
-                id="gungame-squadCreateBtn"
-                type="button"
-              >
-                Neue Session
-              </button>
-              <div class="squad-join-row">
-                <input
-                  class="squad-input squad-code-input"
-                  type="text"
-                  id="gungame-squadJoinCode"
-                  maxlength="2"
-                  placeholder="Code eingeben"
-                />
-                <button
-                  class="squad-btn squad-btn--join"
-                  id="gungame-squadJoinBtn"
-                  type="button"
-                >
-                  Beitreten
-                </button>
-              </div>
-            </div>
-            <p class="squad-error" id="gungame-squadError" hidden></p>
-          </div>
-
-          <div class="squad-session" id="gungame-squadSession" hidden>
-            <div class="squad-session-header">
-              <div class="squad-code-display">
-                <span class="squad-code-label">Session Code:</span>
-                <strong
-                  class="squad-code-value"
-                  id="gungame-squadCodeDisplay"
-                ></strong>
-                <button
-                  class="squad-copy-btn"
-                  id="gungame-squadCopyBtn"
-                  type="button"
-                  title="Code kopieren"
-                >
-                  📋
-                </button>
-              </div>
-              <button
-                class="squad-btn squad-btn--leave"
-                id="gungame-squadLeaveBtn"
-                type="button"
-              >
-                Verlassen
-              </button>
-            </div>
-            <p
-              class="squad-connection-banner"
-              id="gungame-squadConnectionBanner"
-              hidden
-            >
-              Verbindung wird wiederhergestellt...
-            </p>
-            <p class="squad-role-hint" id="gungame-squadRoleHint"></p>
-            <p
-              class="squad-connection-state offline"
-              id="gungame-squadConnectionState"
-            >
-              Nicht verbunden
-            </p>
-            <div class="squad-members" id="gungame-squadMembers"></div>
-            <div class="squad-feed">
-              <h3 class="squad-feed-title">Live Activity</h3>
-              <ul class="squad-feed-list" id="gungame-squadActivityFeed">
-                <li class="squad-feed-empty">Noch keine Aktivitat</li>
-              </ul>
-            </div>
-          </div>
-        </div>
-      </section>
-    </main>
-
-    <a
-      class="mode-link-btn"
-      href="./randomizer.html"
-      aria-label="Zurück zum Randomizer"
-      >Zum Randomizer</a
-    >
-    <script type="module" src="./assets/js/gungame/gungame.js"></script>
+    <p>
+      GunGame ist jetzt v2.
+      <a href="./v2/index.html#/gungame">Weiter zu GunGame</a>
+    </p>
+    <script>
+      if ("serviceWorker" in navigator) {
+        navigator.serviceWorker
+          .getRegistrations()
+          .then((regs) => regs.forEach((reg) => reg.unregister()))
+          .catch(() => {});
+      }
+      location.replace("./v2/index.html#/gungame");
+    </script>
   </body>
 </html>

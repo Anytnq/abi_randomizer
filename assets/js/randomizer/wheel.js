@@ -309,7 +309,7 @@ function getConfigSnapshot(state) {
   };
 }
 
-function buildSpinPayload(values) {
+export function buildSpinPayload(values) {
   const sanitizedValues = sanitizeSpinValues(values);
   if (sanitizedValues.length < 2) {
     return null;
@@ -322,7 +322,7 @@ function buildSpinPayload(values) {
   };
 }
 
-function parseManualValues(rawInput) {
+export function parseManualValues(rawInput) {
   const values = rawInput
     .split(/[,;\n\r]+/)
     .map((entry) => entry.trim())
@@ -331,7 +331,7 @@ function parseManualValues(rawInput) {
   return [...new Set(values)].slice(0, 32);
 }
 
-function sanitizeSpinValues(values) {
+export function sanitizeSpinValues(values) {
   return values
     .map((value) => String(value ?? "").trim())
     .filter((value) => value.length > 0)
@@ -389,7 +389,7 @@ function updateCountLabel(label, count) {
   label.textContent = `${count} Werte`;
 }
 
-function clampWinnerIndex(winnerIndex, length) {
+export function clampWinnerIndex(winnerIndex, length) {
   if (!Number.isInteger(winnerIndex) || length <= 0) {
     return 0;
   }
@@ -397,7 +397,7 @@ function clampWinnerIndex(winnerIndex, length) {
   return Math.min(length - 1, Math.max(0, winnerIndex));
 }
 
-function drawEmptyWheel(context, canvas, label) {
+export function drawEmptyWheel(context, canvas, label) {
   const size = canvas.width;
   const center = size / 2;
   const radius = center - 10;
@@ -418,7 +418,7 @@ function drawEmptyWheel(context, canvas, label) {
   context.fillText(label, center, center);
 }
 
-function drawWheel(context, canvas, values, winnerIndex) {
+export function drawWheel(context, canvas, values, winnerIndex) {
   const size = canvas.width;
   const center = size / 2;
   const radius = center - 10;
@@ -490,6 +490,6 @@ function pickColor(index, isWinner) {
   return SEGMENT_COLORS[index % SEGMENT_COLORS.length];
 }
 
-function normalizeDegrees(value) {
+export function normalizeDegrees(value) {
   return ((value % 360) + 360) % 360;
 }

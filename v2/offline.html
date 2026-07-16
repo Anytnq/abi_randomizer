@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="de">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Offline - OPERATION: RNG v2</title>
+    <meta name="theme-color" content="#06080d" />
+    <link rel="stylesheet" href="./assets/styles/tokens.css" />
+    <link rel="stylesheet" href="./assets/styles/reset.css" />
+    <link rel="stylesheet" href="./assets/styles/base.css" />
+    <link rel="stylesheet" href="./assets/styles/components/button.css" />
+    <link rel="stylesheet" href="./assets/styles/components/card.css" />
+    <style>
+      body {
+        background: var(--color-bg);
+        color: var(--color-text);
+        font-family: var(--font-ui);
+        display: grid;
+        place-items: center;
+        min-height: 100vh;
+        padding: var(--space-4);
+      }
+
+      .offline-card {
+        width: min(480px, 100%);
+        text-align: center;
+      }
+
+      .offline-title {
+        font-family: var(--font-display);
+        font-size: var(--text-2xl);
+        color: var(--color-randomizer);
+        text-transform: uppercase;
+      }
+
+      .offline-text {
+        margin-top: var(--space-2);
+        color: var(--color-text-muted);
+      }
+
+      .offline-hint {
+        margin-top: var(--space-4);
+        padding-top: var(--space-4);
+        border-top: 1px solid var(--color-border);
+        text-align: left;
+        color: var(--color-text-muted);
+        font-size: var(--text-sm);
+      }
+
+      .offline-hint ul {
+        margin-top: var(--space-2);
+        padding-left: var(--space-4);
+        list-style: disc;
+      }
+
+      .offline-actions {
+        margin-top: var(--space-5);
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: var(--space-3);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="card card-body offline-card">
+      <p class="offline-title">Offline</p>
+      <p class="offline-text">
+        Keine Verbindung zum Server. Diese Seite lädt vollständig ohne
+        externe Schriftarten, funktioniert also auch ohne Netzwerk.
+      </p>
+      <div class="offline-hint">
+        <p>Offline verfügbar, sobald einmal online besucht:</p>
+        <ul>
+          <li>Hub und Randomizer (Loadout würfeln, Filter)</li>
+          <li>Wheel mit eigenen Werten</li>
+        </ul>
+        <p style="margin-top: var(--space-2)">
+          Nicht offline verfügbar: Squad (benötigt Firebase-Verbindung).
+        </p>
+      </div>
+      <div class="offline-actions">
+        <button type="button" class="btn btn--primary" id="retryBtn">
+          Erneut versuchen
+        </button>
+        <a class="btn btn--secondary" href="./index.html#/hub">Zum Hub</a>
+      </div>
+    </div>
+    <script>
+      document
+        .getElementById("retryBtn")
+        .addEventListener("click", () => location.reload());
+    </script>
+  </body>
+</html>
