@@ -15,7 +15,7 @@ import {
 } from "./squad-utils.js?v=20260708-1";
 import { categoryOptions } from "./data.js";
 
-const SQUAD_CODE_LENGTH = 4;
+const SQUAD_CODE_LENGTH = 2;
 
 export function createSquadUI({
   storageKey,

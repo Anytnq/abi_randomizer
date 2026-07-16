@@ -167,10 +167,30 @@ export function createSquadService() {
     code = nextCode;
     playerId = nextPlayerId;
     playerName = nextPlayerName;
+    // Firebase delivers the full session asynchronously. Keep the locally known
+    // connection data available immediately so the UI can show/copy the code.
+    lastSnapshot = {
+      code,
+      playerId,
+      playerName,
+      isLeader: false,
+      leaderId: null,
+      players: {},
+      events: [],
+    };
+    setStoreSquad({
+      active: true,
+      isLeader: false,
+      code,
+      playerId,
+      playerName,
+      mapValues: [],
+    });
     saveSession(code, playerId, playerName);
     unsubscribeSession = subscribeToSession(code, onSessionUpdate);
     startHeartbeat();
     startCleanupLoop();
+    notify();
   }
 
   return {
@@ -183,10 +203,8 @@ export function createSquadService() {
       return lastSnapshot;
     },
 
-    create(name, selectedCategories) {
-      const session = createSession(name, selectedCategories, () => {
-        setStoreSquad({ active: false });
-      });
+    async create(name, selectedCategories) {
+      const session = await createSession(name, selectedCategories);
       connect(session.code, session.playerId, name);
       return session.code;
     },

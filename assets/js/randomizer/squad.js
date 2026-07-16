@@ -14,7 +14,7 @@ const MEMBER_KICK_TTL_MS = 6 * 60 * 60 * 1000;
 const SESSION_DELETE_TTL_MS = 8 * 60 * 60 * 1000;
 const MAX_EVENTS = 80;
 const EVENT_TRIM_INTERVAL_MS = 60_000;
-const SESSION_CODE_LENGTH = 4;
+const SESSION_CODE_LENGTH = 2;
 const SESSION_CREATE_ATTEMPTS = 12;
 const lastTrimByCode = new Map();
 
