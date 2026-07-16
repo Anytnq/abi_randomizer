@@ -74,6 +74,10 @@ export function getWeightedRandom(items) {
 }
 
 export function pickMapWinner(maps, lastMap) {
+  if (!Array.isArray(maps) || maps.length === 0) {
+    return null;
+  }
+
   let winner = getWeightedRandom(maps);
   let attempts = 0;
 
@@ -86,6 +90,10 @@ export function pickMapWinner(maps, lastMap) {
 }
 
 export function pickWeaponWinner(weapons, weaponHistory) {
+  if (!Array.isArray(weapons) || weapons.length === 0) {
+    return null;
+  }
+
   let winner;
   let attempts = 0;
 

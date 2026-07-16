@@ -188,7 +188,9 @@ function renderTierButtons(container, excludedTiers, onToggle) {
     button.className = "filter-tier-btn";
     button.dataset.tier = String(tier);
     button.textContent = `Tier ${tier}`;
-    button.classList.toggle("excluded", excludedTiers.includes(tier));
+    const isExcluded = excludedTiers.includes(tier);
+    button.classList.toggle("excluded", isExcluded);
+    button.setAttribute("aria-pressed", String(isExcluded));
     button.addEventListener("click", () => onToggle(tier));
     container.appendChild(button);
   }
@@ -204,7 +206,9 @@ function renderMapButtons(container, excludedMaps, onToggle) {
     button.className = "filter-item";
     button.dataset.map = mapName;
     button.textContent = mapName;
-    button.classList.toggle("excluded", excludedMapSet.has(mapName));
+    const isExcluded = excludedMapSet.has(mapName);
+    button.classList.toggle("excluded", isExcluded);
+    button.setAttribute("aria-pressed", String(isExcluded));
     button.addEventListener("click", () => onToggle(mapName));
     container.appendChild(button);
   });
@@ -239,10 +243,9 @@ function renderWeaponCategoryButtons(
     groupToggleButton.type = "button";
     groupToggleButton.className = "weapon-filter-all";
     groupToggleButton.textContent = "ALL";
-    groupToggleButton.classList.toggle(
-      "active",
-      includedWeapons.length === groupWeapons.length,
-    );
+    const isGroupFullyIncluded = includedWeapons.length === groupWeapons.length;
+    groupToggleButton.classList.toggle("active", isGroupFullyIncluded);
+    groupToggleButton.setAttribute("aria-pressed", String(isGroupFullyIncluded));
     groupToggleButton.addEventListener("click", () =>
       onGroupToggle(weaponCategory.key),
     );
@@ -258,7 +261,9 @@ function renderWeaponCategoryButtons(
       button.className = "weapon-filter-item";
       button.dataset.weapon = weapon.name;
       button.dataset.tier = String(weapon.value ?? 3);
-      button.classList.toggle("excluded", excludedWeaponSet.has(weapon.name));
+      const isExcluded = excludedWeaponSet.has(weapon.name);
+      button.classList.toggle("excluded", isExcluded);
+      button.setAttribute("aria-pressed", String(isExcluded));
       button.innerHTML = `<span class="weapon-filter-dot" aria-hidden="true"></span><span class="weapon-filter-text">${weapon.name}</span>`;
       button.addEventListener("click", () => onToggle(weapon.name));
       groupGrid.appendChild(button);
