@@ -71,11 +71,24 @@ export function render(outlet, options = {}) {
       return name;
     }
 
-    createBtn.addEventListener("click", () => {
+    createBtn.addEventListener("click", async () => {
       const name = requireName();
       if (!name) return;
-      service.create(name, ["map", "primaryWeapon", "secondaryWeapon"]);
-      renderSession();
+      createBtn.disabled = true;
+      createBtn.textContent = "Wird erstellt...";
+      try {
+        await service.create(name, [
+          "map",
+          "primaryWeapon",
+          "secondaryWeapon",
+        ]);
+        renderSession();
+      } catch {
+        errorText.textContent = "Squad konnte nicht erstellt werden.";
+        errorText.hidden = false;
+        createBtn.disabled = false;
+        createBtn.textContent = "Squad erstellen";
+      }
     });
 
     joinBtn.addEventListener("click", () => {
@@ -107,13 +120,20 @@ export function render(outlet, options = {}) {
 
     const codeCard = document.createElement("div");
     codeCard.className = "card card-body squad-code-card";
-    codeCard.innerHTML = `<p class="squad-field-label">Session Code</p><p class="squad-code-value">${snapshot?.code ?? "-"}</p>`;
+    const codeLabel = document.createElement("p");
+    codeLabel.className = "squad-field-label";
+    codeLabel.textContent = "Session Code";
+    const codeValue = document.createElement("p");
+    codeValue.className = "squad-code-value";
+    codeValue.textContent = snapshot?.code ?? "-";
+    codeCard.append(codeLabel, codeValue);
     const copyBtn = document.createElement("button");
     copyBtn.type = "button";
     copyBtn.className = "btn btn--secondary";
     copyBtn.textContent = "Kopieren";
     copyBtn.addEventListener("click", () => {
-      navigator.clipboard?.writeText(snapshot?.code ?? "").then(() => {
+      const currentCode = service.getSnapshot()?.code ?? "";
+      navigator.clipboard?.writeText(currentCode).then(() => {
         copyBtn.textContent = "Kopiert";
         setTimeout(() => (copyBtn.textContent = "Kopieren"), 1500);
       });
@@ -299,6 +319,7 @@ export function render(outlet, options = {}) {
         renderStartScreen();
         return;
       }
+      codeValue.textContent = data.code ?? "-";
       renderMembers(data);
       renderFeed(data);
     });
