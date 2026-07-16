@@ -129,7 +129,7 @@ export async function createSession(playerName, selectedCategories) {
   return { code, playerId };
 }
 
-export function joinSession(code, playerName, onNotFound) {
+export function joinSession(code, playerName, onNotFound, onError) {
   const sessionRef = ref(db, `sessions/${code}`);
   const playerId = crypto.randomUUID();
 
@@ -150,48 +150,53 @@ export function joinSession(code, playerName, onNotFound) {
       set(
         ref(db, `sessions/${code}/players/${playerId}`),
         createPlayerRecord(playerName, "member"),
-      ).then(() => {
-        publishSquadEvent(code, "member-joined", {
-          playerId,
-          by: playerName,
-        });
-      });
+      )
+        .then(() => {
+          publishSquadEvent(code, "member-joined", {
+            playerId,
+            by: playerName,
+          });
+        })
+        .catch(() => onError?.());
     },
+    () => onError?.(),
     { onlyOnce: true },
   );
 
   return { playerId };
 }
 
-export function rejoinSession(code, playerId, playerName, onNotFound) {
+export function rejoinSession(code, playerId, playerName, onNotFound, onError) {
   const sessionRef = ref(db, `sessions/${code}`);
 
-  get(sessionRef).then((snapshot) => {
-    if (!snapshot.exists()) {
-      onNotFound();
-      return;
-    }
+  get(sessionRef)
+    .then((snapshot) => {
+      if (!snapshot.exists()) {
+        onNotFound();
+        return;
+      }
 
-    const data = snapshot.val();
-    if (isSessionExpired(data)) {
-      onNotFound();
-      return;
-    }
+      const data = snapshot.val();
+      if (isSessionExpired(data)) {
+        onNotFound();
+        return;
+      }
 
-    const players = data.players ?? {};
-    const currentRole = players[playerId]?.role ?? "member";
+      const players = data.players ?? {};
+      const currentRole = players[playerId]?.role ?? "member";
 
-    update(ref(db, `sessions/${code}/players/${playerId}`), {
-      name: playerName,
-      role: currentRole,
-      lastSeenAt: Date.now(),
-    }).then(() => {
-      publishSquadEvent(code, "member-rejoined", {
-        playerId,
-        by: playerName,
+      return update(ref(db, `sessions/${code}/players/${playerId}`), {
+        name: playerName,
+        role: currentRole,
+        lastSeenAt: Date.now(),
+      }).then(() => {
+        publishSquadEvent(code, "member-rejoined", {
+          playerId,
+          by: playerName,
+        });
       });
-    });
-  });
+    })
+    .catch(() => onError?.());
 
   return { playerId };
 }

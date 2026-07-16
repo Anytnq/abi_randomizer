@@ -1158,6 +1158,8 @@ function showEliteCrateReveal(reward) {
       existing.remove();
     }
 
+    playCrateRevealSound();
+
     const overlay = document.createElement("div");
     overlay.id = "eventOverlay";
     overlay.className = "event-overlay";

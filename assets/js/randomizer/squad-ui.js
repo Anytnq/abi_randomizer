@@ -578,6 +578,10 @@ export function createSquadUI({
         squadState.playerId,
         squadState.playerName,
         () => resetSquadUI(true),
+        () => {
+          squadState.rejoinPending = false;
+          showReconnectBanner(true, "Offline: verbinde neu...");
+        },
       );
       return;
     }
@@ -641,9 +645,13 @@ export function createSquadUI({
       return;
     }
 
-    rejoinSession(saved.code, saved.playerId, saved.playerName, () => {
-      clearSquadFromStorage();
-    });
+    rejoinSession(
+      saved.code,
+      saved.playerId,
+      saved.playerName,
+      () => clearSquadFromStorage(),
+      () => showReconnectBanner(true, "Offline: verbinde neu..."),
+    );
 
     squadState.code = saved.code;
     squadState.playerId = saved.playerId;
@@ -746,9 +754,15 @@ export function createSquadUI({
         return;
       }
 
-      const { playerId } = joinSession(code, name, () => {
-        showSquadError("Session nicht gefunden oder abgelaufen.");
-      });
+      const { playerId } = joinSession(
+        code,
+        name,
+        () => showSquadError("Session nicht gefunden oder abgelaufen."),
+        () =>
+          showSquadError(
+            "Beitritt fehlgeschlagen. Prüfe deine Internetverbindung.",
+          ),
+      );
 
       squadState.code = code;
       squadState.playerId = playerId;

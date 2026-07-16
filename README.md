@@ -25,6 +25,7 @@ Static browser randomizer for GitHub Pages with squad sync, wheel spin, advanced
 - PWA behavior:
 	- Service Worker with offline fallback page.
 	- Network-first strategy for static assets to reduce stale-cache issues after deployments.
+- "Magische Miesmuschel" (`muschel.html`): standalone yes/no decision tool with sound feedback and local history.
 
 ## Project Structure
 
@@ -33,6 +34,7 @@ Static browser randomizer for GitHub Pages with squad sync, wheel spin, advanced
 ├── index.html
 ├── randomizer.html
 ├── gungame.html
+├── muschel.html
 ├── offline.html
 ├── sw.js
 ├── assets
@@ -43,6 +45,8 @@ Static browser randomizer for GitHub Pages with squad sync, wheel spin, advanced
 │       ├── gungame/
 │       │   ├── data.js
 │       │   └── gungame.js
+│       ├── muschel/
+│       │   └── app.js
 │       └── randomizer/
 │           ├── app.js
 │           ├── data.js
@@ -82,3 +86,4 @@ Static browser randomizer for GitHub Pages with squad sync, wheel spin, advanced
 - The app is fully static (HTML/CSS/JavaScript modules).
 - Cache updates are handled automatically; manual cache clearing should rarely be needed.
 - Optional Hero song for 0-to-Hero mode: place your licensed track at `assets/audio/i-need-a-hero.mp3`.
+- `graphify-out/` holds a generated architecture graph (`graph.html`, `GRAPH_REPORT.md`) of this codebase for review — regenerate with `/graphify` after larger structural changes. Not required to run the app.
