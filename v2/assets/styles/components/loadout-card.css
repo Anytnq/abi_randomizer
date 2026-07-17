@@ -1,9 +1,84 @@
 /* Component: LoadoutCard / WeaponCard (Randomizer Play View, Planungs.md 5.3) */
 
+.loadout-board-wrap {
+  display: grid;
+  justify-items: center;
+  gap: var(--space-6);
+  padding: var(--space-5);
+  border-radius: var(--radius-lg);
+  background: radial-gradient(ellipse at 50% 0%, color-mix(in srgb, var(--route-accent, var(--color-randomizer)) 8%, transparent) 0%, transparent 70%);
+}
+
 .loadout-board {
+  position: relative;
   display: grid;
   gap: var(--space-3);
   max-width: 880px;
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  background: var(--color-bg-raised);
+  box-shadow: inset 0 0 0 1px var(--color-border), var(--shadow-md);
+  transition: filter var(--motion-medium) var(--motion-ease);
+}
+
+/* Marquee chase-light border, classic cabinet trim. */
+.loadout-board::before {
+  content: "";
+  position: absolute;
+  inset: -6px;
+  z-index: -1;
+  border-radius: calc(var(--radius-lg) + 6px);
+  border: 2px dashed color-mix(in srgb, var(--route-accent, var(--color-randomizer)) 65%, transparent);
+  animation: marqueeChase 14s linear infinite;
+}
+
+@keyframes marqueeChase {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+.loadout-board.is-rolling {
+  filter: drop-shadow(0 0 18px color-mix(in srgb, var(--route-accent, var(--color-randomizer)) 35%, transparent));
+}
+
+.loadout-board.is-rolling::before {
+  animation-duration: 3s;
+}
+
+.slot-spin-btn {
+  min-width: 220px;
+  padding: var(--space-4) var(--space-7);
+  border: 3px solid #241a06;
+  border-radius: var(--radius-pill);
+  background: linear-gradient(180deg, var(--color-randomizer-strong) 0%, var(--route-accent, var(--color-randomizer)) 60%, #7a4f00 100%);
+  box-shadow: 0 8px 0 #5c3c00, 0 16px 26px #000000a0;
+  color: #1a1106;
+  font-size: var(--text-lg);
+  letter-spacing: 0.1em;
+  text-shadow: 0 1px 1px #ffffff40;
+  transition: transform 120ms ease, box-shadow 120ms ease, filter 120ms ease;
+}
+
+.slot-spin-btn:hover:not(:disabled) {
+  filter: brightness(1.08);
+}
+
+.slot-spin-btn:active:not(:disabled) {
+  transform: translateY(6px);
+  box-shadow: 0 2px 0 #5c3c00, 0 6px 14px #000000a0;
+}
+
+.slot-spin-btn:disabled {
+  cursor: not-allowed;
+  filter: grayscale(0.4) brightness(0.8);
+  box-shadow: 0 8px 0 #3a3a3a, 0 16px 26px #000000a0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .loadout-board::before {
+    animation: none;
+  }
 }
 
 .loadout-stage {
@@ -109,10 +184,12 @@
 
 .slot-reel {
   display: block;
+  position: relative;
   height: 1.25em;
   overflow: hidden;
-  border-block: 1px solid color-mix(in srgb, var(--route-accent, var(--color-randomizer)) 55%, transparent);
-  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 5%), transparent);
+  border-radius: var(--radius-sm);
+  background: linear-gradient(180deg, var(--color-surface-2) 0%, var(--color-surface-1) 100%);
+  box-shadow: inset 0 0 14px #00000073;
 }
 
 .slot-reel-strip {
@@ -122,9 +199,17 @@
 }
 
 .slot-reel-stop {
+  display: flex;
+  align-items: center;
+  justify-content: center;
   flex: 0 0 1.25em;
   min-width: 0;
+  padding: 0 var(--space-1);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
+}
+
+.slot-reel-stop:nth-child(odd) {
+  background: #ffffff06;
 }

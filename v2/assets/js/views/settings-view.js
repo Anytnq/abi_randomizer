@@ -4,7 +4,10 @@
    data-attributes on <html> (see base.css), same mechanism bootstrap.js
    uses to restore them on load. */
 
-import { setMasterVolume } from "../../../../assets/js/randomizer/sound.js";
+import {
+  setHeroVolume,
+  setMasterVolume,
+} from "../../../../assets/js/randomizer/sound.js";
 import { loadV2State, saveV2State, resetV2Data } from "../core/storage.js";
 import { showConfirmDialog } from "../components/event-overlay.js";
 
@@ -64,6 +67,30 @@ export function render(outlet) {
     volumeValue.textContent = `${Math.round(volume * 100)}%`;
   });
   soundSection.append(soundHeading, volumeLabel, volumeValue);
+
+  const heroVolumeLabel = document.createElement("label");
+  heroVolumeLabel.className = "squad-field-label settings-volume-label";
+  heroVolumeLabel.textContent = "I Need a Hero";
+  const heroVolumeSlider = document.createElement("input");
+  heroVolumeSlider.type = "range";
+  heroVolumeSlider.min = "0";
+  heroVolumeSlider.max = "100";
+  heroVolumeSlider.step = "1";
+  heroVolumeSlider.value = String(Math.round(settings.heroVolume * 100));
+  const heroVolumeValue = document.createElement("span");
+  heroVolumeValue.className = "settings-volume-value";
+  heroVolumeValue.textContent = `${Math.round(settings.heroVolume * 100)}%`;
+  heroVolumeLabel.append(heroVolumeSlider);
+  heroVolumeSlider.addEventListener("input", () => {
+    const volume = Math.min(
+      1,
+      Math.max(0, Number(heroVolumeSlider.value) / 100),
+    );
+    setHeroVolume(volume);
+    saveSettings({ heroVolume: volume });
+    heroVolumeValue.textContent = `${Math.round(volume * 100)}%`;
+  });
+  soundSection.append(heroVolumeLabel, heroVolumeValue);
 
   // --- Animationen ---
   const motionSection = document.createElement("section");
@@ -142,6 +169,9 @@ export function render(outlet) {
     volumeSlider.value = String(Math.round(settings.masterVolume * 100));
     volumeValue.textContent = `${Math.round(settings.masterVolume * 100)}%`;
     setMasterVolume(settings.masterVolume);
+    heroVolumeSlider.value = String(Math.round(settings.heroVolume * 100));
+    heroVolumeValue.textContent = `${Math.round(settings.heroVolume * 100)}%`;
+    setHeroVolume(settings.heroVolume);
     renderMotionBtn();
     renderStreamerButtons();
   });

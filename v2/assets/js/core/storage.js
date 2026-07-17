@@ -17,6 +17,7 @@ function defaultState() {
     muschelHistory: [],
     settings: {
       masterVolume: 0.6,
+      heroVolume: 0.02,
       reducedMotion: false,
       streamerMode: "off",
     },
@@ -35,7 +36,12 @@ export function loadV2State() {
       return defaultState();
     }
 
-    return { ...defaultState(), ...parsed };
+    const defaults = defaultState();
+    return {
+      ...defaults,
+      ...parsed,
+      settings: { ...defaults.settings, ...(parsed.settings ?? {}) },
+    };
   } catch {
     return defaultState();
   }

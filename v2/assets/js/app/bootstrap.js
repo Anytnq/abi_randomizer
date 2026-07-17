@@ -1,6 +1,10 @@
 import { createRouter } from "./router.js";
 import { appStore } from "./app-store.js";
 import { loadV2State } from "../core/storage.js";
+import {
+  setHeroVolume,
+  setMasterVolume,
+} from "../../../../assets/js/randomizer/sound.js";
 
 const NAV_ITEMS = [
   { route: "hub", label: "Hub", available: true },
@@ -22,6 +26,8 @@ const ROUTE_ACCENT_VAR = {
 
 function applyPersistedSettings() {
   const { settings } = loadV2State();
+  setMasterVolume(settings.masterVolume);
+  setHeroVolume(settings.heroVolume);
   document.documentElement.dataset.reducedMotion = String(
     settings.reducedMotion === true,
   );

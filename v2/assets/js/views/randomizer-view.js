@@ -17,6 +17,13 @@ import { loadV2State, saveV2State } from "../core/storage.js";
 import { showEventOverlay } from "../components/event-overlay.js";
 import { getDefaultFilters, ALL_CATEGORY_KEYS } from "../core/filters.js";
 import { appStore } from "../app/app-store.js";
+import {
+  playSpinSound,
+  stopSpinSound,
+  playCrateRevealSound,
+  playHeroSong,
+  stopHeroSong,
+} from "../../../../assets/js/randomizer/sound.js";
 
 const CARD_LABELS = {
   helmet: "Helmet",
@@ -89,6 +96,16 @@ export function render(outlet) {
   const board = document.createElement("div");
   board.className = "loadout-board";
 
+  const spinBtn = document.createElement("button");
+  spinBtn.type = "button";
+  spinBtn.className = "btn btn--primary btn--lg slot-spin-btn";
+  spinBtn.textContent = "SPIN";
+  spinBtn.addEventListener("click", rerollAll);
+
+  const boardWrap = document.createElement("div");
+  boardWrap.className = "loadout-board-wrap";
+  boardWrap.append(board, spinBtn);
+
   const wheelSection = document.createElement("section");
   wheelSection.className = "randomizer-inline-section";
   wheelSection.hidden = true;
@@ -99,7 +116,7 @@ export function render(outlet) {
   squadSection.hidden = true;
   squadSection.setAttribute("aria-label", "Squad");
 
-  outlet.append(header, board, wheelSection, squadSection);
+  outlet.append(header, boardWrap, wheelSection, squadSection);
 
   function makeInlineToggle(toggleBtn, section, mountKey) {
     const state = { mounted: false, cleanup: null };
@@ -164,6 +181,7 @@ export function render(outlet) {
     board
       .querySelectorAll("button")
       .forEach((btn) => (btn.disabled = disabled));
+    spinBtn.disabled = disabled;
   }
 
   async function runRoll(lockSetForThisRoll) {
@@ -182,6 +200,13 @@ export function render(outlet) {
     board.classList.add("is-rolling");
     setButtonsDisabled(true);
 
+    if (result.isZeroToHero) {
+      playHeroSong();
+    } else {
+      stopHeroSong();
+      playSpinSound(SPIN_DURATION_MS);
+    }
+
     await new Promise((resolve) => setTimeout(resolve, SPIN_DURATION_MS));
 
     persist();
@@ -193,6 +218,8 @@ export function render(outlet) {
     renderBoard();
 
     if (result.isZeroToHero) {
+      stopSpinSound();
+      playCrateRevealSound();
       await showEventOverlay({
         title: "0 to Hero",
         text: "Volle Wert-Ausrüstung ausgelost - alles auf eine Karte.",
@@ -201,6 +228,7 @@ export function render(outlet) {
     }
 
     phase = "idle";
+    setButtonsDisabled(false);
   }
 
   function toggleLock(key) {
@@ -289,19 +317,20 @@ export function render(outlet) {
 
   function setSlotValue(element, key, previousItem, nextItem, shouldSpin) {
     const nextName = nextItem?.name ?? "-";
-    if (!shouldSpin) {
-      element.textContent = nextName;
-      return;
-    }
-
     element.classList.add("slot-reel");
+    element.replaceChildren();
+
     const strip = document.createElement("span");
     strip.className = "slot-reel-strip";
-    const names = [
-      previousItem?.name ?? "-",
-      ...shuffledNames(getRandomizerCandidates(key, filters)),
-      nextName,
-    ];
+
+    const names = shouldSpin
+      ? [
+          previousItem?.name ?? "-",
+          ...shuffledNames(getRandomizerCandidates(key, filters)),
+          nextName,
+        ]
+      : [nextName];
+
     names.forEach((name) => {
       const stop = document.createElement("span");
       stop.className = "slot-reel-stop";
@@ -309,7 +338,10 @@ export function render(outlet) {
       strip.appendChild(stop);
     });
     element.appendChild(strip);
-    animateSlotStrip(element, strip);
+
+    if (shouldSpin) {
+      animateSlotStrip(element, strip);
+    }
   }
 
   function renderBoard(previousLoadout = null) {
@@ -432,16 +464,6 @@ export function render(outlet) {
       });
       board.appendChild(weaponGrid);
     }
-
-    const actionsRow = document.createElement("div");
-    actionsRow.className = "loadout-actions";
-    const rollBtn = document.createElement("button");
-    rollBtn.type = "button";
-    rollBtn.className = "btn btn--primary btn--lg";
-    rollBtn.textContent = "Loadout würfeln";
-    rollBtn.addEventListener("click", rerollAll);
-    actionsRow.appendChild(rollBtn);
-    board.appendChild(actionsRow);
   }
 
   persist();

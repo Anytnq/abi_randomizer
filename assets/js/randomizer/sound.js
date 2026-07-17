@@ -5,10 +5,13 @@ let heroAudio = null;
 let heroFadeIntervalId = null;
 let masterGainNode = null;
 let masterVolume = 0.6;
+let heroVolume = 0.02;
 
-const HERO_TRACK_PATH = "./assets/audio/i-need-a-hero.mp3";
+const HERO_TRACK_PATH = new URL(
+  "../../audio/i-need-a-hero.mp3",
+  import.meta.url,
+).href;
 const HERO_FADE_IN_MS = 800;
-const HERO_TARGET_MULTIPLIER = 0.9;
 
 function clampVolume(value) {
   const parsed = Number(value);
@@ -34,7 +37,7 @@ function connectGainToOutput(ctx, gainNode) {
 }
 
 function getHeroTrackTargetVolume() {
-  return Math.min(1, masterVolume * HERO_TARGET_MULTIPLIER);
+  return Math.min(1, masterVolume * heroVolume);
 }
 
 function applyHeroAudioVolume() {
@@ -297,9 +300,8 @@ export function playHeroSong() {
 export function setMasterVolume(volume) {
   masterVolume = clampVolume(volume);
 
-  const ctx = ensureAudioContext();
-  if (ctx && masterGainNode) {
-    masterGainNode.gain.setValueAtTime(masterVolume, ctx.currentTime);
+  if (audioContext && masterGainNode) {
+    masterGainNode.gain.setValueAtTime(masterVolume, audioContext.currentTime);
   }
 
   applyHeroAudioVolume();
@@ -307,4 +309,13 @@ export function setMasterVolume(volume) {
 
 export function getMasterVolume() {
   return masterVolume;
+}
+
+export function setHeroVolume(volume) {
+  heroVolume = clampVolume(volume);
+  applyHeroAudioVolume();
+}
+
+export function getHeroVolume() {
+  return heroVolume;
 }
