@@ -24,11 +24,32 @@
   gap: var(--space-4);
 }
 
-.wheel-canvas {
+.wheel-frame {
+  position: relative;
   width: min(480px, 100%);
+  filter: drop-shadow(0 16px 30px rgb(0 0 0 / 35%));
+}
+
+.wheel-canvas {
+  display: block;
+  width: 100%;
   height: auto;
   aspect-ratio: 1;
   border-radius: 50%;
+}
+
+.wheel-pointer {
+  position: absolute;
+  z-index: 2;
+  top: -3px;
+  left: 50%;
+  width: clamp(20px, 6%, 30px);
+  aspect-ratio: 1 / 1.15;
+  pointer-events: none;
+  transform: translateX(-50%);
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
+  background: linear-gradient(135deg, #fff 0 18%, var(--color-randomizer) 20% 100%);
+  filter: drop-shadow(0 3px 2px rgb(0 0 0 / 60%));
 }
 
 .wheel-result-text {

@@ -42,6 +42,21 @@ const UNFILTERED_POOLS = {
   secondaryWeapon: secondaries,
 };
 
+export function getRandomizerCandidates(key, filters = getDefaultFilters()) {
+  switch (key) {
+    case "map":
+      return getAvailableMaps(filters);
+    case "helmet":
+      return getAvailableHelmets(filters);
+    case "armor":
+      return getAvailableArmors(filters);
+    case "primaryWeapon":
+      return getAvailableWeapons(filters);
+    default:
+      return UNFILTERED_POOLS[key] ?? [];
+  }
+}
+
 export function getItemTier(item) {
   if (!item) return 1;
   if (typeof item.value === "number") return item.value;

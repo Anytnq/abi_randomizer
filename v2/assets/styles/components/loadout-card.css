@@ -107,26 +107,24 @@
   padding-top: var(--space-2);
 }
 
-.loadout-board.is-rolling .loadout-card:not(.loadout-card--locked),
-.loadout-board.is-rolling .loadout-stage {
-  animation: loadoutRolling var(--motion-slow) var(--motion-ease) infinite alternate;
+.slot-reel {
+  display: block;
+  height: 1.25em;
+  overflow: hidden;
+  border-block: 1px solid color-mix(in srgb, var(--route-accent, var(--color-randomizer)) 55%, transparent);
+  background: linear-gradient(90deg, transparent, rgb(255 255 255 / 5%), transparent);
 }
 
-@keyframes loadoutRolling {
-  from {
-    opacity: 1;
-    transform: scale(1);
-  }
-
-  to {
-    opacity: 0.55;
-    transform: scale(0.98);
-  }
+.slot-reel-strip {
+  display: flex;
+  flex-direction: column;
+  will-change: transform, filter;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .loadout-board.is-rolling .loadout-card:not(.loadout-card--locked),
-  .loadout-board.is-rolling .loadout-stage {
-    animation: none;
-  }
+.slot-reel-stop {
+  flex: 0 0 1.25em;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }

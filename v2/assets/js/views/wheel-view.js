@@ -58,7 +58,13 @@ export function render(outlet, options = {}) {
   canvas.height = 480;
   canvas.className = "wheel-canvas";
   canvas.setAttribute("aria-label", "Wheel Spin Auswahl");
-  board.appendChild(canvas);
+  const wheelFrame = document.createElement("div");
+  wheelFrame.className = "wheel-frame";
+  const pointer = document.createElement("span");
+  pointer.className = "wheel-pointer";
+  pointer.setAttribute("aria-hidden", "true");
+  wheelFrame.append(canvas, pointer);
+  board.appendChild(wheelFrame);
 
   const spinBtn = document.createElement("button");
   spinBtn.type = "button";

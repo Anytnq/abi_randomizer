@@ -9,6 +9,7 @@
 import {
   TIER_COLOR,
   createRandomizerEngine,
+  getRandomizerCandidates,
   getItemRarityLabel,
   getItemTier,
 } from "../core/randomizer-engine.js";
@@ -31,7 +32,8 @@ const WEAPON_LABELS = {
 };
 const WEAPON_KEYS = ["primaryWeapon", "secondaryWeapon"];
 
-const SPIN_DURATION_MS = 500;
+const SPIN_DURATION_MS = 2800;
+const REEL_DURATION_MS = 2500;
 
 function reloadIcon() {
   return `<svg viewBox="0 0 24 24" width="16" height="16" aria-hidden="true" focusable="false">
@@ -49,6 +51,7 @@ export function render(outlet) {
   const lockedKeys = new Set();
   let loadout = persisted.lastLoadout ?? {};
   let phase = "idle";
+  let spinningKeys = new Set();
 
   if (!persisted.lastLoadout) {
     ({ loadout } = engine.rollLoadout({}, new Set(), { filters }));
@@ -166,20 +169,26 @@ export function render(outlet) {
   async function runRoll(lockSetForThisRoll) {
     if (phase === "spinning") return;
     phase = "spinning";
-    board.classList.add("is-rolling");
-    setButtonsDisabled(true);
-
-    await new Promise((resolve) => setTimeout(resolve, SPIN_DURATION_MS));
-
+    spinningKeys = new Set(
+      filters.selectedCategories.filter((key) => !lockSetForThisRoll.has(key)),
+    );
+    const previousLoadout = loadout;
     const result = engine.rollLoadout(loadout, lockSetForThisRoll, {
       filters,
       selectedCategories: filters.selectedCategories,
     });
     loadout = result.loadout;
+    renderBoard(previousLoadout);
+    board.classList.add("is-rolling");
+    setButtonsDisabled(true);
+
+    await new Promise((resolve) => setTimeout(resolve, SPIN_DURATION_MS));
+
     persist();
     publishToSquadIfActive();
 
     phase = "result";
+    spinningKeys.clear();
     board.classList.remove("is-rolling");
     renderBoard();
 
@@ -241,7 +250,69 @@ export function render(outlet) {
     return filters.selectedCategories.includes(key);
   }
 
-  function renderBoard() {
+  function shuffledNames(items) {
+    const names = [...new Set(items.map((item) => item?.name).filter(Boolean))];
+    for (let index = names.length - 1; index > 0; index -= 1) {
+      const swapIndex = Math.floor(Math.random() * (index + 1));
+      [names[index], names[swapIndex]] = [names[swapIndex], names[index]];
+    }
+    return names;
+  }
+
+  function animateSlotStrip(viewport, strip) {
+    requestAnimationFrame(() => {
+      const distance = Math.max(0, strip.scrollHeight - viewport.clientHeight);
+      if (distance === 0) return;
+
+      const startedAt = performance.now();
+      function frame(now) {
+        const elapsed = Math.min(1, (now - startedAt) / REEL_DURATION_MS);
+        // Lang anlaufen, schnell durch den Pool laufen und weich einrasten.
+        const progress =
+          elapsed < 0.5
+            ? 4 * elapsed * elapsed * elapsed
+            : 1 - Math.pow(-2 * elapsed + 2, 3) / 2;
+        strip.style.transform = `translate3d(0, ${-distance * Math.min(1, progress)}px, 0)`;
+        strip.style.filter =
+          elapsed > 0.08 && elapsed < 0.82 ? "blur(1.2px)" : "none";
+
+        if (elapsed < 1 && strip.isConnected) {
+          requestAnimationFrame(frame);
+        } else {
+          strip.style.transform = `translate3d(0, ${-distance}px, 0)`;
+          strip.style.filter = "none";
+        }
+      }
+      requestAnimationFrame(frame);
+    });
+  }
+
+  function setSlotValue(element, key, previousItem, nextItem, shouldSpin) {
+    const nextName = nextItem?.name ?? "-";
+    if (!shouldSpin) {
+      element.textContent = nextName;
+      return;
+    }
+
+    element.classList.add("slot-reel");
+    const strip = document.createElement("span");
+    strip.className = "slot-reel-strip";
+    const names = [
+      previousItem?.name ?? "-",
+      ...shuffledNames(getRandomizerCandidates(key, filters)),
+      nextName,
+    ];
+    names.forEach((name) => {
+      const stop = document.createElement("span");
+      stop.className = "slot-reel-stop";
+      stop.textContent = name;
+      strip.appendChild(stop);
+    });
+    element.appendChild(strip);
+    animateSlotStrip(element, strip);
+  }
+
+  function renderBoard(previousLoadout = null) {
     board.replaceChildren();
     updateFilterChip();
 
@@ -263,7 +334,13 @@ export function render(outlet) {
       stageLabel.textContent = "Map";
       const stageValue = document.createElement("p");
       stageValue.className = "loadout-stage-value";
-      stageValue.textContent = loadout.map?.name ?? "-";
+      setSlotValue(
+        stageValue,
+        "map",
+        previousLoadout?.map,
+        loadout.map,
+        phase === "spinning" && spinningKeys.has("map"),
+      );
       const stageReroll = document.createElement("div");
       stageReroll.className = "loadout-stage-reroll";
       stageReroll.append(
@@ -294,7 +371,13 @@ export function render(outlet) {
 
         const value = document.createElement("p");
         value.className = "loadout-card-value";
-        value.textContent = loadout[key]?.name ?? "-";
+        setSlotValue(
+          value,
+          key,
+          previousLoadout?.[key],
+          loadout[key],
+          phase === "spinning" && spinningKeys.has(key),
+        );
 
         card.append(labelRow, value);
         grid.appendChild(card);
@@ -329,7 +412,13 @@ export function render(outlet) {
 
         const value = document.createElement("p");
         value.className = "loadout-card-value";
-        value.textContent = item?.name ?? "-";
+        setSlotValue(
+          value,
+          key,
+          previousLoadout?.[key],
+          item,
+          phase === "spinning" && spinningKeys.has(key),
+        );
 
         const rarity = document.createElement("span");
         rarity.className = "status-chip";
