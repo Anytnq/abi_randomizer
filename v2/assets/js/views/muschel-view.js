@@ -6,6 +6,10 @@ import { askMuschel, pushHistory } from "../core/muschel-engine.js";
 import { loadV2State, saveV2State } from "../core/storage.js";
 import { playmuschelDecisionSound } from "../../../../assets/js/randomizer/sound.js";
 import { openSheet } from "../components/sheet.js";
+import {
+  cancelMuschelSpeech,
+  speakMuschelAnswer,
+} from "../core/speech.js";
 
 export function render(outlet) {
   let history = loadV2State().muschelHistory ?? [];
@@ -63,10 +67,10 @@ export function render(outlet) {
     resultCard.replaceChildren();
     const resultTitle = document.createElement("p");
     resultTitle.className = "muschel-result-title";
-    resultTitle.textContent = `Die Miesmuschel sagt: ${entry.allowed ? "JA" : "NEIN"}`;
+    resultTitle.textContent = "Die Miesmuschel sagt:";
     const resultLine = document.createElement("p");
     resultLine.className = "muschel-result-line";
-    resultLine.textContent = entry.question;
+    resultLine.textContent = entry.answer;
     resultCard.append(resultTitle, resultLine);
 
     shell.classList.remove("is-deciding");
@@ -75,6 +79,9 @@ export function render(outlet) {
     shell.classList.add("is-deciding");
 
     playmuschelDecisionSound(entry.allowed);
+    speakMuschelAnswer(entry.answer, {
+      volume: loadV2State().settings.masterVolume,
+    });
   }
 
   askBtn.addEventListener("click", ask);
@@ -103,7 +110,7 @@ export function render(outlet) {
           const question = document.createElement("span");
           question.textContent = entry.question;
           const answer = document.createElement("strong");
-          answer.textContent = entry.allowed ? "JA" : "NEIN";
+          answer.textContent = entry.answer ?? (entry.allowed ? "JA" : "NEIN");
           li.append(question, answer);
           list.appendChild(li);
         });
@@ -125,5 +132,5 @@ export function render(outlet) {
     });
   });
 
-  return null;
+  return cancelMuschelSpeech;
 }

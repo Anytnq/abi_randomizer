@@ -95,6 +95,11 @@
   background: var(--color-surface-2);
 }
 
+.muschel-history-item strong {
+  max-width: 60%;
+  text-align: right;
+}
+
 .muschel-history-item.allow strong {
   color: var(--color-success);
 }

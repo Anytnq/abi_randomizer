@@ -8,7 +8,7 @@
    install, so Firebase is never force-downloaded before Squad is opened
    (Planungs.md 8: "Firebase nur beim Öffnen von Squad laden"). */
 
-const BUILD_VERSION = "v2-2026-07-17-tierlist-labels-01";
+const BUILD_VERSION = "v2-2026-07-17-muschel-answers-01";
 const CACHE_NAME = `op-rng-${BUILD_VERSION}`;
 const OFFLINE_URL = "./offline.html";
 
@@ -39,6 +39,7 @@ const STATIC_ASSETS = [
   "./assets/js/core/randomizer-engine.js",
   "./assets/js/core/filters.js",
   "./assets/js/core/storage.js",
+  "./assets/js/core/speech.js",
   "./assets/js/components/event-overlay.js",
   "./assets/js/components/sheet.js",
   "../assets/js/randomizer/game.js",

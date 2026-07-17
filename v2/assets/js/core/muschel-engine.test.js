@@ -1,4 +1,9 @@
-import { askMuschel, pushHistory, MAX_HISTORY_ENTRIES } from "./muschel-engine.js";
+import {
+  askMuschel,
+  buildMuschelAnswer,
+  pushHistory,
+  MAX_HISTORY_ENTRIES,
+} from "./muschel-engine.js";
 
 function assert(name, condition) {
   if (!condition) {
@@ -30,10 +35,23 @@ function testPushHistoryCapsAtMax() {
   assert("newest entry is first", history[0].question === `Q${MAX_HISTORY_ENTRIES + 4}`);
 }
 
+function testQuestionBecomesNaturalAnswer() {
+  assert(
+    "positive bin-ich question becomes du statement",
+    buildMuschelAnswer("Bin ich Gut?", true) === "Ja, du bist gut.",
+  );
+  assert(
+    "negative modal question is negated",
+    buildMuschelAnswer("Darf ich dieses Gear spielen?", false) ===
+      "Nein, du darfst nicht dieses Gear spielen.",
+  );
+}
+
 export function runMuschelEngineTests() {
   testAskMuschelShape();
   testAskMuschelFallsBackOnEmptyQuestion();
   testPushHistoryCapsAtMax();
+  testQuestionBecomesNaturalAnswer();
   return "Alle muschel-engine Tests bestanden.";
 }
 
