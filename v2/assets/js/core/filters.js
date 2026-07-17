@@ -10,6 +10,26 @@ import {
   weaponCategoryOptions,
   tierNumberByType,
 } from "../../../../assets/js/randomizer/data.js";
+import tierlist from "../../../../assets/js/tierlist.json" with { type: "json" };
+
+export const WEAPON_SOURCE_V1 = "v1";
+export const WEAPON_SOURCE_TIERLIST = "tierlist";
+export const WEAPON_SOURCES = [WEAPON_SOURCE_V1, WEAPON_SOURCE_TIERLIST];
+
+const TIERLIST_ORDER = ["S", "A", "B", "C", "D", "F"];
+const TIERLIST_TYPE = { S: "t6", A: "t5", B: "t4", C: "t3", D: "t2", F: "t1" };
+const V1_WEAPONS_BY_NAME = new Map(weapons.map((weapon) => [weapon.name, weapon]));
+const TIERLIST_WEAPONS = TIERLIST_ORDER.flatMap((tier) =>
+  (tierlist[tier] ?? []).map((name) => ({
+    ...(V1_WEAPONS_BY_NAME.get(name) ?? {
+      name,
+      chancePercent: 25,
+      type: TIERLIST_TYPE[tier],
+    }),
+    category: `tierlist-${tier.toLowerCase()}`,
+    tierlistTier: tier,
+  })),
+);
 
 /* Same 7 board categories as core/randomizer-engine.js CARD_KEYS - kept as
    an independent literal here to avoid a circular import between the two
@@ -38,6 +58,7 @@ export function getDefaultFilters() {
     excludedHelmetTiers: [],
     excludedArmorTiers: [],
     excludedWeapons: [],
+    weaponSource: WEAPON_SOURCE_V1,
   };
 }
 
@@ -58,14 +79,29 @@ export function getAvailableArmors(filters) {
 
 export function getAvailableWeapons(filters) {
   const excluded = new Set(filters.excludedWeapons);
-  return weapons.filter((weapon) => !excluded.has(weapon.name));
+  return getWeaponPool(filters).filter((weapon) => !excluded.has(weapon.name));
 }
 
-export function getWeaponsByCategory() {
+export function getWeaponPool(filters) {
+  return filters.weaponSource === WEAPON_SOURCE_TIERLIST
+    ? TIERLIST_WEAPONS
+    : weapons;
+}
+
+export function getWeaponCategoryOptions(filters) {
+  if (filters.weaponSource !== WEAPON_SOURCE_TIERLIST) return weaponCategoryOptions;
+  return TIERLIST_ORDER.map((tier) => ({
+    key: `tierlist-${tier.toLowerCase()}`,
+    label: `${tier}-Tier`,
+  }));
+}
+
+export function getWeaponsByCategory(filters) {
+  const pool = getWeaponPool(filters);
   const map = new Map(
-    weaponCategoryOptions.map((category) => [
+    getWeaponCategoryOptions(filters).map((category) => [
       category.key,
-      weapons
+      pool
         .filter((weapon) => weapon.category === category.key)
         .sort((a, b) => a.name.localeCompare(b.name)),
     ]),

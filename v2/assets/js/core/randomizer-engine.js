@@ -67,6 +67,13 @@ export function getItemRarityLabel(item) {
   return getValueRarityLabel(getItemTier(item));
 }
 
+export function getItemResultLabel(item) {
+  const rarity = getItemRarityLabel(item);
+  return item?.tierlistTier
+    ? `${rarity} [${item.tierlistTier}-Tier]`
+    : rarity;
+}
+
 export function createRandomizerEngine({ zeroToHeroChancePercent = 5 } = {}) {
   let weaponHistory = [];
   let lastMap = null;

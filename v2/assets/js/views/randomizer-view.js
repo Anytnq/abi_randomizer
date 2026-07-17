@@ -10,7 +10,7 @@ import {
   TIER_COLOR,
   createRandomizerEngine,
   getRandomizerCandidates,
-  getItemRarityLabel,
+  getItemResultLabel,
   getItemTier,
 } from "../core/randomizer-engine.js";
 import { loadV2State, saveV2State } from "../core/storage.js";
@@ -456,7 +456,7 @@ export function render(outlet) {
         rarity.className = "status-chip";
         if (item) {
           rarity.style.color = TIER_COLOR[getItemTier(item)];
-          rarity.textContent = getItemRarityLabel(item);
+          rarity.textContent = getItemResultLabel(item);
         }
 
         card.append(labelRow, value, rarity);

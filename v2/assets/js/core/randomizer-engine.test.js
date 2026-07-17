@@ -2,6 +2,7 @@ import {
   createRandomizerEngine,
   getItemTier,
   getItemRarityLabel,
+  getItemResultLabel,
 } from "./randomizer-engine.js";
 import { getDefaultFilters, ALL_CATEGORY_KEYS } from "./filters.js";
 
@@ -71,6 +72,14 @@ function testGetItemTierAndRarity() {
   assert(
     "rarity label matches game.js scale",
     getItemRarityLabel({ value: 6 }) === "Immortal",
+  );
+  assert(
+    "tierlist result combines rarity and tier",
+    getItemResultLabel({ value: 3, tierlistTier: "D" }) === "Rare [D-Tier]",
+  );
+  assert(
+    "v1 result keeps rarity-only label",
+    getItemResultLabel({ value: 3 }) === "Rare",
   );
 }
 

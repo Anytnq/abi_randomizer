@@ -2,6 +2,7 @@ import {
   getDefaultFilters,
   getAvailableMaps,
   getAvailableWeapons,
+  WEAPON_SOURCE_TIERLIST,
   validateFilters,
 } from "./filters.js";
 import { maps, weapons } from "../../../../assets/js/randomizer/data.js";
@@ -50,11 +51,22 @@ function testWeaponExclusionNarrowsPool() {
   );
 }
 
+function testTierlistSourceIncludesJsonOnlyWeapons() {
+  const filters = {
+    ...getDefaultFilters(),
+    weaponSource: WEAPON_SOURCE_TIERLIST,
+  };
+  const names = new Set(getAvailableWeapons(filters).map((weapon) => weapon.name));
+  assert("tierlist source includes ZB07", names.has("ZB07"));
+  assert("tierlist source includes MPF45", names.has("MPF45"));
+}
+
 export function runFiltersTests() {
   testDefaultFiltersAreValid();
   testEmptyCategoriesIsInvalid();
   testExcludingAllMapsIsInvalid();
   testWeaponExclusionNarrowsPool();
+  testTierlistSourceIncludesJsonOnlyWeapons();
   return "Alle filters Tests bestanden.";
 }
 

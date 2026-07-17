@@ -8,14 +8,14 @@ import {
   ALL_CATEGORY_KEYS,
   DEFAULT_CATEGORY_KEYS,
   TIERS,
+  WEAPON_SOURCE_TIERLIST,
+  WEAPON_SOURCE_V1,
   getAvailableWeapons,
+  getWeaponCategoryOptions,
   getWeaponsByCategory,
   validateFilters,
 } from "../core/filters.js";
-import {
-  maps as allMaps,
-  weaponCategoryOptions,
-} from "../../../../assets/js/randomizer/data.js";
+import { maps as allMaps } from "../../../../assets/js/randomizer/data.js";
 
 const CATEGORY_LABELS = {
   map: "Map",
@@ -41,6 +41,7 @@ export function openFilterStudio({ currentFilters, onApply }) {
     excludedHelmetTiers: [...currentFilters.excludedHelmetTiers],
     excludedArmorTiers: [...currentFilters.excludedArmorTiers],
     excludedWeapons: [...currentFilters.excludedWeapons],
+    weaponSource: currentFilters.weaponSource ?? WEAPON_SOURCE_V1,
   };
   let weaponSearch = "";
 
@@ -219,6 +220,29 @@ export function openFilterStudio({ currentFilters, onApply }) {
     heading.style.marginBottom = "var(--space-2)";
     section.appendChild(heading);
 
+    const sourceRow = document.createElement("div");
+    sourceRow.style.display = "flex";
+    sourceRow.style.flexWrap = "wrap";
+    sourceRow.style.gap = "var(--space-2)";
+    sourceRow.style.marginBottom = "var(--space-3)";
+    [
+      [WEAPON_SOURCE_V1, "Randomizer V1 Waffen"],
+      [WEAPON_SOURCE_TIERLIST, "Randomizer Tierlist Waffen"],
+    ].forEach(([source, label]) => {
+      const btn = document.createElement("button");
+      const selected = draft.weaponSource === source;
+      btn.type = "button";
+      btn.className = `btn ${selected ? "btn--primary" : "btn--secondary"}`;
+      btn.setAttribute("aria-pressed", String(selected));
+      btn.textContent = label;
+      btn.addEventListener("click", () => {
+        draft.weaponSource = source;
+        refresh();
+      });
+      sourceRow.appendChild(btn);
+    });
+    section.appendChild(sourceRow);
+
     const search = document.createElement("input");
     search.type = "search";
     search.placeholder = "Waffe suchen...";
@@ -233,9 +257,9 @@ export function openFilterStudio({ currentFilters, onApply }) {
     section.appendChild(search);
 
     const query = weaponSearch.trim().toLowerCase();
-    const groups = getWeaponsByCategory();
+    const groups = getWeaponsByCategory(draft);
 
-    weaponCategoryOptions.forEach((category) => {
+    getWeaponCategoryOptions(draft).forEach((category) => {
       const groupWeapons = (groups.get(category.key) ?? []).filter((weapon) =>
         !query || weapon.name.toLowerCase().includes(query),
       );
