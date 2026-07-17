@@ -66,6 +66,10 @@
   border-color: var(--color-danger);
 }
 
+.muschel-result-card.neutral {
+  border-color: var(--color-text-muted);
+}
+
 .muschel-result-title {
   font-family: var(--font-display);
   font-size: var(--text-lg);
@@ -106,4 +110,8 @@
 
 .muschel-history-item.deny strong {
   color: var(--color-danger);
+}
+
+.muschel-history-item.neutral strong {
+  color: var(--color-text-muted);
 }

@@ -62,8 +62,9 @@ export function render(outlet) {
     historyBtn.textContent = `Verlauf (${history.length})`;
 
     resultCard.hidden = false;
-    resultCard.classList.toggle("allow", entry.allowed);
-    resultCard.classList.toggle("deny", !entry.allowed);
+    resultCard.classList.toggle("allow", entry.tone === "allow");
+    resultCard.classList.toggle("deny", entry.tone === "deny");
+    resultCard.classList.toggle("neutral", entry.tone === "neutral");
     resultCard.replaceChildren();
     const resultTitle = document.createElement("p");
     resultTitle.className = "muschel-result-title";
@@ -106,7 +107,7 @@ export function render(outlet) {
         list.className = "muschel-history-list";
         history.forEach((entry) => {
           const li = document.createElement("li");
-          li.className = `muschel-history-item ${entry.allowed ? "allow" : "deny"}`;
+          li.className = `muschel-history-item ${entry.tone ?? (entry.allowed ? "allow" : "deny")}`;
           const question = document.createElement("span");
           question.textContent = entry.question;
           const answer = document.createElement("strong");

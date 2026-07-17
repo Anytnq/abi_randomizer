@@ -8,7 +8,7 @@
    install, so Firebase is never force-downloaded before Squad is opened
    (Planungs.md 8: "Firebase nur beim Öffnen von Squad laden"). */
 
-const BUILD_VERSION = "v2-2026-07-17-muschel-answers-01";
+const BUILD_VERSION = "v2-2026-07-17-support-muschel-01";
 const CACHE_NAME = `op-rng-${BUILD_VERSION}`;
 const OFFLINE_URL = "./offline.html";
 

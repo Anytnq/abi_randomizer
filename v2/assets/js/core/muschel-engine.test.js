@@ -3,6 +3,7 @@ import {
   buildMuschelAnswer,
   pushHistory,
   MAX_HISTORY_ENTRIES,
+  SPECIAL_RESPONSES,
 } from "./muschel-engine.js";
 
 function assert(name, condition) {
@@ -47,11 +48,22 @@ function testQuestionBecomesNaturalAnswer() {
   );
 }
 
+function testSpecialResponsesCanBeSelected() {
+  const randomValues = [0, 0.999];
+  const entry = askMuschel("Was jetzt?", () => randomValues.shift());
+  assert("special response is marked", entry.special === true);
+  assert(
+    "last configured special response can be selected",
+    entry.answer === SPECIAL_RESPONSES.at(-1).answer,
+  );
+}
+
 export function runMuschelEngineTests() {
   testAskMuschelShape();
   testAskMuschelFallsBackOnEmptyQuestion();
   testPushHistoryCapsAtMax();
   testQuestionBecomesNaturalAnswer();
+  testSpecialResponsesCanBeSelected();
   return "Alle muschel-engine Tests bestanden.";
 }
 

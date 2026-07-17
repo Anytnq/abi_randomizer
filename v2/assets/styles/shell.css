@@ -92,7 +92,46 @@
   font-size: var(--text-md);
 }
 
+.support-banner {
+  position: fixed;
+  right: var(--space-3);
+  bottom: calc(var(--bottom-nav-height) + var(--space-3));
+  z-index: 45;
+  display: grid;
+  gap: 3px;
+  width: min(280px, calc(100vw - var(--space-6)));
+  padding: var(--space-3);
+  border: 1px solid color-mix(in srgb, var(--color-randomizer) 55%, var(--color-border));
+  border-radius: var(--radius-md);
+  background: color-mix(in srgb, var(--color-bg-raised) 94%, transparent);
+  box-shadow: var(--shadow-md);
+  font-size: var(--text-xs);
+  backdrop-filter: blur(10px);
+}
+
+.support-banner-label {
+  color: var(--color-text-faint);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+}
+
+.support-banner > span:not(.support-banner-label) {
+  color: var(--color-text-muted);
+}
+
+.support-banner a {
+  margin-top: var(--space-1);
+  color: var(--color-randomizer);
+  font-weight: 700;
+}
+
 @media (min-width: 900px) {
+  .support-banner {
+    right: var(--space-4);
+    bottom: var(--space-4);
+  }
+
   .app-shell {
     grid-template-columns: var(--nav-width) 1fr;
     grid-template-areas:
